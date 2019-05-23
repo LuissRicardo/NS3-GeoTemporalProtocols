@@ -1,0 +1,24 @@
+# *
+# We only want to whitelist our own folders, so we blacklist everything else.
+# *
+
+#
+# Ignore everything (All blacklisted by default)
+#
+
+# Ignore everything in the root directory
+/*
+
+#
+# List of whitelisted items
+#
+
+# Gitignore is needed
+!.gitignore
+
+# Geo-Temporal Library
+!/geotemporal-library/
+
+# Geo-Temporal Spray & Wait
+!/geotemporal-spray-and-wait/
+
