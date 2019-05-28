@@ -133,6 +133,12 @@ public:
     return m_packet_type;
   }
 
+  inline void
+  SetPacketType (const PacketType & type)
+  {
+    m_packet_type = type;
+  }
+
   inline bool
   IsValid () const
   {
@@ -251,10 +257,22 @@ public:
     return m_summary_vector_size;
   }
 
+  inline void
+  SetSummaryVectorSize (uint16_t summary_vector_size)
+  {
+    m_summary_vector_size = summary_vector_size;
+  }
+
   inline const Ipv4Address &
   GetSenderNodeIp () const
   {
     return m_sender_node_ip;
+  }
+
+  inline void
+  SetSenderNodeIp (const Ipv4Address & sender_node_ip)
+  {
+    m_sender_node_ip = sender_node_ip;
   }
 
 
@@ -387,6 +405,12 @@ public:
     return m_summary_vector;
   }
 
+  inline void
+  SetSummaryVector (const std::set<DataIdentifier> & summary_vector)
+  {
+    m_summary_vector = summary_vector;
+  }
+
 
   // --------------------------
   // Type ID
@@ -515,6 +539,12 @@ public:
   GetPosition () const
   {
     return m_position;
+  }
+
+  inline void
+  SetPosition (const Vector2D & position)
+  {
+    m_position = position;
   }
 
 
@@ -672,10 +702,22 @@ public:
     return m_data_id;
   }
 
+  inline void
+  SetDataIdentifier (const DataIdentifier & data_id)
+  {
+    m_data_id = data_id;
+  }
+
   inline const GeoTemporalArea &
   GetDestinationGeoTemporalArea () const
   {
     return m_dest_geo_temporal_area;
+  }
+
+  inline void
+  SetDestinationGeoTemporalArea (const GeoTemporalArea & dest_geo_temporal_area)
+  {
+    m_dest_geo_temporal_area = dest_geo_temporal_area;
   }
 
   inline const std::string &
@@ -684,10 +726,22 @@ public:
     return m_message;
   }
 
+  inline void
+  SetMessage (const std::string & message)
+  {
+    m_message = message;
+  }
+
   inline uint32_t
   GetReplicasToForward () const
   {
     return m_replicas_to_forward;
+  }
+
+  inline void
+  SetReplicasToForward (uint32_t replicas_to_forward)
+  {
+    m_replicas_to_forward = replicas_to_forward;
   }
 
 

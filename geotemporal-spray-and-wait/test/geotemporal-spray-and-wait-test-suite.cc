@@ -156,6 +156,18 @@ public:
   }
 
   void
+  TestGettersSetters ()
+  {
+    TypeHeader header;
+
+    NS_TEST_EXPECT_MSG_EQ (header.GetPacketType (), PacketType::Hello, "Must be Hello");
+
+    header.SetPacketType (PacketType::Data);
+
+    NS_TEST_EXPECT_MSG_EQ (header.GetPacketType (), PacketType::Data, "Must be Data");
+  }
+
+  void
   TestOverloadedOperators ()
   {
     TypeHeader equal_1 (PacketType::Data);
@@ -197,6 +209,7 @@ public:
   DoRun () override
   {
     TestConstructors ();
+    TestGettersSetters ();
     TestOverloadedOperators ();
     TestSerializationDeserialization ();
   }
@@ -239,6 +252,23 @@ public:
     NS_TEST_EXPECT_MSG_EQ (h3.GetSummaryVectorSize (), 17253u, "Must be 17253u");
     NS_TEST_EXPECT_MSG_EQ (h3.GetSenderNodeIp (), Ipv4Address ("1.30.2.44"), "Must be 1.30.2.44 IPv4 address");
     NS_TEST_EXPECT_MSG_EQ (h3.GetSerializedSize (), 7u, "Must be 7u");
+  }
+
+  void
+  TestGettersSetters ()
+  {
+    HelloHeader header (Ipv4Address ("1.2.3.4"), 5u);
+
+    NS_TEST_EXPECT_MSG_EQ (header.GetSenderNodeIp (), Ipv4Address ("1.2.3.4"), "IP must be 1.2.3.4");
+    NS_TEST_EXPECT_MSG_EQ (header.GetSummaryVectorSize (), 5u, "Summary vector size must be 5");
+
+    header.SetSenderNodeIp (Ipv4Address ("9.8.7.6"));
+
+    NS_TEST_EXPECT_MSG_EQ (header.GetSenderNodeIp (), Ipv4Address ("9.8.7.6"), "IP must be 9.8.7.6");
+
+    header.SetSummaryVectorSize (17u);
+
+    NS_TEST_EXPECT_MSG_EQ (header.GetSummaryVectorSize (), 17u, "Summary vector size must be 17");
   }
 
   void
@@ -297,6 +327,7 @@ public:
   DoRun () override
   {
     TestConstructors ();
+    TestGettersSetters ();
     TestOverloadedOperators ();
     TestSerializationDeserialization ();
     TestToString ();
@@ -344,6 +375,26 @@ public:
     NS_TEST_EXPECT_MSG_EQ (h3.GetSummaryVectorSize (), 3u, "Must be 3u");
     NS_TEST_EXPECT_MSG_EQ (h3.GetSummaryVector (), summary_vector, "Must be a set with 3 DataIdentifiers");
     NS_TEST_EXPECT_MSG_EQ (h3.GetSerializedSize (), 21u, "Must be 21u");
+  }
+
+  void
+  TestGettersSetters ()
+  {
+    std::set<DataIdentifier> summary_vector = {DataIdentifier (Ipv4Address ("1.1.1.1"), 1),
+      DataIdentifier (Ipv4Address ("1.1.1.1"), 2),
+      DataIdentifier (Ipv4Address ("1.1.1.1"), 3)};
+
+    ReplyHeader header (summary_vector);
+
+    NS_TEST_EXPECT_MSG_EQ (header.GetSummaryVectorSize (), 3u, "Summary vector size must be 3");
+    NS_TEST_EXPECT_MSG_EQ (header.GetSummaryVector (), summary_vector, "Summary vector must be equal to summary_vector");
+
+    summary_vector.insert ({DataIdentifier (Ipv4Address ("1.1.1.1"), 4),
+                           DataIdentifier (Ipv4Address ("1.1.1.1"), 5)});
+    header.SetSummaryVector (summary_vector);
+
+    NS_TEST_EXPECT_MSG_EQ (header.GetSummaryVectorSize (), 5u, "Summary vector size must be 5");
+    NS_TEST_EXPECT_MSG_EQ (header.GetSummaryVector (), summary_vector, "Summary vector must be equal to summary_vector");
   }
 
   void
@@ -414,6 +465,7 @@ public:
   DoRun () override
   {
     TestConstructors ();
+    TestGettersSetters ();
     TestOverloadedOperators ();
     TestSerializationDeserialization ();
     TestToString ();
@@ -466,6 +518,28 @@ public:
     NS_TEST_EXPECT_MSG_EQ (h3.GetSummaryVector (), summary_vector, "Must be a set with 3 DataIdentifiers");
     NS_TEST_EXPECT_MSG_EQ (h3.GetPosition (), position, "Must be " + position.ToString ());
     NS_TEST_EXPECT_MSG_EQ (h3.GetSerializedSize (), 37u, "Must be 37u");
+  }
+
+  void
+  TestGettersSetters ()
+  {
+    std::set<DataIdentifier> summary_vector = {DataIdentifier (Ipv4Address ("1.1.1.1"), 1),
+      DataIdentifier (Ipv4Address ("1.1.1.1"), 2),
+      DataIdentifier (Ipv4Address ("1.1.1.1"), 3)};
+    Vector2D position (5, 14);
+
+    ReplyBackHeader header (summary_vector, position);
+
+    NS_TEST_EXPECT_MSG_EQ (header.GetSummaryVectorSize (), 3u, "Summary vector size must be 3");
+    NS_TEST_EXPECT_MSG_EQ (header.GetSummaryVector (), summary_vector, "Summary vector must be equal to summary_vector");
+    NS_TEST_EXPECT_MSG_EQ (header.GetPosition (), position, "Summary vector size must be " << position);
+
+    position = Vector2D (99, 88);
+    header.SetPosition (position);
+
+    NS_TEST_EXPECT_MSG_EQ (header.GetSummaryVectorSize (), 3u, "Summary vector size must be 3");
+    NS_TEST_EXPECT_MSG_EQ (header.GetSummaryVector (), summary_vector, "Summary vector must be equal to summary_vector");
+    NS_TEST_EXPECT_MSG_EQ (header.GetPosition (), position, "Summary vector size must be " << position);
   }
 
   void
@@ -557,6 +631,7 @@ public:
   DoRun () override
   {
     TestConstructors ();
+    TestGettersSetters ();
     TestOverloadedOperators ();
     TestSerializationDeserialization ();
     TestToString ();
@@ -611,6 +686,54 @@ public:
     NS_TEST_EXPECT_MSG_EQ (h3.GetMessage (), message, "Must be " << message);
     NS_TEST_EXPECT_MSG_EQ (h3.GetReplicasToForward (), replicas, "Must be " << replicas);
     NS_TEST_EXPECT_MSG_EQ (h3.GetSerializedSize (), 48u + 16u, "Must be 64u");
+  }
+
+  void
+  TestGettersSetters ()
+  {
+    DataIdentifier data_id (Ipv4Address ("1.2.3.4"), 5u);
+    GeoTemporalArea gta (TimePeriod (10, 20), Area (30, 40, 50, 60));
+    std::string message = "packet's message"; // Length 16
+    uint32_t replicas = 5u;
+
+    DataHeader header (data_id, gta, message, replicas);
+
+    NS_TEST_EXPECT_MSG_EQ (header.GetDataIdentifier (), data_id, "Must be " << data_id);
+    NS_TEST_EXPECT_MSG_EQ (header.GetDestinationGeoTemporalArea (), gta, "Must be " << gta);
+    NS_TEST_EXPECT_MSG_EQ (header.GetMessage (), message, "Must be " << message);
+    NS_TEST_EXPECT_MSG_EQ (header.GetReplicasToForward (), replicas, "Must be " << replicas);
+
+    data_id = DataIdentifier (Ipv4Address ("9.8.7.6"), 5u);
+    header.SetDataIdentifier (data_id);
+
+    NS_TEST_EXPECT_MSG_EQ (header.GetDataIdentifier (), data_id, "Must be " << data_id);
+    NS_TEST_EXPECT_MSG_EQ (header.GetDestinationGeoTemporalArea (), gta, "Must be " << gta);
+    NS_TEST_EXPECT_MSG_EQ (header.GetMessage (), message, "Must be " << message);
+    NS_TEST_EXPECT_MSG_EQ (header.GetReplicasToForward (), replicas, "Must be " << replicas);
+
+    gta = GeoTemporalArea (TimePeriod (50, 60), Area (30, 40, 50, 60));
+    header.SetDestinationGeoTemporalArea (gta);
+
+    NS_TEST_EXPECT_MSG_EQ (header.GetDataIdentifier (), data_id, "Must be " << data_id);
+    NS_TEST_EXPECT_MSG_EQ (header.GetDestinationGeoTemporalArea (), gta, "Must be " << gta);
+    NS_TEST_EXPECT_MSG_EQ (header.GetMessage (), message, "Must be " << message);
+    NS_TEST_EXPECT_MSG_EQ (header.GetReplicasToForward (), replicas, "Must be " << replicas);
+
+    message = "new packet's message :)";
+    header.SetMessage (message);
+
+    NS_TEST_EXPECT_MSG_EQ (header.GetDataIdentifier (), data_id, "Must be " << data_id);
+    NS_TEST_EXPECT_MSG_EQ (header.GetDestinationGeoTemporalArea (), gta, "Must be " << gta);
+    NS_TEST_EXPECT_MSG_EQ (header.GetMessage (), message, "Must be " << message);
+    NS_TEST_EXPECT_MSG_EQ (header.GetReplicasToForward (), replicas, "Must be " << replicas);
+
+    replicas = 91u;
+    header.SetReplicasToForward (replicas);
+
+    NS_TEST_EXPECT_MSG_EQ (header.GetDataIdentifier (), data_id, "Must be " << data_id);
+    NS_TEST_EXPECT_MSG_EQ (header.GetDestinationGeoTemporalArea (), gta, "Must be " << gta);
+    NS_TEST_EXPECT_MSG_EQ (header.GetMessage (), message, "Must be " << message);
+    NS_TEST_EXPECT_MSG_EQ (header.GetReplicasToForward (), replicas, "Must be " << replicas);
   }
 
   void
@@ -694,6 +817,7 @@ public:
   DoRun () override
   {
     TestConstructors ();
+    TestGettersSetters ();
     TestOverloadedOperators ();
     TestSerializationDeserialization ();
     TestToString ();
