@@ -2,6 +2,9 @@
 #include "packet-utils.h"
 
 #include <cstdio>
+#include <vector>
+
+#include "string-utils.h"
 
 namespace GeoTemporalLibrary
 {
@@ -146,6 +149,16 @@ DataIdentifier::DataIdentifier () : m_source_ip (), m_source_id (0) { }
 DataIdentifier::DataIdentifier (const ns3::Ipv4Address & source_ip,
                                 const uint16_t source_id) :
 m_source_ip (source_ip), m_source_id (source_id) { }
+
+DataIdentifier::DataIdentifier (const std::string& data_id) : DataIdentifier ()
+{
+  std::vector<std::string> tokens = Split (Trim_Copy (data_id), ':');
+
+  if (tokens.size () != 2u) throw std::runtime_error ("Invalid input string.");
+
+  m_source_ip = ns3::Ipv4Address (tokens.at (0u).c_str ());
+  m_source_id = (uint16_t) std::stoi (tokens.at (1u));
+}
 
 DataIdentifier::DataIdentifier (const DataIdentifier& copy) :
 m_source_ip (copy.m_source_ip), m_source_id (copy.m_source_id) { }

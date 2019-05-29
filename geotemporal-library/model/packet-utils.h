@@ -246,6 +246,21 @@ public:
 
   DataIdentifier (const ns3::Ipv4Address & source_ip, const uint16_t source_id);
 
+  /**
+   * Constructs a <code>DataIdentifier</code> object by parsing the input string.
+   * 
+   * The input string is in format: <pre>xxx.xxx.xxx.xxx:yyy</pre>
+   * 
+   * Where:
+   * 
+   * - <code>xxx.xxx.xxx.xxx</code> is a valid IP v4 address, and
+   * 
+   * - <code>yyy</code> is a 16-bit unsigned integer (from 0 up to 65,535).
+   * 
+   * @param data_id The string containing the data identifier as described above.
+   */
+  DataIdentifier (const std::string & data_id);
+
   DataIdentifier (const DataIdentifier & copy);
 
   /**
