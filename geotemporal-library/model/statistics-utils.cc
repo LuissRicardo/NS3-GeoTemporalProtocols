@@ -218,7 +218,7 @@ DataPacketStatistics::CountReception (const uint32_t & receiver_node_id, const D
   if (!IsExpectedReceiverNodesSet ())
     throw std::runtime_error ("The nodes that visited the packet's geo-temporal area haven't been set.");
 
-  if (m_data_id != reception_stats.GetReceivedPacketDataId ())
+  if (m_data_id != reception_stats.GetPacketDataIdentifier ())
     throw std::runtime_error ("The packet's DATA ID doesn't match.");
 
   // If the given node is not an expected receiver node (i.e., didn't visited the geo-temporal area) then stop.
@@ -422,7 +422,7 @@ SimulationStatistics::CountDataPacketReceiverNode (const ns3::Ipv4Address & rece
                                                    const DataPacketReceptionStats & reception_stats)
 {
   std::map<DataIdentifier, DataPacketStatistics>::iterator packet_statistics_it
-          = m_data_packets_statistics.find (reception_stats.GetReceivedPacketDataId ());
+          = m_data_packets_statistics.find (reception_stats.GetPacketDataIdentifier ());
 
   if (packet_statistics_it == m_data_packets_statistics.end ())
     throw std::runtime_error ("The specified packet doesn't exist. Add it using AddDataPacket "
@@ -715,7 +715,7 @@ SimulationStatisticsFile::CountDataPacketReceiverNode (const ns3::Ipv4Address & 
   std::sprintf (buffer, "%u", reception_stats.GetReceivedDuplicatesCount ());
   reception_str += "received-duplicates=\"" + std::string (buffer) + "\" />" + end_line;
 
-  m_data_packets_str_section[reception_stats.GetReceivedPacketDataId ()] += reception_str;
+  m_data_packets_str_section[reception_stats.GetPacketDataIdentifier ()] += reception_str;
 
   return expected_receiver; // Returns true
 }

@@ -289,7 +289,7 @@ public:
    * Returns the data identifier of the received data packet.
    */
   inline const DataIdentifier &
-  GetReceivedPacketDataId () const
+  GetPacketDataIdentifier () const
   {
     return m_received_packet_data_id;
   }
