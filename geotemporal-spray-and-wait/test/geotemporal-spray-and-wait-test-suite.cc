@@ -22,6 +22,11 @@
 
 #include "ns3/test.h"
 
+#include <cmath>
+#include <cstdio>
+#include <map>
+#include <set>
+
 #include <ns3/geotemporal-utils.h>
 #include <ns3/math-utils.h>
 #include <ns3/packet.h>
@@ -1031,6 +1036,7 @@ public:
     // This function is launched by the scheduler at second 6.00
     bool found = false;
 
+    // Some packet entries already expired at second 5.0.
     // The neighbors table now looks like this:
     //      Neighbor IP   -   Expiration time
     //      1.1.1.1       -      second 10
@@ -1430,6 +1436,1566 @@ public:
 
 
 // =============================================================================
+//                               PacketQueueEntryTest
+// =============================================================================
+
+/**
+ * PacketQueueEntry for the data packets queue test suite.
+ * 
+ * \ingroup tests
+ * \ingroup geotemporal-spray-and-wait-test
+ */
+class PacketQueueEntryTest : public TestCasePlus
+{
+public:
+
+  const DataIdentifier m_data_id;
+  const GeoTemporalArea m_geo_temporal_area;
+  const std::string m_message;
+  const uint32_t m_replicas;
+  const DataHeader m_header;
+
+  PacketQueueEntry m_queue_entry;
+
+  PacketQueueEntryTest ()
+  : TestCasePlus ("PacketQueueEntry"),
+  m_data_id (Ipv4Address ("1.1.1.1"), 1u),
+  m_geo_temporal_area (TimePeriod (34, 74), Area (10, 10, 90, 90)),
+  m_message ("0123456789"),
+  m_replicas (15u),
+  m_header (m_data_id, m_geo_temporal_area, m_message, m_replicas),
+  m_queue_entry () { }
+
+  void
+  TestConstructors ()
+  {
+    // Default constructor
+    PacketQueueEntry e1;
+
+    NS_TEST_EXPECT_MSG_EQ (e1.GetDataPacketId (), DataIdentifier (), "Must be the default DataIdentifier.");
+    NS_TEST_EXPECT_MSG_EQ (e1.GetDataPacket (), DataHeader (), "Must be the default DataHeader.");
+    NS_TEST_EXPECT_MSG_EQ (e1.GetExpirationTime (), Time (), "Must be the default Time.");
+    NS_TEST_EXPECT_MSG_EQ (e1.GetReplicasCounter (), 0u, "Must be zero.");
+
+    // Parameters constructor
+    PacketQueueEntry e2 (m_header);
+
+    NS_TEST_EXPECT_MSG_EQ (e2.GetDataPacketId (), m_data_id, "Must be " << m_data_id);
+    NS_TEST_EXPECT_MSG_EQ (e2.GetDataPacket (), m_header, "Must be " << m_header);
+    NS_TEST_EXPECT_MSG_EQ_TOL (e2.GetExpirationTime (), Seconds (74), MicroSeconds (1),
+                               "Must be the second 74.");
+    NS_TEST_EXPECT_MSG_EQ (e2.GetReplicasCounter (), m_replicas, "Must be " << m_replicas);
+
+    // Copy constructor
+    PacketQueueEntry e3 (e2);
+
+    NS_TEST_EXPECT_MSG_EQ (e3.GetDataPacketId (), m_data_id, "Must be " << m_data_id);
+    NS_TEST_EXPECT_MSG_EQ (e3.GetDataPacket (), m_header, "Must be " << m_header);
+    NS_TEST_EXPECT_MSG_EQ_TOL (e3.GetExpirationTime (), Seconds (74), MicroSeconds (1),
+                               "Must be the second 74.");
+    NS_TEST_EXPECT_MSG_EQ (e3.GetReplicasCounter (), m_replicas, "Must be " << m_replicas);
+  }
+
+  void
+  TestGetSetReplicasCounter ()
+  {
+    PacketQueueEntry entry (m_header);
+
+    NS_TEST_EXPECT_MSG_EQ (entry.GetReplicasCounter (), m_replicas, "Must be " << m_replicas);
+
+    entry.SetReplicasCounter (497u);
+
+    NS_TEST_EXPECT_MSG_EQ (entry.GetReplicasCounter (), 497u, "Must be 497");
+  }
+
+  void
+  TestExpirationTime_Scheduled_1 ()
+  {
+    // This function is launched by the scheduler at second 13.82
+    Time expected_time = Seconds (69.18); // 83 - 13.82 = 69.18
+    NS_TEST_EXPECT_MSG_EQ_TOL (m_queue_entry.GetExpirationTime (), expected_time, MicroSeconds (1),
+                               "Expected expiration time: " << expected_time.ToDouble (Time::S)
+                               << " seconds.");
+
+    m_queue_entry.SetExpirationTime (Seconds (28.6)); // Will expire at second 42.42 (13.82 + 28.6)
+  }
+
+  void
+  TestExpirationTime_Scheduled_2 ()
+  {
+    // This function is launched by the scheduler at second 25.25
+    Time expected_time = Seconds (17.17); // 42.42 − 25.25 = 17.17
+    NS_TEST_EXPECT_MSG_EQ_TOL (m_queue_entry.GetExpirationTime (), expected_time, MicroSeconds (1),
+                               "Expected expiration time: " << expected_time.ToDouble (Time::S)
+                               << " seconds.");
+
+    m_queue_entry.SetExpirationTime (30u, 43u); // Will expire at second 73 (30 + 43)
+  }
+
+  void
+  TestExpirationTime_Scheduled_3 ()
+  {
+    // This function is launched by the scheduler at second 61.9
+    Time expected_time = Seconds (11.1); // 73 − 61.9 = 11.1
+    NS_TEST_EXPECT_MSG_EQ_TOL (m_queue_entry.GetExpirationTime (), expected_time, MicroSeconds (1),
+                               "Expected expiration time: " << expected_time.ToDouble (Time::S)
+                               << " seconds.");
+  }
+
+  void
+  TestExpirationTime ()
+  {
+    DataHeader header (m_header);
+    header.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (37, 83),
+                                                           Area (10, 10, 90, 90)));
+
+    m_queue_entry = PacketQueueEntry (header);
+
+    Simulator::Schedule (Seconds (13.82), &PacketQueueEntryTest::TestExpirationTime_Scheduled_1, this);
+    Simulator::Schedule (Seconds (25.25), &PacketQueueEntryTest::TestExpirationTime_Scheduled_2, this);
+    Simulator::Schedule (Seconds (61.9), &PacketQueueEntryTest::TestExpirationTime_Scheduled_3, this);
+
+    Simulator::Run ();
+    Simulator::Destroy ();
+  }
+
+  void
+  TestToStringFunction_Scheduled_1 ()
+  {
+    // This function is launched by the scheduler at second 13.82
+    std::string expected_str = "Packet queue entry 1.1.1.1:1 will expire at second 83";
+
+    NS_TEST_EXPECT_MSG_EQ (m_queue_entry.ToString (), expected_str, "Expected string: " << expected_str);
+
+    m_queue_entry.SetExpirationTime (Seconds (28.6)); // Will expire at second 42.42 (13.82 + 28.6)
+  }
+
+  void
+  TestToStringFunction_Scheduled_2 ()
+  {
+    // This function is launched by the scheduler at second 42.42
+    std::string expected_str = "Packet queue entry 1.1.1.1:1 will expire at second 83";
+
+    NS_TEST_EXPECT_MSG_EQ (m_queue_entry.ToString (), expected_str, "Expected string: " << expected_str);
+
+    m_queue_entry.SetExpirationTime (30u, 43u); // Will expire at second 73 (30 + 43)
+  }
+
+  void
+  TestToStringFunction_Scheduled_3 ()
+  {
+    // This function is launched by the scheduler at second 61.9
+    std::string expected_str = "Packet queue entry 1.1.1.1:1 will expire at second 73";
+
+    NS_TEST_EXPECT_MSG_EQ (m_queue_entry.ToString (), expected_str, "Expected string: " << expected_str);
+  }
+
+  void
+  TestToStringFunction ()
+  {
+    DataHeader header (m_header);
+    header.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (37, 83),
+                                                           Area (10, 10, 90, 90)));
+
+    m_queue_entry = PacketQueueEntry (header);
+
+    Simulator::Schedule (Seconds (13.82), &PacketQueueEntryTest::TestExpirationTime_Scheduled_1, this);
+    Simulator::Schedule (Seconds (25.25), &PacketQueueEntryTest::TestExpirationTime_Scheduled_2, this);
+    Simulator::Schedule (Seconds (61.9), &PacketQueueEntryTest::TestExpirationTime_Scheduled_3, this);
+
+    Simulator::Run ();
+    Simulator::Destroy ();
+  }
+
+  void
+  TestOverloadedOperators ()
+  {
+    // Different DataHeader
+    PacketQueueEntry equal_1 (m_header);
+    PacketQueueEntry equal_2 (m_header);
+
+    DataHeader diff_header (m_header);
+    diff_header.SetReplicasToForward (8u);
+    PacketQueueEntry different (diff_header);
+
+    TestEqualityRelationalOperators (equal_1, equal_2, different);
+
+    // Different expiration time
+    equal_1 = PacketQueueEntry (m_header);
+    equal_2 = PacketQueueEntry (m_header);
+    different = PacketQueueEntry (m_header);
+
+    different.SetExpirationTime (Seconds (400));
+
+    TestEqualityRelationalOperators (equal_1, equal_2, different);
+
+    // Different replicas counter
+    equal_1 = PacketQueueEntry (m_header);
+    equal_2 = PacketQueueEntry (m_header);
+    different = PacketQueueEntry (m_header);
+
+    different.SetReplicasCounter (999u);
+
+    TestEqualityRelationalOperators (equal_1, equal_2, different);
+  }
+
+  void
+  DoRun () override
+  {
+    TestConstructors ();
+    TestGetSetReplicasCounter ();
+    TestExpirationTime ();
+    TestToStringFunction ();
+    TestOverloadedOperators ();
+  }
+};
+
+
+// =============================================================================
+//                               PacketsQueueTest
+// =============================================================================
+
+/**
+ * PacketsQueue for the data packets queue test suite.
+ * 
+ * \ingroup tests
+ * \ingroup geotemporal-spray-and-wait-test
+ */
+class PacketsQueueTest : public TestCasePlus
+{
+public:
+
+  PacketsQueue m_packets_queue;
+
+  PacketsQueueTest () : TestCasePlus ("PacketsQueue"), m_packets_queue () { }
+
+  void
+  TestConstructors ()
+  {
+    std::set<DataIdentifier> summary_vector;
+
+    // Default constructor
+    PacketsQueue q1;
+    q1.GetSummaryVector (summary_vector);
+
+    NS_TEST_EXPECT_MSG_EQ (q1.GetBinaryMode (), false, "Must be false.");
+    NS_TEST_EXPECT_MSG_EQ (q1.GetMaxLength (), 128u, "Must be 128.");
+    NS_TEST_EXPECT_MSG_EQ (q1.GetDroppedPacketsCounter (), 0u, "Must be 0.");
+    NS_TEST_EXPECT_MSG_EQ (q1.Size (), 0u, "Must be 0.");
+    NS_TEST_EXPECT_MSG_EQ (summary_vector.empty (), true, "Must be empty");
+    NS_TEST_EXPECT_MSG_EQ (q1.GetPacketReceptionStats ().empty (), true, "Must be empty.");
+
+    // Parameters constructor
+    PacketsQueue q2 (true, 17u);
+    q2.GetSummaryVector (summary_vector);
+
+    NS_TEST_EXPECT_MSG_EQ (q2.GetBinaryMode (), true, "Must be true.");
+    NS_TEST_EXPECT_MSG_EQ (q2.GetMaxLength (), 17u, "Must be 17.");
+    NS_TEST_EXPECT_MSG_EQ (q2.GetDroppedPacketsCounter (), 0u, "Must be 0.");
+    NS_TEST_EXPECT_MSG_EQ (q2.Size (), 0u, "Must be 0.");
+    NS_TEST_EXPECT_MSG_EQ (summary_vector.empty (), true, "Must be empty");
+    NS_TEST_EXPECT_MSG_EQ (q2.GetPacketReceptionStats ().empty (), true, "Must be empty.");
+
+    // Copy constructor
+    PacketsQueue q3 (q2);
+    q3.GetSummaryVector (summary_vector);
+
+    NS_TEST_EXPECT_MSG_EQ (q3.GetBinaryMode (), true, "Must be true.");
+    NS_TEST_EXPECT_MSG_EQ (q3.GetMaxLength (), 17u, "Must be 17.");
+    NS_TEST_EXPECT_MSG_EQ (q3.GetDroppedPacketsCounter (), 0u, "Must be 0.");
+    NS_TEST_EXPECT_MSG_EQ (q3.Size (), 0u, "Must be 0.");
+    NS_TEST_EXPECT_MSG_EQ (summary_vector.empty (), true, "Must be empty");
+    NS_TEST_EXPECT_MSG_EQ (q3.GetPacketReceptionStats ().empty (), true, "Must be empty.");
+  }
+
+  void
+  TestGettersSetters ()
+  {
+    m_packets_queue = PacketsQueue (false, 67);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.GetBinaryMode (), false, "Must be false.");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.GetMaxLength (), 67u, "Must be 67.");
+
+    m_packets_queue.SetBinaryMode (true);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.GetBinaryMode (), true, "Must be true.");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.GetMaxLength (), 67u, "Must be 67.");
+
+    m_packets_queue.SetMaxLength (11u);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.GetBinaryMode (), true, "Must be true.");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.GetMaxLength (), 11u, "Must be 11.");
+
+    m_packets_queue.SetMaxLength (1u);
+
+    Ipv4Address source_ip = Ipv4Address ("1.1.1.1");
+
+    DataHeader data_packet (/* Data ID */ DataIdentifier (source_ip, 0u),
+                            /* Geo-temporal area */ GeoTemporalArea (TimePeriod (0, 10),
+                                                                     Area (0, 0, 100, 100)),
+                            /* Message */ "Message",
+                            /* Replicas */ 5);
+    m_packets_queue.Enqueue (data_packet, source_ip);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.GetDroppedPacketsCounter (), 0u, "Must be 0.");
+
+    for (uint32_t i = 1u; i <= 100u; ++i)
+      {
+        data_packet.SetDataIdentifier (DataIdentifier (source_ip, i));
+        m_packets_queue.Enqueue (data_packet, source_ip);
+
+        NS_TEST_EXPECT_MSG_EQ (m_packets_queue.GetDroppedPacketsCounter (), i, "Must be " << i);
+      }
+  }
+
+  void
+  TestGetSize_Scheduled_1 ()
+  {
+    // This function is launched by the scheduler at second 15.00
+    // Al entries must be purged by Size.
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 0u, "Size of the packets queue must be 0.");
+  }
+
+  void
+  TestGetSize ()
+  {
+    m_packets_queue = PacketsQueue (false, 5u);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 0u, "Size of the packets queue must be 0.");
+
+    Ipv4Address source_ip = Ipv4Address ("1.1.1.1");
+    DataHeader data_packet (/* Data ID */ DataIdentifier (source_ip, 0u),
+                            /* Geo-temporal area */ GeoTemporalArea (TimePeriod (0, 10),
+                                                                     Area (0, 0, 100, 100)),
+                            /* Message */ "Message",
+                            /* Replicas */ 5);
+
+    for (uint32_t i = 0u; i < 5u; ++i)
+      {
+        data_packet.SetDataIdentifier (DataIdentifier (source_ip, i));
+
+        m_packets_queue.Enqueue (data_packet, source_ip);
+
+        NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 1u + i,
+                               "Size of the packets queue must be " << (1u + i));
+      }
+
+    for (uint32_t i = 0u; i < 15u; ++i)
+      {
+        data_packet.SetDataIdentifier (DataIdentifier (source_ip, 10u + i));
+
+        m_packets_queue.Enqueue (data_packet, source_ip);
+
+        NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 5u, "Size of the packets queue must be 5.");
+      }
+
+    // The following scheduled calls test:
+    //  - That Size () calls Purge()
+    Simulator::Schedule (Seconds (15), &PacketsQueueTest::TestGetSize_Scheduled_1, this);
+
+    Simulator::Run ();
+    Simulator::Destroy ();
+  }
+
+  void
+  TestGetSummaryVector_Scheduled_1 ()
+  {
+    // This function is launched by the scheduler at second 6.00
+
+    // Some packet entries already expired at second 5.0.
+    // The packets queue now looks like this:
+    //     Data ID   -   Packet entry expiration time
+    //    1.1.1.1:1  -           second 10
+    //    1.1.1.2:2  -           second 10
+
+    std::set<DataIdentifier> summary_vector, expected_summary_vector;
+
+    m_packets_queue.GetSummaryVector (summary_vector);
+    expected_summary_vector = {DataIdentifier ("1.1.1.1:1"), DataIdentifier ("1.1.1.2:2")};
+    NS_TEST_EXPECT_MSG_EQ (summary_vector, expected_summary_vector, "Summary vector size must be the expected.");
+  }
+
+  void
+  TestGetSummaryVector ()
+  {
+    std::set<DataIdentifier> summary_vector, expected_summary_vector;
+    m_packets_queue = PacketsQueue (false, 5);
+
+    // Test when packets queue is empty
+    m_packets_queue.GetSummaryVector (summary_vector);
+    NS_TEST_EXPECT_MSG_EQ (summary_vector.size (), 0u, "Summary vector must be empty.");
+
+    // New entry expires at second 10
+    DataHeader data_packet (/* Data ID */ DataIdentifier ("1.1.1.1:1"),
+                            /* Geo-temporal area */ GeoTemporalArea (TimePeriod (0, 10),
+                                                                     Area (0, 0, 100, 100)),
+                            /* Message */ "Message",
+                            /* Replicas */ 5);
+    m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.1"));
+
+    m_packets_queue.GetSummaryVector (summary_vector);
+    expected_summary_vector = {DataIdentifier ("1.1.1.1:1")};
+    NS_TEST_EXPECT_MSG_EQ (summary_vector, expected_summary_vector, "Summary vector must be the expected.");
+
+    // New entry expires at second 10
+    data_packet.SetDataIdentifier (DataIdentifier ("1.1.1.2:2"));
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (2, 10),
+                                                                Area (0, 0, 100, 100)));
+    m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.2"));
+
+    m_packets_queue.GetSummaryVector (summary_vector);
+    expected_summary_vector = {DataIdentifier ("1.1.1.1:1"), DataIdentifier ("1.1.1.2:2")};
+    NS_TEST_EXPECT_MSG_EQ (summary_vector, expected_summary_vector, "Summary vector must be the expected.");
+
+    // New entry expires at second 5
+    data_packet.SetDataIdentifier (DataIdentifier ("1.1.1.3:3"));
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (1, 5),
+                                                                Area (0, 0, 100, 100)));
+    m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.3"));
+
+    m_packets_queue.GetSummaryVector (summary_vector);
+    expected_summary_vector = {DataIdentifier ("1.1.1.1:1"), DataIdentifier ("1.1.1.2:2"),
+      DataIdentifier ("1.1.1.3:3")};
+    NS_TEST_EXPECT_MSG_EQ (summary_vector, expected_summary_vector, "Summary vector must be the expected.");
+
+    // New entry expires at second 5
+    data_packet.SetDataIdentifier (DataIdentifier ("1.1.1.4:4"));
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (0, 5),
+                                                                Area (0, 0, 100, 100)));
+    m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.4"));
+
+    m_packets_queue.GetSummaryVector (summary_vector);
+    expected_summary_vector = {DataIdentifier ("1.1.1.1:1"), DataIdentifier ("1.1.1.2:2"),
+      DataIdentifier ("1.1.1.3:3"), DataIdentifier ("1.1.1.4:4")};
+    NS_TEST_EXPECT_MSG_EQ (summary_vector, expected_summary_vector, "Summary vector must be the expected.");
+
+    // The packets queue now looks like this:
+    //     Data ID   -   Packet entry expiration time
+    //    1.1.1.1:1  -           second 10
+    //    1.1.1.2:2  -           second 10
+    //    1.1.1.3:3  -           second 5
+    //    1.1.1.4:4  -           second 5
+
+    // The following scheduled calls test:
+    //  - That GetSummaryVector () calls Purge()
+    Simulator::Schedule (Seconds (6), &PacketsQueueTest::TestGetSummaryVector_Scheduled_1, this);
+
+    Simulator::Run ();
+    Simulator::Destroy ();
+  }
+
+  void
+  TestProcessDisjointVector_Scheduled_1 ()
+  {
+    // This function is launched by the scheduler at second 20.00
+    std::set<DataIdentifier> received_summary_vector, disjoint_vector, expected_disjoint_vector;
+
+    // The packets queue now looks like this:
+    //        Data ID     -   Packet entry expiration time
+    //     1. 1. 1. 1: 1  -           second 10
+    //     9. 9. 9. 9: 9  -           second 5
+    //    10.10.10.10:10  -           second 7
+    //    11.11.11.11:11  -           second 9
+    //     1. 1. 1. 3: 3  -           second 3
+    //     1. 1. 1. 2: 2  -           second 8
+    //     1. 1. 1. 4: 4  -           second 11
+    //     1. 1. 1. 5: 5  -           second 10
+
+    // All entries are expired and a call to Purge () would remove them from the queue.
+
+    // If we call ProcessDisjointVector () when the packets queue contains all packets
+    // contained in the summary vector, even when this packets are expired, it should
+    // return an empty disjoint vector.
+
+    received_summary_vector = {DataIdentifier ("1.1.1.1:1"), DataIdentifier ("1.1.1.1:2"),
+      DataIdentifier ("1.1.1.1:3"), DataIdentifier ("1.1.1.1:4"), DataIdentifier ("1.1.1.1:5")};
+    expected_disjoint_vector.clear ();
+
+    m_packets_queue.ProcessDisjointVector (received_summary_vector, disjoint_vector);
+
+    NS_TEST_EXPECT_MSG_EQ (disjoint_vector, expected_disjoint_vector, "Disjoint vector must be the expected.");
+  }
+
+  void
+  TestProcessDisjointVector ()
+  {
+    std::set<DataIdentifier> received_summary_vector, disjoint_vector, expected_disjoint_vector;
+    m_packets_queue = PacketsQueue (false, 5);
+
+    received_summary_vector = {DataIdentifier ("1.1.1.1:1"), DataIdentifier ("1.1.1.1:2"),
+      DataIdentifier ("1.1.1.1:3"), DataIdentifier ("1.1.1.1:4"), DataIdentifier ("1.1.1.1:5")};
+
+    // Test when packets queue is empty
+    m_packets_queue.ProcessDisjointVector (received_summary_vector, disjoint_vector);
+
+    expected_disjoint_vector = std::set<DataIdentifier> (received_summary_vector);
+    NS_TEST_EXPECT_MSG_EQ (disjoint_vector, expected_disjoint_vector, "Disjoint vector must be the expected.");
+
+    // Test when 1 packet from the summary vector is present in the queue
+    // New entry expires at second 10
+    DataHeader data_packet (/* Data ID */ DataIdentifier ("1.1.1.1:1"),
+                            /* Geo-temporal area */ GeoTemporalArea (TimePeriod (0, 10),
+                                                                     Area (0, 0, 100, 100)),
+                            /* Message */ "Message",
+                            /* Replicas */ 5);
+    m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.1"));
+
+    // The packets queue now looks like this:
+    //     Data ID   -   Packet entry expiration time
+    //    1.1.1.1:1  -           second 10
+
+    m_packets_queue.ProcessDisjointVector (received_summary_vector, disjoint_vector);
+
+    expected_disjoint_vector = {DataIdentifier ("1.1.1.1:2"), DataIdentifier ("1.1.1.1:3"),
+      DataIdentifier ("1.1.1.1:4"), DataIdentifier ("1.1.1.1:5")};
+    NS_TEST_EXPECT_MSG_EQ (disjoint_vector, expected_disjoint_vector, "Disjoint vector must be the expected.");
+
+    // Add packets that won't be contained in the summary vector to the packets queue
+    {
+      // This new packet expires at second 5
+      DataHeader data_packet_1 (/* Data ID */ DataIdentifier ("9.9.9.9:9"),
+                                /* Geo-temporal area */ GeoTemporalArea (TimePeriod (0, 5),
+                                                                         Area (0, 0, 100, 100)),
+                                /* Message */ "Message",
+                                /* Replicas */ 5);
+      m_packets_queue.Enqueue (data_packet_1, Ipv4Address ("9.9.9.9"));
+
+      // This new packet expires at second 7
+      DataHeader data_packet_2 (/* Data ID */ DataIdentifier ("10.10.10.10:10"),
+                                /* Geo-temporal area */ GeoTemporalArea (TimePeriod (0, 7),
+                                                                         Area (0, 0, 100, 100)),
+                                /* Message */ "Message",
+                                /* Replicas */ 5);
+      m_packets_queue.Enqueue (data_packet_2, Ipv4Address ("10.10.10.10"));
+
+      // This new packet expires at second 9
+      DataHeader data_packet_3 (/* Data ID */ DataIdentifier ("11.11.11.11:11"),
+                                /* Geo-temporal area */ GeoTemporalArea (TimePeriod (0, 9),
+                                                                         Area (0, 0, 100, 100)),
+                                /* Message */ "Message",
+                                /* Replicas */ 5);
+      m_packets_queue.Enqueue (data_packet_3, Ipv4Address ("11.11.11.11"));
+    }
+
+    // The packets queue now looks like this:
+    //        Data ID     -   Packet entry expiration time
+    //     1. 1. 1. 1: 1  -           second 10
+    //     9. 9. 9. 9: 9  -           second 5
+    //    10.10.10.10:10  -           second 7
+    //    11.11.11.11:11  -           second 9
+
+    // Test when 1 packet from the summary vector is present in the queue among 
+    // other packets not included in the summary vector
+    m_packets_queue.ProcessDisjointVector (received_summary_vector, disjoint_vector);
+
+    expected_disjoint_vector = {DataIdentifier ("1.1.1.1:2"), DataIdentifier ("1.1.1.1:3"),
+      DataIdentifier ("1.1.1.1:4"), DataIdentifier ("1.1.1.1:5")};
+    NS_TEST_EXPECT_MSG_EQ (disjoint_vector, expected_disjoint_vector, "Disjoint vector must be the expected.");
+
+    // New entry expires at second 3
+    data_packet.SetDataIdentifier (DataIdentifier ("1.1.1.3:3"));
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (1, 3),
+                                                                Area (0, 0, 100, 100)));
+    m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.3"));
+
+    // The packets queue now looks like this:
+    //        Data ID     -   Packet entry expiration time
+    //     1. 1. 1. 1: 1  -           second 10
+    //     9. 9. 9. 9: 9  -           second 5
+    //    10.10.10.10:10  -           second 7
+    //    11.11.11.11:11  -           second 9
+    //     1. 1. 1. 3: 3  -           second 3
+
+    // Test when 2 packets from the summary vector are present in the queue among 
+    // other packets not included in the summary vector
+    m_packets_queue.ProcessDisjointVector (received_summary_vector, disjoint_vector);
+
+    expected_disjoint_vector = {DataIdentifier ("1.1.1.1:2"), DataIdentifier ("1.1.1.1:4"),
+      DataIdentifier ("1.1.1.1:5")};
+    NS_TEST_EXPECT_MSG_EQ (disjoint_vector, expected_disjoint_vector, "Disjoint vector must be the expected.");
+
+    // New entry expires at second 8
+    data_packet.SetDataIdentifier (DataIdentifier ("1.1.1.2:2"));
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (1, 8),
+                                                                Area (0, 0, 100, 100)));
+    m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.2"));
+
+    // New entry expires at second 11
+    data_packet.SetDataIdentifier (DataIdentifier ("1.1.1.4:4"));
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (1, 11),
+                                                                Area (0, 0, 100, 100)));
+    m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.4"));
+
+    // New entry expires at second 10
+    data_packet.SetDataIdentifier (DataIdentifier ("1.1.1.5:5"));
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (1, 10),
+                                                                Area (0, 0, 100, 100)));
+    m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.5"));
+
+    // The packets queue now looks like this:
+    //        Data ID     -   Packet entry expiration time
+    //     1. 1. 1. 1: 1  -           second 10
+    //     9. 9. 9. 9: 9  -           second 5
+    //    10.10.10.10:10  -           second 7
+    //    11.11.11.11:11  -           second 9
+    //     1. 1. 1. 3: 3  -           second 3
+    //     1. 1. 1. 2: 2  -           second 8
+    //     1. 1. 1. 4: 4  -           second 11
+    //     1. 1. 1. 5: 5  -           second 10
+
+    // Test when all packets from the summary vector are present in the queue among 
+    // other packets not included in the summary vector
+    m_packets_queue.ProcessDisjointVector (received_summary_vector, disjoint_vector);
+
+    expected_disjoint_vector.clear ();
+    NS_TEST_EXPECT_MSG_EQ (disjoint_vector, expected_disjoint_vector, "Disjoint vector must be the expected.");
+
+    // The following scheduled calls test:
+    //  - That ProcessDisjointVector does not call Purge()
+    Simulator::Schedule (Seconds (20), &PacketsQueueTest::TestProcessDisjointVector_Scheduled_1, this);
+
+    Simulator::Run ();
+    Simulator::Destroy ();
+  }
+
+  void
+  TestFindFunctions_Scheduled_1 ()
+  {
+    // This function is launched by the scheduler at second 6.00
+    bool found = false;
+
+    // Some packet entries already expired at second 5.0.
+    // The packets queue now looks like this:
+    //     Data ID   -   Packet entry expiration time
+    //    1.1.1.1:1  -           second 10
+    //    1.1.1.2:2  -           second 10
+
+    // The entry to be found expired at second 5, so it must not be found.
+    found = m_packets_queue.Find (DataIdentifier ("1.1.1.3:3"));
+    NS_TEST_EXPECT_MSG_EQ (found, false, "Packet queue entry 1.1.1.3:3 must not be found.");
+
+    // There should be 2 entries in the queue
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 2u, "Size of the packets queue must be 2.");
+
+    found = m_packets_queue.Find (DataIdentifier ("1.1.1.1:1"));
+    NS_TEST_EXPECT_MSG_EQ (found, true, "Packet queue entry 1.1.1.1:1 must be found.");
+
+    found = m_packets_queue.Find (DataIdentifier ("1.1.1.2:2"));
+    NS_TEST_EXPECT_MSG_EQ (found, true, "Packet queue entry 1.1.1.2:2 must be found.");
+  }
+
+  void
+  TestFindFunctions ()
+  {
+    bool found = false;
+    PacketQueueEntry entry;
+    DataIdentifier data_id;
+
+    m_packets_queue = PacketsQueue (false, 5);
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 0u, "Packets queue must be empty.");
+
+    // New entry expires at second 10
+    DataHeader data_packet (/* Data ID */ DataIdentifier ("1.1.1.1:1"),
+                            /* Geo-temporal area */ GeoTemporalArea (TimePeriod (0, 10),
+                                                                     Area (0, 0, 100, 100)),
+                            /* Message */ "Message",
+                            /* Replicas */ 5);
+    m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.1"));
+
+    // New entry expires at second 10
+    data_packet.SetDataIdentifier (DataIdentifier ("1.1.1.2:2"));
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (2, 10),
+                                                                Area (0, 0, 100, 100)));
+    m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.2"));
+
+    // New entry expires at second 5
+    data_packet.SetDataIdentifier (DataIdentifier ("1.1.1.3:3"));
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (1, 5),
+                                                                Area (0, 0, 100, 100)));
+    m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.3"));
+
+    // New entry expires at second 5
+    data_packet.SetDataIdentifier (DataIdentifier ("1.1.1.4:4"));
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (0, 5),
+                                                                Area (0, 0, 100, 100)));
+    m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.4"));
+
+    // The packets queue now looks like this:
+    //     Data ID   -   Packet entry expiration time
+    //    1.1.1.1:1  -           second 10
+    //    1.1.1.2:2  -           second 10
+    //    1.1.1.3:3  -           second 5
+    //    1.1.1.4:4  -           second 5
+
+    // Test bool Find (const DataIdentifier &, PacketQueueEntry &)
+    // - Successfully found
+    data_id = DataIdentifier (Ipv4Address ("1.1.1.1"), 1);
+    found = m_packets_queue.Find (data_id, entry);
+
+    NS_TEST_EXPECT_MSG_EQ (found, true, "Packet queue entry 1.1.1.1:1 must be found.");
+    NS_TEST_EXPECT_MSG_EQ (entry.GetDataPacketId (), data_id, "Entry must have data ID " << data_id);
+    NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetExpirationTime (), Seconds (10), MicroSeconds (1),
+                               "Packet queue entry must have 10 seconds of expiration time.");
+
+    // - Expected not found
+    data_id = DataIdentifier (Ipv4Address ("1.1.1.1"), 2);
+    found = m_packets_queue.Find (data_id, entry);
+
+    NS_TEST_EXPECT_MSG_EQ (found, false, "Packet queue entry 1.1.1.1:2 must not be found.");
+
+    // Test bool Find (const DataIdentifier &);
+    // - Successfully found
+    data_id = DataIdentifier (Ipv4Address ("1.1.1.2"), 2);
+    found = m_packets_queue.Find (data_id);
+
+    NS_TEST_EXPECT_MSG_EQ (found, true, "Packet queue entry 1.1.1.2:2 must be found.");
+
+    // - Expected not found
+    data_id = DataIdentifier (Ipv4Address ("1.1.1.2"), 1);
+    found = m_packets_queue.Find (data_id);
+
+    NS_TEST_EXPECT_MSG_EQ (found, false, "Packet queue entry 1.1.1.2:1 must not be found.");
+
+    // Test bool Find (const PacketQueueEntry &);
+    // - Successfully found
+    data_packet.SetDataIdentifier (DataIdentifier ("1.1.1.3:3"));
+    found = m_packets_queue.Find (PacketQueueEntry (data_packet));
+
+    NS_TEST_EXPECT_MSG_EQ (found, true, "Packet queue entry 1.1.1.3:3 must be found.");
+
+    // - Expected not found
+    data_packet.SetDataIdentifier (DataIdentifier ("1.1.1.4:1"));
+    found = m_packets_queue.Find (PacketQueueEntry (data_packet));
+
+    NS_TEST_EXPECT_MSG_EQ (found, false, "Packet queue entry 1.1.1.4:1 must not be found.");
+
+    // The following scheduled calls test:
+    //  - That Find calls Purge()
+    Simulator::Schedule (Seconds (6), &PacketsQueueTest::TestFindFunctions_Scheduled_1, this);
+
+    Simulator::Run ();
+    Simulator::Destroy ();
+  }
+
+  void
+  TestEnqueueFunction_Scheduled_1 ()
+  {
+    // This function is launched by the scheduler at second 16.00
+    bool enqueued, found;
+    PacketQueueEntry entry;
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 1u, "Size of the packets queue must be 1.");
+
+    // The packets queue now looks like this:
+    //     Data ID   -   Packet entry expiration time
+    //    1.1.1.5:5  -           second 17
+
+    found = m_packets_queue.Find (DataIdentifier ("1.1.1.3:3"));
+
+    NS_TEST_EXPECT_MSG_EQ (found, false, "Packet queue entry 1.1.1.3:3 must not be found.");
+
+    // The following entry to be inserted used to exist but was previously 
+    // dropped, so it is inserted as newly inserted.
+    // Successful insertion of new entry that expires at second 20
+    DataHeader data_packet (/* Data ID */ DataIdentifier ("1.1.1.3:3"),
+                            /* Geo-temporal area */ GeoTemporalArea (TimePeriod (10, 20),
+                                                                     Area (0, 0, 100, 100)),
+                            /* Message */ "Message",
+                            /* Replicas */ 5);
+    enqueued = m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.3"));
+
+    // The packets queue now looks like this:
+    //     Data ID   -   Packet entry expiration time
+    //    1.1.1.5:5  -           second 17
+    //    1.1.1.3:3  -           second 20
+
+    NS_TEST_EXPECT_MSG_EQ (enqueued, true, "Packet queue entry 1.1.1.3:3 must have been enqueued.");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 2u, "Size of the packets queue must be 2.");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.GetPacketReceptionStats ().size (), 5u,
+                           "Size of the received packets statistics must be 5.");
+
+    m_packets_queue.Find (DataIdentifier ("1.1.1.3:3"), entry);
+
+    NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetExpirationTime (), Seconds (4), MicroSeconds (1),
+                               "Packet queue entry 1.1.1.3:3 expiration time must be 4 seconds.");
+  }
+
+  void
+  TestEnqueueFunction_Scheduled_2 ()
+  {
+    // This function is launched by the scheduler at second 25.00
+    // At this point in time all entries must have expired.
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 0u, "Packets queue must be empty.");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.GetPacketReceptionStats ().size (), 5u,
+                           "Size of the received packets statistics must be 5.");
+
+    const std::map<DataIdentifier, DataPacketReceptionStats> & queue_stats
+            = m_packets_queue.GetPacketReceptionStats ();
+
+    std::map<DataIdentifier, DataPacketReceptionStats>::const_iterator stats_it;
+
+    // Check that Enqueue () logs the expected statistics (when: a new packet arrives,
+    // a duplicated packet arrives, a packet is dropped).
+
+    // Check statistics about packet 1.1.1.1:1
+    stats_it = queue_stats.find (DataIdentifier ("1.1.1.1:1"));
+
+    NS_TEST_EXPECT_MSG_EQ ((stats_it != queue_stats.end ()), true,
+                           "Stats of packet 1.1.1.1:1 must be found.");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetPacketDataIdentifier (), DataIdentifier ("1.1.1.1:1"),
+                           "Must be 1.1.1.1:1");
+    NS_TEST_EXPECT_MSG_EQ_TOL (stats_it->second.GetReceptionTime (), Seconds (0), MicroSeconds (1),
+                               "Must be second 0");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetTransmitterIpAddress (), Ipv4Address ("1.1.1.1"),
+                           "Must be 1.1.1.1");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetPacketDestinedToReceiverNode (), true,
+                           "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetPacketDropped (), false,
+                           "Must be false");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetReceivedDuplicatesCount (), 1u,
+                           "Must be 1");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetTransmittedReplicasCount (), 0u,
+                           "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetBroadcastTransmittedReplicasCount (), 0u,
+                           "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetUnicastTransmittedReplicasCount (), 0u,
+                           "Must be 0");
+
+    // Check statistics about packet 1.1.1.2:2
+    stats_it = queue_stats.find (DataIdentifier ("1.1.1.2:2"));
+
+    NS_TEST_EXPECT_MSG_EQ ((stats_it != queue_stats.end ()), true,
+                           "Stats of packet 1.1.1.2:2 must be found.");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetPacketDataIdentifier (), DataIdentifier ("1.1.1.2:2"),
+                           "Must be 1.1.1.2:2");
+    NS_TEST_EXPECT_MSG_EQ_TOL (stats_it->second.GetReceptionTime (), Seconds (0), MicroSeconds (1),
+                               "Must be second 0");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetTransmitterIpAddress (), Ipv4Address ("1.1.1.2"),
+                           "Must be 1.1.1.2");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetPacketDestinedToReceiverNode (), true,
+                           "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetPacketDropped (), false,
+                           "Must be false");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetReceivedDuplicatesCount (), 2u,
+                           "Must be 2");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetTransmittedReplicasCount (), 0u,
+                           "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetBroadcastTransmittedReplicasCount (), 0u,
+                           "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetUnicastTransmittedReplicasCount (), 0u,
+                           "Must be 0");
+
+    // Check statistics about packet 1.1.1.3:3
+    stats_it = queue_stats.find (DataIdentifier ("1.1.1.3:3"));
+
+    NS_TEST_EXPECT_MSG_EQ ((stats_it != queue_stats.end ()), true,
+                           "Stats of packet 1.1.1.3:3 must be found.");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetPacketDataIdentifier (), DataIdentifier ("1.1.1.3:3"),
+                           "Must be 1.1.1.3:3");
+    NS_TEST_EXPECT_MSG_EQ_TOL (stats_it->second.GetReceptionTime (), Seconds (16), MicroSeconds (1),
+                               "Must be second 16");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetTransmitterIpAddress (), Ipv4Address ("1.1.1.3"),
+                           "Must be 1.1.1.3");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetPacketDestinedToReceiverNode (), true,
+                           "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetPacketDropped (), false,
+                           "Must be false");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetReceivedDuplicatesCount (), 0u,
+                           "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetTransmittedReplicasCount (), 0u,
+                           "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetBroadcastTransmittedReplicasCount (), 0u,
+                           "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetUnicastTransmittedReplicasCount (), 0u,
+                           "Must be 0");
+
+    // Check statistics about packet 1.1.1.4:4
+    stats_it = queue_stats.find (DataIdentifier ("1.1.1.4:4"));
+
+    NS_TEST_EXPECT_MSG_EQ ((stats_it != queue_stats.end ()), true,
+                           "Stats of packet 1.1.1.4:4 must be found.");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetPacketDataIdentifier (), DataIdentifier ("1.1.1.4:4"),
+                           "Must be 1.1.1.4:4");
+    NS_TEST_EXPECT_MSG_EQ_TOL (stats_it->second.GetReceptionTime (), Seconds (0), MicroSeconds (1),
+                               "Must be second 0");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetTransmitterIpAddress (), Ipv4Address ("1.1.1.4"),
+                           "Must be 1.1.1.4");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetPacketDestinedToReceiverNode (), true,
+                           "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetPacketDropped (), true,
+                           "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetReceivedDuplicatesCount (), 0u,
+                           "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetTransmittedReplicasCount (), 0u,
+                           "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetBroadcastTransmittedReplicasCount (), 0u,
+                           "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetUnicastTransmittedReplicasCount (), 0u,
+                           "Must be 0");
+
+    // Check statistics about packet 1.1.1.5:5
+    stats_it = queue_stats.find (DataIdentifier ("1.1.1.5:5"));
+
+    NS_TEST_EXPECT_MSG_EQ ((stats_it != queue_stats.end ()), true,
+                           "Stats of packet 1.1.1.5:5 must be found.");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetPacketDataIdentifier (), DataIdentifier ("1.1.1.5:5"),
+                           "Must be 1.1.1.5:5");
+    NS_TEST_EXPECT_MSG_EQ_TOL (stats_it->second.GetReceptionTime (), Seconds (0), MicroSeconds (1),
+                               "Must be second 0");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetTransmitterIpAddress (), Ipv4Address ("1.1.1.5"),
+                           "Must be 1.1.1.5");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetPacketDestinedToReceiverNode (), true,
+                           "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetPacketDropped (), false,
+                           "Must be false");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetReceivedDuplicatesCount (), 0u,
+                           "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetTransmittedReplicasCount (), 0u,
+                           "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetBroadcastTransmittedReplicasCount (), 0u,
+                           "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetUnicastTransmittedReplicasCount (), 0u,
+                           "Must be 0");
+  }
+
+  void
+  TestEnqueueFunction ()
+  {
+    m_packets_queue = PacketsQueue (false, 3);
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 0u, "Packets queue must be empty.");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.GetPacketReceptionStats ().empty (), true,
+                           "Size of the received packets statistics must be empty.");
+
+    bool enqueued, found;
+    PacketQueueEntry entry;
+
+    // Successful insertion of new entry that expires at second 10
+    DataHeader data_packet (/* Data ID */ DataIdentifier ("1.1.1.1:1"),
+                            /* Geo-temporal area */ GeoTemporalArea (TimePeriod (0, 10),
+                                                                     Area (0, 0, 100, 100)),
+                            /* Message */ "Message",
+                            /* Replicas */ 5);
+    enqueued = m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.1"));
+
+    // The packets queue now looks like this:
+    //     Data ID   -   Packet entry expiration time
+    //    1.1.1.1:1  -           second 10
+
+    NS_TEST_EXPECT_MSG_EQ (enqueued, true, "Packet queue entry 1.1.1.1:1 must have been enqueued.");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 1u, "Size of the packets queue must be 1.");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.GetPacketReceptionStats ().size (), 1u,
+                           "Size of the received packets statistics must be 1.");
+
+    m_packets_queue.Find (DataIdentifier ("1.1.1.1:1"), entry);
+
+    NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetExpirationTime (), Seconds (10), MicroSeconds (1),
+                               "Packet queue entry 1.1.1.1:1 expiration time must be 10 seconds.");
+
+    // Expected failure of already inserted entry
+    enqueued = m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.1"));
+
+    NS_TEST_EXPECT_MSG_EQ (enqueued, false, "Packet queue entry 1.1.1.1:1 must have not been enqueued.");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 1u, "Size of the packets queue must be 1.");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.GetPacketReceptionStats ().size (), 1u,
+                           "Size of the received packets statistics must be 1.");
+
+    // Successful insertion of new entry that expires at second 15
+    data_packet.SetDataIdentifier (DataIdentifier ("1.1.1.2:2"));
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (3, 15),
+                                                                Area (0, 0, 100, 100)));
+    enqueued = m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.2"));
+
+    // The packets queue now looks like this:
+    //     Data ID   -   Packet entry expiration time
+    //    1.1.1.1:1  -           second 10
+    //    1.1.1.2:2  -           second 15
+
+    NS_TEST_EXPECT_MSG_EQ (enqueued, true, "Packet queue entry 1.1.1.2:2 must have been enqueued.");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 2u, "Size of the packets queue must be 2.");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.GetPacketReceptionStats ().size (), 2u,
+                           "Size of the received packets statistics must be 2.");
+
+    m_packets_queue.Find (DataIdentifier ("1.1.1.2:2"), entry);
+
+    NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetExpirationTime (), Seconds (15), MicroSeconds (1),
+                               "Packet queue entry 1.1.1.2:2 expiration time must be 15 seconds.");
+
+    // Expected failure of already inserted entry
+    // We execute twice the Enqueue call to count 2 received duplicates.
+    enqueued = m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.2"));
+    enqueued = m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.2")); // Not a accidentally duplicated line
+
+    NS_TEST_EXPECT_MSG_EQ (enqueued, false, "Packet queue entry 1.1.1.2:2 must have not been enqueued.");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 2u, "Size of the packets queue must be 2.");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.GetPacketReceptionStats ().size (), 2u,
+                           "Size of the received packets statistics must be 2.");
+
+    // Successful insertion of new entry that expires at second 5
+    data_packet.SetDataIdentifier (DataIdentifier ("1.1.1.3:3"));
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (1, 5),
+                                                                Area (0, 0, 100, 100)));
+    enqueued = m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.3"));
+
+    // The packets queue now looks like this:
+    //     Data ID   -   Packet entry expiration time
+    //    1.1.1.1:1  -           second 10
+    //    1.1.1.2:2  -           second 15
+    //    1.1.1.3:3  -           second 5
+
+    NS_TEST_EXPECT_MSG_EQ (enqueued, true, "Packet queue entry 1.1.1.3:3 must have been enqueued.");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 3u, "Size of the packets queue must be 3.");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.GetPacketReceptionStats ().size (), 3u,
+                           "Size of the received packets statistics must be 3.");
+
+    m_packets_queue.Find (DataIdentifier ("1.1.1.3:3"), entry);
+
+    NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetExpirationTime (), Seconds (5), MicroSeconds (1),
+                               "Packet queue entry 1.1.1.3:3 expiration time must be 5 seconds.");
+
+    // Test that when the queue is full the oldest packet is dropped and the new
+    // entry is successfully inserted.
+    // This new packet expires at second 9.
+    // Packet 1.1.1.3:3 is dropped.
+    data_packet.SetDataIdentifier (DataIdentifier ("1.1.1.4:4"));
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (1, 9),
+                                                                Area (0, 0, 100, 100)));
+    enqueued = m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.4"));
+
+    // The packets queue now looks like this:
+    //     Data ID   -   Packet entry expiration time
+    //    1.1.1.1:1  -           second 10
+    //    1.1.1.2:2  -           second 15
+    //    1.1.1.4:4  -           second 09
+
+    NS_TEST_EXPECT_MSG_EQ (enqueued, true, "Packet queue entry 1.1.1.4:4 must have been enqueued.");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 3u, "Size of the packets queue must be 3.");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.GetPacketReceptionStats ().size (), 4u,
+                           "Size of the received packets statistics must be 4.");
+
+    m_packets_queue.Find (DataIdentifier ("1.1.1.4:4"), entry);
+
+    NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetExpirationTime (), Seconds (9), MicroSeconds (1),
+                               "Packet queue entry 1.1.1.4:4 expiration time must be 9 seconds.");
+
+    found = m_packets_queue.Find (DataIdentifier ("1.1.1.3:3"));
+
+    NS_TEST_EXPECT_MSG_EQ (found, false, "Packet queue entry 1.1.1.3:3 must not be found.");
+
+    // Insert another packet entry into the already full queue.
+    // This new packet expires at second 17.
+    // Packet 1.1.1.4:4 is dropped.
+    data_packet.SetDataIdentifier (DataIdentifier ("1.1.1.5:5"));
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (1, 17),
+                                                                Area (0, 0, 100, 100)));
+    enqueued = m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.5"));
+
+    // The packets queue now looks like this:
+    //     Data ID   -   Packet entry expiration time
+    //    1.1.1.1:1  -           second 10
+    //    1.1.1.2:2  -           second 15
+    //    1.1.1.5:5  -           second 17
+
+    NS_TEST_EXPECT_MSG_EQ (enqueued, true, "Packet queue entry 1.1.1.5:5 must have been enqueued.");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 3u, "Size of the packets queue must be 3.");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.GetPacketReceptionStats ().size (), 5u,
+                           "Size of the received packets statistics must be 5.");
+
+    m_packets_queue.Find (DataIdentifier ("1.1.1.5:5"), entry);
+
+    NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetExpirationTime (), Seconds (17), MicroSeconds (1),
+                               "Packet queue entry 1.1.1.5:5 expiration time must be 17 seconds.");
+
+    found = m_packets_queue.Find (DataIdentifier ("1.1.1.4:4"));
+
+    NS_TEST_EXPECT_MSG_EQ (found, false, "Packet queue entry 1.1.1.4:4 must not be found.");
+
+    // The following scheduled call test:
+    //  - That Enqueue calls Purge()
+    Simulator::Schedule (Seconds (16), &PacketsQueueTest::TestEnqueueFunction_Scheduled_1, this);
+
+    // The following scheduled call test:
+    //  - That Enqueue logs the statistics
+    Simulator::Schedule (Seconds (20), &PacketsQueueTest::TestEnqueueFunction_Scheduled_2, this);
+
+    Simulator::Run ();
+    Simulator::Destroy ();
+  }
+
+  void
+  TestDiscountPacketReplicasToForward_NormalMode ()
+  {
+    bool discounted;
+    uint32_t replicas;
+    PacketQueueEntry packet_entry;
+
+    // Test that it returns false for a non-existent data packet entry
+    m_packets_queue = PacketsQueue (false, 1u);
+    discounted = m_packets_queue.DiscountPacketReplicasToForward (DataIdentifier ("1.1.1.1:1"), replicas);
+
+    DataHeader data_packet (/* Data ID */ DataIdentifier ("1.1.1.1:1"),
+                            /* Geo-temporal area */ GeoTemporalArea (TimePeriod (0, 10),
+                                                                     Area (0, 0, 100, 100)),
+                            /* Message */ "Message",
+                            /* Replicas */ 1u);
+    m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.1"));
+
+    m_packets_queue.Find (DataIdentifier ("1.1.1.1:1"), packet_entry);
+    NS_TEST_EXPECT_MSG_EQ (packet_entry.GetReplicasCounter (), 1u, "Packet entry must have 1 replica(s).");
+
+    // Test that packets with only 1 replica remaining don't get its replicas discounted
+    replicas = 98761u; // We test that this value is not modified.
+    discounted = true; // This value must be modified
+
+    discounted = m_packets_queue.DiscountPacketReplicasToForward (DataIdentifier ("1.1.1.1:1"), replicas);
+
+    NS_TEST_EXPECT_MSG_EQ (discounted, false, "Replicas must not be discounted.");
+    NS_TEST_EXPECT_MSG_EQ (replicas, 98761u, "Replicas to forward must not be modified.");
+
+    m_packets_queue.Find (DataIdentifier ("1.1.1.1:1"), packet_entry);
+    NS_TEST_EXPECT_MSG_EQ (packet_entry.GetReplicasCounter (), 1u, "Packet entry must have 1 replica(s).");
+
+    // Test that only 1 replica is discounted at a time, until there are no more
+    // replicas available
+    for (uint32_t starting_replicas = 2u; starting_replicas < 20u; ++starting_replicas)
+      {
+        m_packets_queue = PacketsQueue (false, 1u);
+
+        data_packet.SetReplicasToForward (starting_replicas);
+        m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.1"));
+
+        m_packets_queue.Find (DataIdentifier ("1.1.1.1:1"), packet_entry);
+        NS_TEST_EXPECT_MSG_EQ (packet_entry.GetReplicasCounter (), starting_replicas,
+                               "Packet entry must have " << starting_replicas << " replica(s).");
+
+        // 'starting_replicas' - 1 replicas must be discounted
+        for (uint8_t i = 0u; i < starting_replicas - 1u; ++i)
+          {
+            replicas = 98761u; // This value must be modified.
+            discounted = false; // This value must be modified
+
+            discounted = m_packets_queue.DiscountPacketReplicasToForward (DataIdentifier ("1.1.1.1:1"), replicas);
+
+            NS_TEST_EXPECT_MSG_EQ (discounted, true, "Replicas must be discounted.");
+            NS_TEST_EXPECT_MSG_EQ (replicas, 1u, "Replicas to forward must be 1.");
+
+            m_packets_queue.Find (DataIdentifier ("1.1.1.1:1"), packet_entry);
+            NS_TEST_EXPECT_MSG_EQ (packet_entry.GetReplicasCounter (), starting_replicas - 1u - i,
+                                   "Packet entry must have " << starting_replicas - 1u - i << " replica(s).");
+          }
+
+        // No more replicas can be discounted
+        for (uint8_t i = 0u; i < 5u; ++i)
+          {
+            replicas = 98761u; // This value must not be modified.
+            discounted = true; // This value must be modified
+
+            discounted = m_packets_queue.DiscountPacketReplicasToForward (DataIdentifier ("1.1.1.1:1"), replicas);
+
+            NS_TEST_EXPECT_MSG_EQ (discounted, false, "Replicas must not be discounted.");
+            NS_TEST_EXPECT_MSG_EQ (replicas, 98761u, "Replicas to forward must not be modified.");
+          }
+
+        m_packets_queue.Find (DataIdentifier ("1.1.1.1:1"), packet_entry);
+        NS_TEST_EXPECT_MSG_EQ (packet_entry.GetReplicasCounter (), 1u,
+                               "Packet entry must have 1 replica(s).");
+      }
+  }
+
+  void
+  TestDiscountPacketReplicasToForward_BinaryMode ()
+  {
+    bool discounted;
+    uint32_t replicas;
+    PacketQueueEntry packet_entry;
+
+    // Test that it returns false for a non-existent data packet entry
+    m_packets_queue = PacketsQueue (true, 1u);
+    discounted = m_packets_queue.DiscountPacketReplicasToForward (DataIdentifier ("1.1.1.1:1"), replicas);
+
+    DataHeader data_packet (/* Data ID */ DataIdentifier ("1.1.1.1:1"),
+                            /* Geo-temporal area */ GeoTemporalArea (TimePeriod (0, 10),
+                                                                     Area (0, 0, 100, 100)),
+                            /* Message */ "Message",
+                            /* Replicas */ 1u);
+    m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.1"));
+
+    m_packets_queue.Find (DataIdentifier ("1.1.1.1:1"), packet_entry);
+    NS_TEST_EXPECT_MSG_EQ (packet_entry.GetReplicasCounter (), 1u, "Packet entry must have 1 replica(s).");
+
+    // Test that packets with only 1 replica remaining don't get its replicas discounted
+    replicas = 98761u; // We test that this value is not modified.
+    discounted = true; // This value must be modified
+
+    discounted = m_packets_queue.DiscountPacketReplicasToForward (DataIdentifier ("1.1.1.1:1"), replicas);
+
+    NS_TEST_EXPECT_MSG_EQ (discounted, false, "Replicas must not be discounted.");
+    NS_TEST_EXPECT_MSG_EQ (replicas, 98761u, "Replicas to forward must not be modified.");
+
+    m_packets_queue.Find (DataIdentifier ("1.1.1.1:1"), packet_entry);
+    NS_TEST_EXPECT_MSG_EQ (packet_entry.GetReplicasCounter (), 1u, "Packet entry must have 1 replica(s).");
+
+    // Test that only 1 replica is discounted at a time, until there are no more
+    // replicas available
+    uint8_t discounts_counter;
+    uint32_t expected_replicas_to_keep, expected_replicas_to_forward;
+
+    for (uint32_t starting_replicas = 2u; starting_replicas <= 128u; ++starting_replicas)
+      {
+        m_packets_queue = PacketsQueue (true, 1u);
+
+        data_packet.SetReplicasToForward (starting_replicas);
+        m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.1"));
+
+        m_packets_queue.Find (DataIdentifier ("1.1.1.1:1"), packet_entry);
+        NS_TEST_EXPECT_MSG_EQ (packet_entry.GetReplicasCounter (), starting_replicas,
+                               "Packet entry must have " << starting_replicas << " replica(s).");
+
+        discounts_counter = (uint8_t) std::ceil (std::log2 (starting_replicas));
+        expected_replicas_to_keep = starting_replicas;
+        expected_replicas_to_forward = starting_replicas;
+
+        // The packet must be discounted maximum 'discounts_counter' times
+        for (uint8_t i = 0u; i < discounts_counter; ++i)
+          {
+            m_packets_queue.Find (DataIdentifier ("1.1.1.1:1"), packet_entry);
+
+            expected_replicas_to_keep = (uint32_t) std::ceil ((double) packet_entry.GetReplicasCounter () / 2.0);
+            expected_replicas_to_forward = (uint32_t) std::floor ((double) packet_entry.GetReplicasCounter () / 2.0);
+
+            NS_TEST_EXPECT_MSG_EQ (expected_replicas_to_keep + expected_replicas_to_forward, packet_entry.GetReplicasCounter (),
+                                   "Must be equal.");
+
+            replicas = 98761u; // This value must be modified.
+            discounted = false; // This value must be modified
+
+            discounted = m_packets_queue.DiscountPacketReplicasToForward (DataIdentifier ("1.1.1.1:1"), replicas);
+
+            NS_TEST_EXPECT_MSG_EQ (discounted, true, "Replicas must be discounted.");
+            NS_TEST_EXPECT_MSG_EQ (replicas, expected_replicas_to_forward,
+                                   "Replicas to forward must be " << expected_replicas_to_forward);
+
+            m_packets_queue.Find (DataIdentifier ("1.1.1.1:1"), packet_entry);
+            NS_TEST_EXPECT_MSG_EQ (packet_entry.GetReplicasCounter (), expected_replicas_to_keep,
+                                   "Packet entry must have " << expected_replicas_to_keep << " replica(s).");
+          }
+
+        // No more replicas can be discounted
+        for (uint8_t i = 0u; i < 5u; ++i)
+          {
+            replicas = 98761u; // This value must not be modified.
+            discounted = true; // This value must be modified
+
+            discounted = m_packets_queue.DiscountPacketReplicasToForward (DataIdentifier ("1.1.1.1:1"), replicas);
+
+            NS_TEST_EXPECT_MSG_EQ (discounted, false, "Replicas must not be discounted.");
+            NS_TEST_EXPECT_MSG_EQ (replicas, 98761u, "Replicas to forward must not be modified.");
+          }
+
+        m_packets_queue.Find (DataIdentifier ("1.1.1.1:1"), packet_entry);
+        NS_TEST_EXPECT_MSG_EQ (packet_entry.GetReplicasCounter (), 1u,
+                               "Packet entry must have 1 replica(s).");
+      }
+  }
+
+  void
+  TestStatistics_Scheduled_1 ()
+  {
+    // This function is launched by the scheduler at second 25.00
+    m_packets_queue.LogNewPacketReceived (DataIdentifier ("1.1.1.2:2"), Ipv4Address ("1.1.1.2"));
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.GetPacketReceptionStats ().size (), 2u,
+                           "Size of the received packets statistics must be 2.");
+
+    const std::map<DataIdentifier, DataPacketReceptionStats> & queue_stats
+            = m_packets_queue.GetPacketReceptionStats ();
+
+    std::map<DataIdentifier, DataPacketReceptionStats>::const_iterator stats_it
+            = queue_stats.find (DataIdentifier ("1.1.1.2:2"));
+
+    NS_TEST_EXPECT_MSG_EQ ((stats_it != queue_stats.end ()), true,
+                           "Stats of packet 1.1.1.2:2 must be found.");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetPacketDataIdentifier (), DataIdentifier ("1.1.1.2:2"),
+                           "Must be 1.1.1.2:2");
+    NS_TEST_EXPECT_MSG_EQ_TOL (stats_it->second.GetReceptionTime (), Seconds (25), MicroSeconds (1),
+                               "Must be second 25");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetTransmitterIpAddress (), Ipv4Address ("1.1.1.2"),
+                           "Must be 1.1.1.2");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetPacketDestinedToReceiverNode (), true,
+                           "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetPacketDropped (), false,
+                           "Must be false");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetReceivedDuplicatesCount (), 0u,
+                           "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetTransmittedReplicasCount (), 0u,
+                           "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetBroadcastTransmittedReplicasCount (), 0u,
+                           "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetUnicastTransmittedReplicasCount (), 0u,
+                           "Must be 0");
+  }
+
+  void
+  TestStatistics ()
+  {
+    m_packets_queue = PacketsQueue (true, 1u);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.GetPacketReceptionStats ().size (), 0u,
+                           "Size of the received packets statistics must be 0.");
+
+    // Test the logging of non-existing data packets does nothing
+    m_packets_queue.LogPacketTransmitted (DataIdentifier ("1.1.1.1:1"));
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.GetPacketReceptionStats ().size (), 0u,
+                           "Size of the received packets statistics must be 0.");
+
+    m_packets_queue.LogDuplicatedPacketReceived (DataIdentifier ("1.1.1.1:1"));
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.GetPacketReceptionStats ().size (), 0u,
+                           "Size of the received packets statistics must be 0.");
+
+    m_packets_queue.LogPacketDropped (DataIdentifier ("1.1.1.1:1"));
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.GetPacketReceptionStats ().size (), 0u,
+                           "Size of the received packets statistics must be 0.");
+
+    // Test log new packet received
+    m_packets_queue.LogNewPacketReceived (DataIdentifier ("1.1.1.1:1"), Ipv4Address ("1.1.1.1"));
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.GetPacketReceptionStats ().size (), 1u,
+                           "Size of the received packets statistics must be 1.");
+
+    const std::map<DataIdentifier, DataPacketReceptionStats> & queue_stats
+            = m_packets_queue.GetPacketReceptionStats ();
+
+    std::map<DataIdentifier, DataPacketReceptionStats>::const_iterator stats_it
+            = queue_stats.find (DataIdentifier ("1.1.1.1:1"));
+
+    NS_TEST_EXPECT_MSG_EQ ((stats_it != queue_stats.end ()), true,
+                           "Stats of packet 1.1.1.1:1 must be found.");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetPacketDataIdentifier (), DataIdentifier ("1.1.1.1:1"),
+                           "Must be 1.1.1.1:1");
+    NS_TEST_EXPECT_MSG_EQ_TOL (stats_it->second.GetReceptionTime (), Seconds (0), MicroSeconds (1),
+                               "Must be second 0");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetTransmitterIpAddress (), Ipv4Address ("1.1.1.1"),
+                           "Must be 1.1.1.1");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetPacketDestinedToReceiverNode (), true,
+                           "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetPacketDropped (), false,
+                           "Must be false");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetReceivedDuplicatesCount (), 0u,
+                           "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetTransmittedReplicasCount (), 0u,
+                           "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetBroadcastTransmittedReplicasCount (), 0u,
+                           "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetUnicastTransmittedReplicasCount (), 0u,
+                           "Must be 0");
+
+    // Test log duplicated packet received
+    for (uint32_t i = 0u; i < 13u; ++i)
+      {
+        m_packets_queue.LogDuplicatedPacketReceived (DataIdentifier ("1.1.1.1:1"));
+      }
+
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetPacketDataIdentifier (), DataIdentifier ("1.1.1.1:1"),
+                           "Must be 1.1.1.1:1");
+    NS_TEST_EXPECT_MSG_EQ_TOL (stats_it->second.GetReceptionTime (), Seconds (0), MicroSeconds (1),
+                               "Must be second 0");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetTransmitterIpAddress (), Ipv4Address ("1.1.1.1"),
+                           "Must be 1.1.1.1");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetPacketDestinedToReceiverNode (), true,
+                           "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetPacketDropped (), false,
+                           "Must be false");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetReceivedDuplicatesCount (), 13u,
+                           "Must be 13");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetTransmittedReplicasCount (), 0u,
+                           "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetBroadcastTransmittedReplicasCount (), 0u,
+                           "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetUnicastTransmittedReplicasCount (), 0u,
+                           "Must be 0");
+
+    // Test log packet transmitted
+
+    for (uint32_t i = 0u; i < 17u; ++i)
+      {
+        m_packets_queue.LogPacketTransmitted (DataIdentifier ("1.1.1.1:1"));
+      }
+
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetPacketDataIdentifier (), DataIdentifier ("1.1.1.1:1"),
+                           "Must be 1.1.1.1:1");
+    NS_TEST_EXPECT_MSG_EQ_TOL (stats_it->second.GetReceptionTime (), Seconds (0), MicroSeconds (1),
+                               "Must be second 0");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetTransmitterIpAddress (), Ipv4Address ("1.1.1.1"),
+                           "Must be 1.1.1.1");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetPacketDestinedToReceiverNode (), true,
+                           "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetPacketDropped (), false,
+                           "Must be false");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetReceivedDuplicatesCount (), 13u,
+                           "Must be 13");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetTransmittedReplicasCount (), 17u,
+                           "Must be 17");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetBroadcastTransmittedReplicasCount (), 0u,
+                           "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetUnicastTransmittedReplicasCount (), 17u,
+                           "Must be 17");
+
+    // Test log packets dropped
+    m_packets_queue.LogPacketDropped (DataIdentifier ("1.1.1.1:1"));
+
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetPacketDataIdentifier (), DataIdentifier ("1.1.1.1:1"),
+                           "Must be 1.1.1.1:1");
+    NS_TEST_EXPECT_MSG_EQ_TOL (stats_it->second.GetReceptionTime (), Seconds (0), MicroSeconds (1),
+                               "Must be second 0");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetTransmitterIpAddress (), Ipv4Address ("1.1.1.1"),
+                           "Must be 1.1.1.1");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetPacketDestinedToReceiverNode (), true,
+                           "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetPacketDropped (), true,
+                           "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetReceivedDuplicatesCount (), 13u,
+                           "Must be 13");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetTransmittedReplicasCount (), 17u,
+                           "Must be 17");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetBroadcastTransmittedReplicasCount (), 0u,
+                           "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetUnicastTransmittedReplicasCount (), 17u,
+                           "Must be 17");
+
+    for (uint32_t i = 0u; i < 7u; ++i)
+      {
+        m_packets_queue.LogPacketDropped (DataIdentifier ("1.1.1.1:1"));
+      }
+
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetPacketDataIdentifier (), DataIdentifier ("1.1.1.1:1"),
+                           "Must be 1.1.1.1:1");
+    NS_TEST_EXPECT_MSG_EQ_TOL (stats_it->second.GetReceptionTime (), Seconds (0), MicroSeconds (1),
+                               "Must be second 0");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetTransmitterIpAddress (), Ipv4Address ("1.1.1.1"),
+                           "Must be 1.1.1.1");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetPacketDestinedToReceiverNode (), true,
+                           "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetPacketDropped (), true,
+                           "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetReceivedDuplicatesCount (), 13u,
+                           "Must be 13");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetTransmittedReplicasCount (), 17u,
+                           "Must be 17");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetBroadcastTransmittedReplicasCount (), 0u,
+                           "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetUnicastTransmittedReplicasCount (), 17u,
+                           "Must be 17");
+
+    // Test that data packet reception stats object is overwritten correctly
+    {
+      char buffer[25];
+      for (uint32_t i = 0u; i < 23u; ++i)
+        {
+          std::sprintf (buffer, "1.1.1.%u", (i + 100u));
+          m_packets_queue.LogNewPacketReceived (DataIdentifier ("1.1.1.1:1"), Ipv4Address (buffer));
+        }
+    }
+
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetPacketDataIdentifier (), DataIdentifier ("1.1.1.1:1"),
+                           "Must be 1.1.1.1:1");
+    NS_TEST_EXPECT_MSG_EQ_TOL (stats_it->second.GetReceptionTime (), Seconds (0), MicroSeconds (1),
+                               "Must be second 0");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetTransmitterIpAddress (), Ipv4Address ("1.1.1.122"),
+                           "Must be 1.1.1.23");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetPacketDestinedToReceiverNode (), true,
+                           "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetPacketDropped (), false,
+                           "Must be false");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetReceivedDuplicatesCount (), 0u,
+                           "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetTransmittedReplicasCount (), 0u,
+                           "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetBroadcastTransmittedReplicasCount (), 0u,
+                           "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (stats_it->second.GetUnicastTransmittedReplicasCount (), 0u,
+                           "Must be 0");
+
+    Simulator::Schedule (Seconds (25), &PacketsQueueTest::TestStatistics_Scheduled_1, this);
+
+    Simulator::Run ();
+    Simulator::Destroy ();
+  }
+
+  void
+  TestToStringFunction ()
+  {
+    char buffer[100];
+
+    m_packets_queue = PacketsQueue (false, 1u);
+
+    std::string expected_str = "Packets queue has 0 / 1 packet entries";
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.ToString (), expected_str,
+                           "Expected string: " + expected_str);
+
+    m_packets_queue.SetMaxLength (17u);
+
+    expected_str = "Packets queue has 0 / 17 packet entries";
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.ToString (), expected_str,
+                           "Expected string: " + expected_str);
+
+    DataHeader data_packet (/* Data ID */ DataIdentifier ("1.1.1.1:1"),
+                            /* Geo-temporal area */ GeoTemporalArea (TimePeriod (0, 10),
+                                                                     Area (0, 0, 100, 100)),
+                            /* Message */ "Message",
+                            /* Replicas */ 1u);
+    m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.1"));
+
+    expected_str = "Packets queue has 1 / 17 packet entries";
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.ToString (), expected_str,
+                           "Expected string: " + expected_str);
+
+    for (uint32_t i = 0u; i < 16u; ++i)
+      {
+        std::sprintf (buffer, "1.1.2.%u:%u", i, i);
+        data_packet.SetDataIdentifier (DataIdentifier (std::string (buffer)));
+
+        m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.1"));
+
+        std::sprintf (buffer, "Packets queue has %u / 17 packet entries", (i + 2));
+        expected_str = std::string (buffer);
+        NS_TEST_EXPECT_MSG_EQ (m_packets_queue.ToString (), expected_str,
+                               "Expected string: " + expected_str);
+      }
+
+    for (uint32_t i = 0u; i < 100u; ++i)
+      {
+        std::sprintf (buffer, "1.1.3.%u:%u", i, i);
+        data_packet.SetDataIdentifier (DataIdentifier (std::string (buffer)));
+
+        m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.3"));
+      }
+
+    expected_str = "Packets queue has 17 / 17 packet entries";
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.ToString (), expected_str,
+                           "Expected string: " + expected_str);
+  }
+
+  void
+  DoRun () override
+  {
+    TestConstructors ();
+    TestGettersSetters ();
+    TestGetSize ();
+    TestGetSummaryVector ();
+    TestFindFunctions ();
+    TestEnqueueFunction ();
+    TestDiscountPacketReplicasToForward_NormalMode ();
+    TestDiscountPacketReplicasToForward_BinaryMode ();
+    TestStatistics ();
+    TestToStringFunction ();
+  }
+};
+
+
+// =============================================================================
 //                       GeoTemporalSprayAndWaitTestSuite
 // =============================================================================
 
@@ -1453,6 +3019,8 @@ public:
     AddTestCase (new DataHeaderTest, TestCase::QUICK);
     AddTestCase (new NeighborEntryTest, TestCase::QUICK);
     AddTestCase (new NeighborsTableTest, TestCase::QUICK);
+    AddTestCase (new PacketQueueEntryTest, TestCase::QUICK);
+    AddTestCase (new PacketsQueueTest, TestCase::QUICK);
   }
 };
 
