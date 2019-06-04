@@ -9,6 +9,7 @@
 def build(bld):
     module = bld.create_ns3_module('geotemporal-spray-and-wait', ['internet', 'wifi'])
     module.source = [
+        'model/geotemporal-spray-and-wait-duplicate-detector.cc',
         'model/geotemporal-spray-and-wait-neighbors-table.cc',
         'model/geotemporal-spray-and-wait-packets-queue.cc',
         'model/geotemporal-spray-and-wait-packets.cc',
@@ -22,6 +23,7 @@ def build(bld):
     headers = bld(features='ns3header')
     headers.module = 'geotemporal-spray-and-wait'
     headers.source = [
+        'model/geotemporal-spray-and-wait-duplicate-detector.h',
         'model/geotemporal-spray-and-wait-neighbors-table.h',
         'model/geotemporal-spray-and-wait-packets-queue.h',
         'model/geotemporal-spray-and-wait-packets.h',

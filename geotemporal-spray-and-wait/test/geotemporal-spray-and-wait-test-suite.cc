@@ -2996,6 +2996,167 @@ public:
 
 
 // =============================================================================
+//                         DuplicatedPacketDetectorTest
+// =============================================================================
+
+/**
+ * DuplicatedPacketDetector for the detector of duplicated data packets test suite.
+ * 
+ * \ingroup tests
+ * \ingroup geotemporal-spray-and-wait-test
+ */
+class DuplicatedPacketDetectorTest : public TestCasePlus
+{
+public:
+
+  DuplicatedPacketDetector m_detector;
+
+  DuplicatedPacketDetectorTest () : TestCasePlus ("DuplicatedPacketDetector"), m_detector () { }
+
+  void
+  TestConstructors ()
+  {
+    // Default constructor
+
+    DuplicatedPacketDetector d1;
+
+    NS_TEST_EXPECT_MSG_EQ_TOL (d1.GetExpirationTime (), Seconds (5), MicroSeconds (1), "Must be 5 seconds");
+    NS_TEST_EXPECT_MSG_EQ (d1.Size (), 0u, "Must be 0.");
+
+    DuplicatedPacketDetector d2 (Days (7));
+
+    NS_TEST_EXPECT_MSG_EQ_TOL (d2.GetExpirationTime (), Days (7), MicroSeconds (1), "Must be 7 days");
+    NS_TEST_EXPECT_MSG_EQ (d2.Size (), 0u, "Must be 0.");
+
+    DuplicatedPacketDetector d3 (d2);
+
+    NS_TEST_EXPECT_MSG_EQ_TOL (d3.GetExpirationTime (), Days (7), MicroSeconds (1), "Must be 7 days");
+    NS_TEST_EXPECT_MSG_EQ (d3.Size (), 0u, "Must be 0.");
+  }
+
+  void
+  TestGettersSetters ()
+  {
+    m_detector = DuplicatedPacketDetector (Seconds (13.6));
+
+    NS_TEST_EXPECT_MSG_EQ_TOL (m_detector.GetExpirationTime (), Seconds (13.6), MicroSeconds (1), "Must be 13.6 seconds");
+
+    m_detector.SetExpirationTime (Days (97.8));
+
+    NS_TEST_EXPECT_MSG_EQ_TOL (m_detector.GetExpirationTime (), Days (97.8), MicroSeconds (1), "Must be 97.8 days");
+  }
+
+  void
+  Scheduled_check_1 ()
+  {
+    // This function is launched by the scheduler at second 8.00
+
+    // Cache looks like this:
+    //   <IP - ID> tuple        Expiration time (in seconds)
+    //   1.1.1.1 - 1                       10
+    //   1.1.1.1 - 2                       10
+    //   2.2.2.2 - 1                       10
+    //   3.3.3.3 - 3                       15
+    //   4.4.4.4 - 4                       15
+    //   5.5.5.5 - 5                       15
+    //   6.6.6.6 - 6                       15
+
+    NS_TEST_EXPECT_MSG_EQ (m_detector.Size (), 7, "Expected 7 entries");
+
+    m_detector.SetExpirationTime (Seconds (5));
+
+    m_detector.IsDuplicate (Ipv4Address ("7.7.7.7"), 7u);
+
+    // Cache looks like this:
+    //   <IP - ID> tuple        Expiration time (in seconds)
+    //   1.1.1.1 - 1                       10
+    //   1.1.1.1 - 2                       10
+    //   2.2.2.2 - 1                       10
+    //   3.3.3.3 - 3                       15
+    //   4.4.4.4 - 4                       15
+    //   5.5.5.5 - 5                       15
+    //   6.6.6.6 - 6                       15
+    //   7.7.7.7 - 7                       13
+  }
+
+  void
+  Scheduled_check_2 ()
+  {
+    // This function is launched by the scheduler at second 12.00
+
+    // Cache looks like this:
+    //   <IP - ID> tuple        Expiration time (in seconds)
+    //   3.3.3.3 - 3                       15
+    //   4.4.4.4 - 4                       15
+    //   5.5.5.5 - 5                       15
+    //   6.6.6.6 - 6                       15
+    //   7.7.7.7 - 7                       13
+
+    NS_TEST_EXPECT_MSG_EQ (m_detector.Size (), 5, "Expected 5 entries");
+  }
+
+  void
+  Scheduled_check_3 ()
+  {
+    // This function is launched by the scheduler at second 20.00
+
+    // Cache looks like this:
+    //   <IP - ID> tuple        Expiration time (in seconds)
+
+    NS_TEST_EXPECT_MSG_EQ (m_detector.Size (), 0, "Expected 0 entries");
+  }
+
+  void
+  DoRun () override
+  {
+    TestConstructors ();
+    TestGettersSetters ();
+
+    m_detector = DuplicatedPacketDetector (Seconds (10));
+
+    // Test IsDuplicate ()
+    NS_TEST_EXPECT_MSG_EQ (m_detector.IsDuplicate (Ipv4Address ("1.1.1.1"), 1u),
+                           false, "Unknown IP and ID");
+    NS_TEST_EXPECT_MSG_EQ (m_detector.IsDuplicate (Ipv4Address ("1.1.1.1"), 2u),
+                           false, "Unknown ID");
+    NS_TEST_EXPECT_MSG_EQ (m_detector.IsDuplicate (Ipv4Address ("2.2.2.2"), 1u),
+                           false, "Unknown IP");
+
+    NS_TEST_EXPECT_MSG_EQ (m_detector.IsDuplicate (Ipv4Address ("1.1.1.1"), 1u),
+                           true, "Known IP and ID");
+
+    m_detector.SetExpirationTime (Seconds (15));
+
+    m_detector.IsDuplicate (Ipv4Address ("3.3.3.3"), 3u);
+    m_detector.IsDuplicate (Ipv4Address ("4.4.4.4"), 4u);
+    m_detector.IsDuplicate (Ipv4Address ("5.5.5.5"), 5u);
+    m_detector.IsDuplicate (Ipv4Address ("6.6.6.6"), 6u);
+
+    NS_TEST_EXPECT_MSG_EQ (m_detector.Size (), 7, "Expected 7 entries");
+
+    // Cache looks like this:
+    //   <IP - ID> tuple        Expiration time (in seconds)
+    //   1.1.1.1 - 1                       10
+    //   1.1.1.1 - 2                       10
+    //   2.2.2.2 - 1                       10
+    //   3.3.3.3 - 3                       15
+    //   4.4.4.4 - 4                       15
+    //   5.5.5.5 - 5                       15
+    //   6.6.6.6 - 6                       15
+
+    // The following scheduled calls test:
+    //  - That Size () calls Purge()
+    Simulator::Schedule (Seconds (8), &DuplicatedPacketDetectorTest::Scheduled_check_1, this);
+    Simulator::Schedule (Seconds (12), &DuplicatedPacketDetectorTest::Scheduled_check_2, this);
+    Simulator::Schedule (Seconds (20), &DuplicatedPacketDetectorTest::Scheduled_check_3, this);
+
+    Simulator::Run ();
+    Simulator::Destroy ();
+  }
+};
+
+
+// =============================================================================
 //                       GeoTemporalSprayAndWaitTestSuite
 // =============================================================================
 
@@ -3021,6 +3182,7 @@ public:
     AddTestCase (new NeighborsTableTest, TestCase::QUICK);
     AddTestCase (new PacketQueueEntryTest, TestCase::QUICK);
     AddTestCase (new PacketsQueueTest, TestCase::QUICK);
+    AddTestCase (new DuplicatedPacketDetectorTest, TestCase::QUICK);
   }
 };
 
