@@ -116,9 +116,7 @@ public:
   inline void
   SetExpirationTime (const TimePeriod & packet_time_period)
   {
-    m_expiration_time = Seconds (packet_time_period.GetEndTime ());
-    //    SetExpirationTime (packet_time_period.GetStartTime (),
-    //                       packet_time_period.GetDuration ());
+    m_expiration_time = packet_time_period.GetEndTime ();
   }
 
   inline uint32_t
@@ -454,6 +452,10 @@ public:
    * from the end of the time scope of the destination geo-temporal area and the
    * number of replicas to forward from the <i>replicas to forward</i> field of
    * the header.
+   * 
+   * This function purges expired packet entries before enqueueing the new 
+   * packet queue entry, so if the packet entry to be inserted does exists but 
+   * it has expired then it will be purged and inserted again.
    * 
    * @param data_header [IN] Data header of the data packet to insert.
    * @param transmitter_ip [IN] IP address of the node that transmitted the 

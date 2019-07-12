@@ -133,16 +133,20 @@ PacketsQueue::GetSummaryVector (std::set<DataIdentifier>& summary_vector)
 bool
 PacketsQueue::Find (const DataIdentifier& data_packet_id, PacketQueueEntry& entry)
 {
+  NS_LOG_FUNCTION (this << data_packet_id);
+
   Purge ();
 
   ConstIterator_t entry_it = m_packets_table.find (data_packet_id);
 
   if (entry_it == m_packets_table.end ())
     {
+      NS_LOG_DEBUG ("Packet entry " << data_packet_id << " NOT found.");
       return false;
     }
 
   entry = entry_it->second;
+  NS_LOG_DEBUG ("Packet entry " << data_packet_id << " found: " << entry);
   return true;
 }
 

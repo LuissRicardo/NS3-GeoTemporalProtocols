@@ -45,6 +45,8 @@ namespace ns3
 namespace geotemporal_spray_and_wait
 {
 
+using GeoTemporalLibrary::LibraryUtils::Vector2D;
+
 // =============================================================================
 //                                  PacketType
 // =============================================================================
@@ -58,9 +60,9 @@ namespace geotemporal_spray_and_wait
  * 
  * 1. HELLO packet: It is used to advertise the presence of a node in the network.
  * 
- * 2. REPLY packet: Once a HELLO is received, it starts the anti-entropy session.
- *    The node with smaller network ID (i.e. IP) will send a reply packet which 
- *    contains the summary vector of all the packet IDs in its buffer.
+ * 2. REPLY packet: Once a HELLO is received, the receiver node responds with
+ *    a REPLY packet that contains the list of packets that it has in memory, 
+ *    this list is called the summary vector.
  * 
  * 3. REPLY BACK (or REQUEST) packet: Once a REPLY packet is received, the 
  *    receiver node determines the disjoint packets between its buffer and the 
@@ -77,7 +79,7 @@ enum class PacketType : uint8_t
 {
   Hello = 0, //< Advertises the presence of a node.
   Reply = 5, //< Reply to a HELLO, with the summary vector of the known packets.
-  ReplyBack = 7, //!< Response to a REPLY packet. Also called REQUEST.
+  ReplyBack = 7, //< Response to a REPLY packet. Also called REQUEST.
   Data = 9 //< Actual data packet.
 };
 

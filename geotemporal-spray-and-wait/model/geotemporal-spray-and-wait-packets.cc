@@ -633,8 +633,8 @@ DataHeader::Serialize (Buffer::Iterator start) const
   start.WriteHtonU32 (y2_int);
   start.WriteHtonU32 (y2_float);
 
-  start.WriteHtonU16 (m_dest_geo_temporal_area.GetTimePeriod ().GetStartTime ());
-  start.WriteHtonU16 (m_dest_geo_temporal_area.GetDuration ());
+  start.WriteHtonU16 ((uint32_t) m_dest_geo_temporal_area.GetTimePeriod ().GetStartTime ().GetSeconds ());
+  start.WriteHtonU16 ((uint32_t) m_dest_geo_temporal_area.GetDuration ().GetSeconds ());
 
   char chars_buffer [m_message.length () + 1u];
   std::strcpy (chars_buffer, m_message.c_str ());
@@ -675,13 +675,12 @@ DataHeader::Deserialize (Buffer::Iterator start)
   double area_y2 = DecodeDoubleFromIntegers (int_part, float_part, sign_flags, AREA_Y2);
 
   // Read temporal scope's start time and duration. Then calculate end time.
-  uint16_t start_time = it.ReadNtohU16 ();
-  uint16_t duration = it.ReadNtohU16 ();
-  uint32_t end_time = TimePeriod::CalculateEndTime (start_time, duration);
+  Time start_time = Seconds (it.ReadNtohU16 ());
+  Time duration = Seconds (it.ReadNtohU16 ());
+  Time end_time = TimePeriod::CalculateEndTime (start_time, duration);
 
   m_dest_geo_temporal_area = GeoTemporalArea (TimePeriod (start_time, end_time),
-                                              Area (area_x1, area_y1,
-                                                    area_x2, area_y2));
+                                              Area (area_x1, area_y1, area_x2, area_y2));
 
   // Read the string message.
   uint8_t character_read = 0u;
@@ -725,10 +724,10 @@ DataHeader::ToString () const
   std::string str = "DATA " + m_data_id.ToString () + " (" + std::string (buffer)
           + " replicas) destined to area " + m_dest_geo_temporal_area.GetArea ().ToString ();
 
-  std::sprintf (buffer, "%u", m_dest_geo_temporal_area.GetTimePeriod ().GetStartTime ());
+  std::sprintf (buffer, "%04.2f", m_dest_geo_temporal_area.GetTimePeriod ().GetStartTime ().GetSeconds ());
   str += " to start at second " + std::string (buffer);
 
-  std::sprintf (buffer, "%u", m_dest_geo_temporal_area.GetDuration ());
+  std::sprintf (buffer, "%04.2f", m_dest_geo_temporal_area.GetDuration ().GetSeconds ());
   str += " with a duration of " + std::string (buffer) + " seconds";
 
   std::sprintf (buffer, "%u", (uint32_t) m_message.size ());

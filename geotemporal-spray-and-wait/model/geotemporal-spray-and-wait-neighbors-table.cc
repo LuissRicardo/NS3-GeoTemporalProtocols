@@ -81,14 +81,23 @@ NeighborEntry::ToString () const
 // =============================================================================
 
 NeighborsTable::NeighborsTable ()
-: NeighborsTable (Seconds (15)) { }
+: NeighborsTable (Seconds (15))
+{
+  NS_LOG_FUNCTION (this);
+}
 
 NeighborsTable::NeighborsTable (const Time& entries_expiration_time)
-: m_table (), m_entries_expiration_time (entries_expiration_time) { }
+: m_table (), m_entries_expiration_time (entries_expiration_time)
+{
+  NS_LOG_FUNCTION (this);
+}
 
 NeighborsTable::NeighborsTable (const NeighborsTable& copy)
 : m_table (copy.m_table),
-m_entries_expiration_time (copy.m_entries_expiration_time) { }
+m_entries_expiration_time (copy.m_entries_expiration_time)
+{
+  NS_LOG_FUNCTION (this);
+}
 
 
 // --------------------------
@@ -98,6 +107,8 @@ m_entries_expiration_time (copy.m_entries_expiration_time) { }
 uint32_t
 NeighborsTable::Size ()
 {
+  NS_LOG_FUNCTION (this);
+
   Purge ();
   return m_table.size ();
 }
@@ -110,6 +121,8 @@ NeighborsTable::Size ()
 bool
 NeighborsTable::Find (const Ipv4Address& neighbor_ip, NeighborEntry& entry)
 {
+  NS_LOG_FUNCTION (this);
+
   Purge ();
 
   ConstIterator_t entry_it = m_table.find (neighbor_ip);
@@ -126,6 +139,8 @@ NeighborsTable::Find (const Ipv4Address& neighbor_ip, NeighborEntry& entry)
 bool
 NeighborsTable::Find (const Ipv4Address& neighbor_ip)
 {
+  NS_LOG_FUNCTION (this);
+
   NeighborEntry temp;
   return Find (neighbor_ip, temp);
 }
@@ -133,6 +148,8 @@ NeighborsTable::Find (const Ipv4Address& neighbor_ip)
 bool
 NeighborsTable::Find (const NeighborEntry& neighbor_entry)
 {
+  NS_LOG_FUNCTION (this);
+
   NeighborEntry temp;
   return Find (neighbor_entry.GetNeighborIpAddress (), temp);
 }
@@ -229,12 +246,16 @@ NeighborsTable::Purge ()
 void
 NeighborsTable::Print (std::ostream& os) const
 {
+  NS_LOG_FUNCTION (this);
+
   os << ToString ();
 }
 
 std::string
 NeighborsTable::ToString () const
 {
+  NS_LOG_FUNCTION (this);
+
   char buffer [10];
   std::sprintf (buffer, "%u", (uint32_t) m_table.size ());
   std::string str = "Neighbors table with " + std::string (buffer)

@@ -255,6 +255,15 @@ public:
   // --------------------------
 
   /**
+   * Removes all neighbor entries from the table.
+   */
+  inline void
+  Clear ()
+  {
+    m_table.clear ();
+  }
+
+  /**
    * Inserts a new neighbor entry with the specified IP address.
    * 
    * Sets the expiration time of the new neighbor entry to the value of the 

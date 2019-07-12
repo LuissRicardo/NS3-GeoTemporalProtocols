@@ -13,6 +13,8 @@ def build(bld):
         'model/geotemporal-spray-and-wait-neighbors-table.cc',
         'model/geotemporal-spray-and-wait-packets-queue.cc',
         'model/geotemporal-spray-and-wait-packets.cc',
+        'model/geotemporal-spray-and-wait-routing-protocol.cc',
+        'helper/geotemporal-spray-and-wait-helper.cc',
         ]
 
     module_test = bld.create_ns3_module_test_library('geotemporal-spray-and-wait')
@@ -27,10 +29,12 @@ def build(bld):
         'model/geotemporal-spray-and-wait-neighbors-table.h',
         'model/geotemporal-spray-and-wait-packets-queue.h',
         'model/geotemporal-spray-and-wait-packets.h',
+        'model/geotemporal-spray-and-wait-routing-protocol.h',
+        'helper/geotemporal-spray-and-wait-helper.h',
         ]
 
-    # if bld.env.ENABLE_EXAMPLES:
-    #     bld.recurse('examples')
+    if bld.env.ENABLE_EXAMPLES:
+        bld.recurse('examples')
 
     # bld.ns3_python_bindings()
 

@@ -37,12 +37,6 @@
 using namespace ns3;
 using namespace ns3::geotemporal_spray_and_wait;
 
-/**
- * With the following line all references to Vector2D will be to 
- * GeoTemporalLibrary::LibraryUtils::Vector2D class instead of ns3::Vector2D.
- */
-using GeoTemporalLibrary::LibraryUtils::Vector2D;
-
 // =============================================================================
 //                                 TestCasePlus
 // =============================================================================
@@ -501,7 +495,7 @@ public:
     ReplyBackHeader h1;
     NS_TEST_EXPECT_MSG_EQ (h1.GetSummaryVectorSize (), 0u, "Must be 0u");
     NS_TEST_EXPECT_MSG_EQ (h1.GetSummaryVector (), std::set<DataIdentifier> (), "Must be an empty set");
-    NS_TEST_EXPECT_MSG_EQ (h1.GetPosition (), Vector2D (), "Must be a default Vector2D instance");
+    NS_TEST_EXPECT_MSG_EQ (h1.GetPosition (), GeoTemporalLibrary::LibraryUtils::Vector2D (), "Must be a default Vector2D instance");
     NS_TEST_EXPECT_MSG_EQ (h1.GetSerializedSize (), 19u, "Must be 19u");
 
     // Parameters constructor
@@ -509,7 +503,7 @@ public:
       DataIdentifier (Ipv4Address ("1.1.1.1"), 2),
       DataIdentifier (Ipv4Address ("1.1.1.1"), 3)};
 
-    Vector2D position (3, 4);
+    GeoTemporalLibrary::LibraryUtils::Vector2D position (3, 4);
 
     ReplyBackHeader h2 (summary_vector, position);
     NS_TEST_EXPECT_MSG_EQ (h2.GetSummaryVectorSize (), 3u, "Must be 3u");
@@ -531,7 +525,7 @@ public:
     std::set<DataIdentifier> summary_vector = {DataIdentifier (Ipv4Address ("1.1.1.1"), 1),
       DataIdentifier (Ipv4Address ("1.1.1.1"), 2),
       DataIdentifier (Ipv4Address ("1.1.1.1"), 3)};
-    Vector2D position (5, 14);
+    GeoTemporalLibrary::LibraryUtils::Vector2D position (5, 14);
 
     ReplyBackHeader header (summary_vector, position);
 
@@ -539,7 +533,7 @@ public:
     NS_TEST_EXPECT_MSG_EQ (header.GetSummaryVector (), summary_vector, "Summary vector must be equal to summary_vector");
     NS_TEST_EXPECT_MSG_EQ (header.GetPosition (), position, "Summary vector size must be " << position);
 
-    position = Vector2D (99, 88);
+    position = GeoTemporalLibrary::LibraryUtils::Vector2D (99, 88);
     header.SetPosition (position);
 
     NS_TEST_EXPECT_MSG_EQ (header.GetSummaryVectorSize (), 3u, "Summary vector size must be 3");
@@ -554,7 +548,7 @@ public:
       DataIdentifier (Ipv4Address ("1.1.1.1"), 2),
       DataIdentifier (Ipv4Address ("1.1.1.1"), 3)};
 
-    Vector2D position (3, 4);
+    GeoTemporalLibrary::LibraryUtils::Vector2D position (3, 4);
 
     ReplyBackHeader equal_1 (summary_vector, position);
     ReplyBackHeader equal_2 (summary_vector, position);
@@ -572,7 +566,7 @@ public:
     equal_1 = ReplyBackHeader (summary_vector, position);
     equal_2 = ReplyBackHeader (summary_vector, position);
 
-    position = Vector2D (99, 299);
+    position = GeoTemporalLibrary::LibraryUtils::Vector2D (99, 299);
 
     different = ReplyBackHeader (summary_vector, position);
 
@@ -586,14 +580,14 @@ public:
       DataIdentifier (Ipv4Address ("1.1.1.1"), 2),
       DataIdentifier (Ipv4Address ("1.1.1.1"), 3)};
 
-    Vector2D position (3, 4);
+    GeoTemporalLibrary::LibraryUtils::Vector2D position (3, 4);
 
     ReplyBackHeader h1;
     ReplyBackHeader h2 (summary_vector, position);
     ReplyBackHeader h3 (h2);
 
     summary_vector = std::set<DataIdentifier>({DataIdentifier (Ipv4Address ("1.1.1.1"), 1)});
-    position = Vector2D (-54, 23);
+    position = GeoTemporalLibrary::LibraryUtils::Vector2D (-54, 23);
 
     h2 = ReplyBackHeader (summary_vector, position);
 
@@ -624,7 +618,7 @@ public:
       DataIdentifier (Ipv4Address ("1.1.1.1"), 2),
       DataIdentifier (Ipv4Address ("1.1.1.1"), 3)};
 
-    Vector2D position (3, 4);
+    GeoTemporalLibrary::LibraryUtils::Vector2D position (3, 4);
 
     ReplyBackHeader h (summary_vector, position);
     std::string expected_str = "REPLY_BACK sent from position (3.00, 4.00) "
@@ -673,7 +667,7 @@ public:
 
     // Parameters constructor
     DataIdentifier data_id (Ipv4Address ("1.2.3.4"), 5u);
-    GeoTemporalArea gta (TimePeriod (10, 20), Area (30, 40, 50, 60));
+    GeoTemporalArea gta (TimePeriod (Seconds (10), Seconds (20)), Area (30, 40, 50, 60));
     std::string message = "packet's message"; // Length 16
     uint32_t replicas = 5u;
 
@@ -697,7 +691,7 @@ public:
   TestGettersSetters ()
   {
     DataIdentifier data_id (Ipv4Address ("1.2.3.4"), 5u);
-    GeoTemporalArea gta (TimePeriod (10, 20), Area (30, 40, 50, 60));
+    GeoTemporalArea gta (TimePeriod (Seconds (10), Seconds (20)), Area (30, 40, 50, 60));
     std::string message = "packet's message"; // Length 16
     uint32_t replicas = 5u;
 
@@ -716,7 +710,7 @@ public:
     NS_TEST_EXPECT_MSG_EQ (header.GetMessage (), message, "Must be " << message);
     NS_TEST_EXPECT_MSG_EQ (header.GetReplicasToForward (), replicas, "Must be " << replicas);
 
-    gta = GeoTemporalArea (TimePeriod (50, 60), Area (30, 40, 50, 60));
+    gta = GeoTemporalArea (TimePeriod (MilliSeconds (50), MilliSeconds (60)), Area (30, 40, 50, 60));
     header.SetDestinationGeoTemporalArea (gta);
 
     NS_TEST_EXPECT_MSG_EQ (header.GetDataIdentifier (), data_id, "Must be " << data_id);
@@ -745,7 +739,7 @@ public:
   TestOverloadedOperators ()
   {
     DataIdentifier data_id (Ipv4Address ("1.2.3.4"), 5u);
-    GeoTemporalArea gta (TimePeriod (10, 20), Area (30, 40, 50, 60));
+    GeoTemporalArea gta (TimePeriod (Seconds (10), Seconds (20)), Area (30, 40, 50, 60));
     std::string message = "packet's message"; // Length 16
     uint32_t replicas = 5u;
 
@@ -755,7 +749,7 @@ public:
 
     TestEqualityRelationalOperators (equal_1, equal_2, different);
 
-    different = DataHeader (data_id, GeoTemporalArea (TimePeriod (10, 20), Area (0, 0, 100, 100)),
+    different = DataHeader (data_id, GeoTemporalArea (TimePeriod (Seconds (10), Seconds (20)), Area (0, 0, 100, 100)),
                             message, replicas);
 
     TestEqualityRelationalOperators (equal_1, equal_2, different);
@@ -773,7 +767,7 @@ public:
   TestSerializationDeserialization ()
   {
     DataIdentifier data_id (Ipv4Address ("1.2.3.4"), 5u);
-    GeoTemporalArea gta (TimePeriod (10, 20), Area (30, 40, 50, 60));
+    GeoTemporalArea gta (TimePeriod (Seconds (10), Seconds (20)), Area (30, 40, 50, 60));
     std::string message = "packet's message"; // Length 16
     uint32_t replicas = 5u;
 
@@ -807,14 +801,14 @@ public:
   TestToString ()
   {
     DataIdentifier data_id (Ipv4Address ("1.2.3.4"), 5u);
-    GeoTemporalArea gta (TimePeriod (10, 20), Area (30, 40, 50, 60));
+    GeoTemporalArea gta (TimePeriod (Seconds (10), Seconds (20)), Area (30, 40, 50, 60));
     std::string message = "packet's message"; // Length 16
     uint32_t replicas = 5u;
 
     DataHeader h (data_id, gta, message, replicas);
     std::string expected_str = "DATA 1.2.3.4:5 (5 replicas) destined to area "
             "{(30.00, 40.00), (50.00, 60.00)} to start at second "
-            "10 with a duration of 10 seconds has a message of 16 byte(s)";
+            "10.00 with a duration of 10.00 seconds has a message of 16 byte(s)";
     NS_TEST_EXPECT_MSG_EQ (h.ToString (), expected_str, "Expected string: " + expected_str);
   }
 
@@ -1460,7 +1454,7 @@ public:
   PacketQueueEntryTest ()
   : TestCasePlus ("PacketQueueEntry"),
   m_data_id (Ipv4Address ("1.1.1.1"), 1u),
-  m_geo_temporal_area (TimePeriod (34, 74), Area (10, 10, 90, 90)),
+  m_geo_temporal_area (TimePeriod (Seconds (34), Seconds (74)), Area (10, 10, 90, 90)),
   m_message ("0123456789"),
   m_replicas (15u),
   m_header (m_data_id, m_geo_temporal_area, m_message, m_replicas),
@@ -1546,7 +1540,7 @@ public:
   TestExpirationTime ()
   {
     DataHeader header (m_header);
-    header.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (37, 83),
+    header.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (Seconds (37), Seconds (83)),
                                                            Area (10, 10, 90, 90)));
 
     m_queue_entry = PacketQueueEntry (header);
@@ -1594,7 +1588,7 @@ public:
   TestToStringFunction ()
   {
     DataHeader header (m_header);
-    header.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (37, 83),
+    header.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (Seconds (37), Seconds (83)),
                                                            Area (10, 10, 90, 90)));
 
     m_queue_entry = PacketQueueEntry (header);
@@ -1731,7 +1725,7 @@ public:
     Ipv4Address source_ip = Ipv4Address ("1.1.1.1");
 
     DataHeader data_packet (/* Data ID */ DataIdentifier (source_ip, 0u),
-                            /* Geo-temporal area */ GeoTemporalArea (TimePeriod (0, 10),
+                            /* Geo-temporal area */ GeoTemporalArea (TimePeriod (Seconds (0), Seconds (10)),
                                                                      Area (0, 0, 100, 100)),
                             /* Message */ "Message",
                             /* Replicas */ 5);
@@ -1765,7 +1759,7 @@ public:
 
     Ipv4Address source_ip = Ipv4Address ("1.1.1.1");
     DataHeader data_packet (/* Data ID */ DataIdentifier (source_ip, 0u),
-                            /* Geo-temporal area */ GeoTemporalArea (TimePeriod (0, 10),
+                            /* Geo-temporal area */ GeoTemporalArea (TimePeriod (Seconds (0), Seconds (10)),
                                                                      Area (0, 0, 100, 100)),
                             /* Message */ "Message",
                             /* Replicas */ 5);
@@ -1827,7 +1821,7 @@ public:
 
     // New entry expires at second 10
     DataHeader data_packet (/* Data ID */ DataIdentifier ("1.1.1.1:1"),
-                            /* Geo-temporal area */ GeoTemporalArea (TimePeriod (0, 10),
+                            /* Geo-temporal area */ GeoTemporalArea (TimePeriod (Seconds (0), Seconds (10)),
                                                                      Area (0, 0, 100, 100)),
                             /* Message */ "Message",
                             /* Replicas */ 5);
@@ -1839,7 +1833,7 @@ public:
 
     // New entry expires at second 10
     data_packet.SetDataIdentifier (DataIdentifier ("1.1.1.2:2"));
-    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (2, 10),
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (Seconds (2), Seconds (10)),
                                                                 Area (0, 0, 100, 100)));
     m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.2"));
 
@@ -1849,7 +1843,7 @@ public:
 
     // New entry expires at second 5
     data_packet.SetDataIdentifier (DataIdentifier ("1.1.1.3:3"));
-    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (1, 5),
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (Seconds (1), Seconds (5)),
                                                                 Area (0, 0, 100, 100)));
     m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.3"));
 
@@ -1860,7 +1854,7 @@ public:
 
     // New entry expires at second 5
     data_packet.SetDataIdentifier (DataIdentifier ("1.1.1.4:4"));
-    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (0, 5),
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (Seconds (0), Seconds (5)),
                                                                 Area (0, 0, 100, 100)));
     m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.4"));
 
@@ -1934,7 +1928,7 @@ public:
     // Test when 1 packet from the summary vector is present in the queue
     // New entry expires at second 10
     DataHeader data_packet (/* Data ID */ DataIdentifier ("1.1.1.1:1"),
-                            /* Geo-temporal area */ GeoTemporalArea (TimePeriod (0, 10),
+                            /* Geo-temporal area */ GeoTemporalArea (TimePeriod (Seconds (0), Seconds (10)),
                                                                      Area (0, 0, 100, 100)),
                             /* Message */ "Message",
                             /* Replicas */ 5);
@@ -1954,7 +1948,7 @@ public:
     {
       // This new packet expires at second 5
       DataHeader data_packet_1 (/* Data ID */ DataIdentifier ("9.9.9.9:9"),
-                                /* Geo-temporal area */ GeoTemporalArea (TimePeriod (0, 5),
+                                /* Geo-temporal area */ GeoTemporalArea (TimePeriod (Seconds (0), Seconds (5)),
                                                                          Area (0, 0, 100, 100)),
                                 /* Message */ "Message",
                                 /* Replicas */ 5);
@@ -1962,7 +1956,7 @@ public:
 
       // This new packet expires at second 7
       DataHeader data_packet_2 (/* Data ID */ DataIdentifier ("10.10.10.10:10"),
-                                /* Geo-temporal area */ GeoTemporalArea (TimePeriod (0, 7),
+                                /* Geo-temporal area */ GeoTemporalArea (TimePeriod (Seconds (0), Seconds (7)),
                                                                          Area (0, 0, 100, 100)),
                                 /* Message */ "Message",
                                 /* Replicas */ 5);
@@ -1970,7 +1964,7 @@ public:
 
       // This new packet expires at second 9
       DataHeader data_packet_3 (/* Data ID */ DataIdentifier ("11.11.11.11:11"),
-                                /* Geo-temporal area */ GeoTemporalArea (TimePeriod (0, 9),
+                                /* Geo-temporal area */ GeoTemporalArea (TimePeriod (Seconds (0), Seconds (9)),
                                                                          Area (0, 0, 100, 100)),
                                 /* Message */ "Message",
                                 /* Replicas */ 5);
@@ -1994,7 +1988,7 @@ public:
 
     // New entry expires at second 3
     data_packet.SetDataIdentifier (DataIdentifier ("1.1.1.3:3"));
-    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (1, 3),
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (Seconds (1), Seconds (3)),
                                                                 Area (0, 0, 100, 100)));
     m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.3"));
 
@@ -2016,19 +2010,19 @@ public:
 
     // New entry expires at second 8
     data_packet.SetDataIdentifier (DataIdentifier ("1.1.1.2:2"));
-    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (1, 8),
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (Seconds (1), Seconds (8)),
                                                                 Area (0, 0, 100, 100)));
     m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.2"));
 
     // New entry expires at second 11
     data_packet.SetDataIdentifier (DataIdentifier ("1.1.1.4:4"));
-    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (1, 11),
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (Seconds (1), Seconds (11)),
                                                                 Area (0, 0, 100, 100)));
     m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.4"));
 
     // New entry expires at second 10
     data_packet.SetDataIdentifier (DataIdentifier ("1.1.1.5:5"));
-    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (1, 10),
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (Seconds (1), Seconds (10)),
                                                                 Area (0, 0, 100, 100)));
     m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.5"));
 
@@ -2096,7 +2090,7 @@ public:
 
     // New entry expires at second 10
     DataHeader data_packet (/* Data ID */ DataIdentifier ("1.1.1.1:1"),
-                            /* Geo-temporal area */ GeoTemporalArea (TimePeriod (0, 10),
+                            /* Geo-temporal area */ GeoTemporalArea (TimePeriod (Seconds (0), Seconds (10)),
                                                                      Area (0, 0, 100, 100)),
                             /* Message */ "Message",
                             /* Replicas */ 5);
@@ -2104,19 +2098,19 @@ public:
 
     // New entry expires at second 10
     data_packet.SetDataIdentifier (DataIdentifier ("1.1.1.2:2"));
-    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (2, 10),
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (Seconds (2), Seconds (10)),
                                                                 Area (0, 0, 100, 100)));
     m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.2"));
 
     // New entry expires at second 5
     data_packet.SetDataIdentifier (DataIdentifier ("1.1.1.3:3"));
-    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (1, 5),
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (Seconds (1), Seconds (5)),
                                                                 Area (0, 0, 100, 100)));
     m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.3"));
 
     // New entry expires at second 5
     data_packet.SetDataIdentifier (DataIdentifier ("1.1.1.4:4"));
-    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (0, 5),
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (Seconds (0), Seconds (5)),
                                                                 Area (0, 0, 100, 100)));
     m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.4"));
 
@@ -2181,24 +2175,20 @@ public:
   TestEnqueueFunction_Scheduled_1 ()
   {
     // This function is launched by the scheduler at second 16.00
-    bool enqueued, found;
+    bool enqueued;
     PacketQueueEntry entry;
-
-    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 1u, "Size of the packets queue must be 1.");
 
     // The packets queue now looks like this:
     //     Data ID   -   Packet entry expiration time
+    //    1.1.1.1:1  -            Expired
+    //    1.1.1.2:2  -            Expired
     //    1.1.1.5:5  -           second 17
-
-    found = m_packets_queue.Find (DataIdentifier ("1.1.1.3:3"));
-
-    NS_TEST_EXPECT_MSG_EQ (found, false, "Packet queue entry 1.1.1.3:3 must not be found.");
 
     // The following entry to be inserted used to exist but was previously 
     // dropped, so it is inserted as newly inserted.
     // Successful insertion of new entry that expires at second 20
     DataHeader data_packet (/* Data ID */ DataIdentifier ("1.1.1.3:3"),
-                            /* Geo-temporal area */ GeoTemporalArea (TimePeriod (10, 20),
+                            /* Geo-temporal area */ GeoTemporalArea (TimePeriod (Seconds (10), Seconds (20)),
                                                                      Area (0, 0, 100, 100)),
                             /* Message */ "Message",
                             /* Replicas */ 5);
@@ -2372,7 +2362,7 @@ public:
 
     // Successful insertion of new entry that expires at second 10
     DataHeader data_packet (/* Data ID */ DataIdentifier ("1.1.1.1:1"),
-                            /* Geo-temporal area */ GeoTemporalArea (TimePeriod (0, 10),
+                            /* Geo-temporal area */ GeoTemporalArea (TimePeriod (Seconds (0), Seconds (10)),
                                                                      Area (0, 0, 100, 100)),
                             /* Message */ "Message",
                             /* Replicas */ 5);
@@ -2402,7 +2392,7 @@ public:
 
     // Successful insertion of new entry that expires at second 15
     data_packet.SetDataIdentifier (DataIdentifier ("1.1.1.2:2"));
-    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (3, 15),
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (Seconds (3), Seconds (15)),
                                                                 Area (0, 0, 100, 100)));
     enqueued = m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.2"));
 
@@ -2433,7 +2423,7 @@ public:
 
     // Successful insertion of new entry that expires at second 5
     data_packet.SetDataIdentifier (DataIdentifier ("1.1.1.3:3"));
-    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (1, 5),
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (Seconds (1), Seconds (5)),
                                                                 Area (0, 0, 100, 100)));
     enqueued = m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.3"));
 
@@ -2453,12 +2443,12 @@ public:
     NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetExpirationTime (), Seconds (5), MicroSeconds (1),
                                "Packet queue entry 1.1.1.3:3 expiration time must be 5 seconds.");
 
-    // Test that when the queue is full the oldest packet is dropped and the new
-    // entry is successfully inserted.
+    // Test that when the queue is full the packet with minimum expiration time 
+    // is dropped and the new entry is successfully inserted.
     // This new packet expires at second 9.
     // Packet 1.1.1.3:3 is dropped.
     data_packet.SetDataIdentifier (DataIdentifier ("1.1.1.4:4"));
-    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (1, 9),
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (Seconds (1), Seconds (9)),
                                                                 Area (0, 0, 100, 100)));
     enqueued = m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.4"));
 
@@ -2486,7 +2476,7 @@ public:
     // This new packet expires at second 17.
     // Packet 1.1.1.4:4 is dropped.
     data_packet.SetDataIdentifier (DataIdentifier ("1.1.1.5:5"));
-    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (1, 17),
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (Seconds (1), Seconds (17)),
                                                                 Area (0, 0, 100, 100)));
     enqueued = m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.5"));
 
@@ -2534,7 +2524,7 @@ public:
     discounted = m_packets_queue.DiscountPacketReplicasToForward (DataIdentifier ("1.1.1.1:1"), replicas);
 
     DataHeader data_packet (/* Data ID */ DataIdentifier ("1.1.1.1:1"),
-                            /* Geo-temporal area */ GeoTemporalArea (TimePeriod (0, 10),
+                            /* Geo-temporal area */ GeoTemporalArea (TimePeriod (Seconds (0), Seconds (10)),
                                                                      Area (0, 0, 100, 100)),
                             /* Message */ "Message",
                             /* Replicas */ 1u);
@@ -2614,7 +2604,7 @@ public:
     discounted = m_packets_queue.DiscountPacketReplicasToForward (DataIdentifier ("1.1.1.1:1"), replicas);
 
     DataHeader data_packet (/* Data ID */ DataIdentifier ("1.1.1.1:1"),
-                            /* Geo-temporal area */ GeoTemporalArea (TimePeriod (0, 10),
+                            /* Geo-temporal area */ GeoTemporalArea (TimePeriod (Seconds (0), Seconds (10)),
                                                                      Area (0, 0, 100, 100)),
                             /* Message */ "Message",
                             /* Replicas */ 1u);
@@ -2942,7 +2932,7 @@ public:
                            "Expected string: " + expected_str);
 
     DataHeader data_packet (/* Data ID */ DataIdentifier ("1.1.1.1:1"),
-                            /* Geo-temporal area */ GeoTemporalArea (TimePeriod (0, 10),
+                            /* Geo-temporal area */ GeoTemporalArea (TimePeriod (Seconds (0), Seconds (10)),
                                                                      Area (0, 0, 100, 100)),
                             /* Message */ "Message",
                             /* Replicas */ 1u);
