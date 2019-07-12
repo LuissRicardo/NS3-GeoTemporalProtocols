@@ -12,78 +12,18 @@ namespace LibraryUtils
 {
 
 // =============================================================================
-//                                  AreaStatus
-// =============================================================================
-
-AreaStatus::AreaStatus ()
-: Area (), m_node_inside_area (false) { }
-
-AreaStatus::AreaStatus (const bool inside_area)
-: Area (), m_node_inside_area (inside_area) { }
-
-AreaStatus::AreaStatus (const Area & area)
-: Area (area), m_node_inside_area (false) { }
-
-AreaStatus::AreaStatus (const Vector2D & vector1, const Vector2D & vector2)
-: Area (vector1, vector2), m_node_inside_area (false) { }
-
-AreaStatus::AreaStatus (const Vector2D & vector1, const Vector2D & vector2,
-                        const bool inside_area)
-: Area (vector1, vector2), m_node_inside_area (inside_area) { }
-
-AreaStatus::AreaStatus (const double & x1, const double & y1, const double & x2,
-                        const double & y2)
-: Area (x1, y1, x2, y2), m_node_inside_area (false) { }
-
-AreaStatus::AreaStatus (const double & x1, const double & y1, const double & x2,
-                        const double & y2, const bool inside_area)
-: Area (x1, y1, x2, y2), m_node_inside_area (inside_area) { }
-
-AreaStatus::AreaStatus (const AreaStatus & copy)
-: Area (copy), m_node_inside_area (copy.m_node_inside_area) { }
-
-std::string
-AreaStatus::ToString () const
-{
-  char buffer[25];
-
-  std::sprintf (buffer, "%04.2f", m_coord_1.m_x);
-  std::string to_string = "{(" + std::string (buffer) + ", ";
-
-  std::sprintf (buffer, "%04.2f", m_coord_1.m_y);
-  to_string += std::string (buffer) + "), (";
-
-  std::sprintf (buffer, "%04.2f", m_coord_2.m_x);
-  to_string += std::string (buffer) + ", ";
-
-  std::sprintf (buffer, "%04.2f", m_coord_2.m_y);
-  to_string += std::string (buffer) + "), ";
-
-  to_string += (m_node_inside_area ? "inside" : "outside");
-  to_string += "}";
-
-  return to_string;
-}
-
-void
-AreaStatus::Print (std::ostream & os) const
-{
-  os << ToString ();
-}
-
-// =============================================================================
 //                                   TimePeriod
 // =============================================================================
 
 TimePeriod::TimePeriod ()
-: m_start_time (0), m_end_time (0) { }
+: m_start_time (ns3::Seconds (0)), m_end_time (ns3::Seconds (0)) { }
 
-TimePeriod::TimePeriod (uint32_t start_time, uint32_t end_time)
+TimePeriod::TimePeriod (const ns3::Time & start_time, const ns3::Time & end_time)
 : TimePeriod ()
 {
   if (end_time < start_time)
-    throw std::invalid_argument ("Invalid end time: it must be a positive integer greater "
-                                 "or equal than start time.");
+    throw std::invalid_argument ("Invalid end time: it must be greater or equal "
+                                 "than the start time.");
 
   m_start_time = start_time;
   m_end_time = end_time;
@@ -93,7 +33,7 @@ TimePeriod::TimePeriod (const TimePeriod & copy)
 : m_start_time (copy.m_start_time), m_end_time (copy.m_end_time) { }
 
 bool
-TimePeriod::IsTimeInstantInTimePeriod (double time_instant) const
+TimePeriod::IsDuringTimePeriod (const ns3::Time & time_instant) const
 {
   return (m_start_time <= time_instant && time_instant <= m_end_time);
 }
@@ -103,14 +43,14 @@ TimePeriod::ToString () const
 {
   char buffer[25];
 
-  std::sprintf (buffer, "%u", m_start_time);
+  std::sprintf (buffer, "%04.2f", m_start_time.GetSeconds ());
   std::string ret_string = "Period of time starts at " + std::string (buffer);
 
-  std::sprintf (buffer, "%u", m_end_time);
+  std::sprintf (buffer, "%04.2f", m_end_time.GetSeconds ());
   ret_string += " sec. and ends at " + std::string (buffer) + " sec. ";
 
-  std::sprintf (buffer, "%u", GetDuration ());
-  ret_string += "(lasts " + std::string (buffer) + " seconds).";
+  std::sprintf (buffer, "%04.2f", GetDuration ().GetSeconds ());
+  ret_string += "(lasts " + std::string (buffer) + " seconds)";
 
   return ret_string;
 }
@@ -139,11 +79,11 @@ GeoTemporalArea::ToString () const
 {
   char buffer[25];
 
-  std::sprintf (buffer, "%u", m_time_period.GetStartTime ());
+  std::sprintf (buffer, "%04.2f", m_time_period.GetStartTime ().GetSeconds ());
   std::string ret_string = "Geo-temporal area " + m_area.ToString () + " active from "
           + std::string (buffer) + " to ";
 
-  std::sprintf (buffer, "%u", m_time_period.GetEndTime ());
+  std::sprintf (buffer, "%04.2f", m_time_period.GetEndTime ().GetSeconds ());
   ret_string += std::string (buffer) + " seconds.";
 
   return ret_string;
@@ -160,15 +100,17 @@ GeoTemporalArea::Print (std::ostream & os) const
 // =============================================================================
 
 DestinationGeoTemporalArea::DestinationGeoTemporalArea ()
-: GeoTemporalArea (), m_node_id (0) { }
+: GeoTemporalArea (), m_node_id (0), m_creation_time (ns3::Seconds (0)) { }
 
 DestinationGeoTemporalArea::DestinationGeoTemporalArea (uint32_t node_id,
                                                         const TimePeriod & time_period,
                                                         const Area & area)
-: GeoTemporalArea (time_period, area), m_node_id (node_id) { }
+: GeoTemporalArea (time_period, area), m_node_id (node_id),
+m_creation_time (time_period.GetStartTime ()) { }
 
 DestinationGeoTemporalArea::DestinationGeoTemporalArea (const DestinationGeoTemporalArea & copy)
-: GeoTemporalArea (copy), m_node_id (copy.m_node_id) { }
+: GeoTemporalArea (copy), m_node_id (copy.m_node_id),
+m_creation_time (copy.m_creation_time) { }
 
 std::string
 DestinationGeoTemporalArea::ToString () const
@@ -179,14 +121,16 @@ DestinationGeoTemporalArea::ToString () const
   std::string ret_string = "Node with ID " + std::string (buffer)
           + " has destination geo-temporal area " + m_area.ToString ();
 
-  std::sprintf (buffer, "%u", m_time_period.GetStartTime ());
+  std::sprintf (buffer, "%04.2f", m_time_period.GetStartTime ().GetSeconds ());
   ret_string += " active from " + std::string (buffer) + " to ";
 
-  std::sprintf (buffer, "%u", m_time_period.GetEndTime ());
-  ret_string += std::string (buffer) + " seconds.";
+  std::sprintf (buffer, "%04.2f", m_time_period.GetEndTime ().GetSeconds ());
+  ret_string += std::string (buffer) + " seconds created at ";
+
+  std::sprintf (buffer, "%04.2f", m_creation_time.GetSeconds ());
+  ret_string += std::string (buffer);
 
   return ret_string;
-
 }
 
 void
@@ -194,6 +138,7 @@ DestinationGeoTemporalArea::Print (std::ostream & os) const
 {
   os << ToString ();
 }
+
 
 // =============================================================================
 //                     RandomDestinationGeoTemporalAreasLists
@@ -353,6 +298,7 @@ RandomDestinationGeoTemporalAreasLists::RandomDestinationGeoTemporalAreasLists (
 
   // Sets of lists
   std::vector<uint32_t> int_tokens;
+  DestinationGeoTemporalArea destination_gta;
   std::vector<DestinationGeoTemporalArea> destinations_vector;
   std::map<uint32_t, std::vector<DestinationGeoTemporalArea> > lists_set;
 
@@ -418,7 +364,7 @@ RandomDestinationGeoTemporalAreasLists::RandomDestinationGeoTemporalAreasLists (
               input_file.close ();
               std::cout << " Error!\n";
               throw std::runtime_error ("Corrupt file. The file does not match the correct format."
-                                        "Invalid list length.");
+                                        " Invalid list length.");
             }
 
           // Discard validated information we don't need anymore
@@ -427,11 +373,15 @@ RandomDestinationGeoTemporalAreasLists::RandomDestinationGeoTemporalAreasLists (
 
           for (uint32_t list_index = 0u; list_index < *list_length_it; ++list_index)
             {
-              destinations_vector.emplace_back (int_tokens.at (0u),
-                                                TimePeriod (int_tokens.at (2u), int_tokens.at (3u)),
-                                                m_destination_areas_list.at (int_tokens.at (1u)));
+              destination_gta = DestinationGeoTemporalArea (/*Node ID*/ int_tokens.at (0u),
+                                                            /*Time period*/ TimePeriod (ns3::Seconds (int_tokens.at (2u)),
+                                                                                        ns3::Seconds (int_tokens.at (3u))),
+                                                            /*Area*/ m_destination_areas_list.at (int_tokens.at (1u)));
+              destination_gta.SetCreationTime (ns3::Seconds (int_tokens.at (4u)));
 
-              int_tokens.erase (int_tokens.begin (), int_tokens.begin () + 4);
+              destinations_vector.push_back (destination_gta);
+
+              int_tokens.erase (int_tokens.begin (), int_tokens.begin () + 5);
             }
 
           if (destinations_vector.size () != *list_length_it)
@@ -439,7 +389,7 @@ RandomDestinationGeoTemporalAreasLists::RandomDestinationGeoTemporalAreasLists (
               input_file.close ();
               std::cout << " Error!\n";
               throw std::runtime_error ("Corrupt file. The file does not match the correct format."
-                                        "Invalid list length.");
+                                        " Invalid list length.");
             }
 
           // Add single list to set
@@ -450,7 +400,7 @@ RandomDestinationGeoTemporalAreasLists::RandomDestinationGeoTemporalAreasLists (
       m_lists_sets.push_back (lists_set);
       lists_set.clear ();
 
-      // Expected emtpy line.
+      // Expected empty line.
       if (!LibraryUtils::GetInputStreamNextLine (input_file, text_line) || !text_line.empty ())
         {
           input_file.close ();
@@ -566,7 +516,7 @@ RandomDestinationGeoTemporalAreasLists::ExportToFile (const std::string & filena
       set_number = set_index + 1u;
 
       output_file << "# -- Set " << set_number << " --" << end_line;
-      output_file << "# Set Number, List length[, Source node ID, Area ID, Start time, End time]*" << end_line;
+      output_file << "# Set Number, List length[, Source node ID, Area ID, Start time, End time, Creation time]*" << end_line;
 
       for (std::set<uint32_t>::const_iterator list_length_it = m_list_lengths_in_set.begin ();
               list_length_it != m_list_lengths_in_set.end (); ++list_length_it)
@@ -587,8 +537,9 @@ RandomDestinationGeoTemporalAreasLists::ExportToFile (const std::string & filena
             {
               output_file << ", " << temporal_area_it->GetNodeId ()
                       << ", " << areas_ids_mapping.at (temporal_area_it->GetArea ())
-                      << ", " << temporal_area_it->GetTimePeriod ().GetStartTime ()
-                      << ", " << temporal_area_it->GetTimePeriod ().GetEndTime ();
+                      << ", " << ((uint32_t) temporal_area_it->GetTimePeriod ().GetStartTime ().GetSeconds ())
+                      << ", " << ((uint32_t) temporal_area_it->GetTimePeriod ().GetEndTime ().GetSeconds ())
+                      << ", " << ((uint32_t) temporal_area_it->GetCreationTime ().GetSeconds ());
             }
 
           output_file << end_line;

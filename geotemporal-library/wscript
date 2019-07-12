@@ -20,10 +20,10 @@ def build(bld):
         'model/vehicle-routes.cc',
         ]
 
-    # module_test = bld.create_ns3_module_test_library('geotemporal-library')
-    # module_test.source = [
-    #     'test/geotemporal-library-test-suite.cc',
-    #     ]
+    module_test = bld.create_ns3_module_test_library('geotemporal-library')
+    module_test.source = [
+        'test/geotemporal-library-test-suite.cc',
+        ]
 
     headers = bld(features='ns3header')
     headers.module = 'geotemporal-library'

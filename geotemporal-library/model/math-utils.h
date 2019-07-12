@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+#include <ns3/vector.h>
+
 namespace GeoTemporalLibrary
 {
 namespace LibraryUtils
@@ -62,6 +64,8 @@ public:
   Vector2D ();
 
   Vector2D (const double & x, const double & y);
+
+  Vector2D (const ns3::Vector & ns3_vector);
 
   Vector2D (const Vector2D & copy);
 
@@ -308,9 +312,9 @@ public:
   double CalculateArea () const;
 
   /**
-   * Computes if the given <code>coordinate</code> is inside the area or not.
+   * Computes if the given <code>point</code> is inside the area or not.
    * @param point [IN] Point to test.
-   * @return <code>true</code> if <code>coordinate</code> is inside, <code>false</code>
+   * @return <code>true</code> if <code>point</code> is inside, <code>false</code>
    * otherwise.
    */
   bool IsInside (const Vector2D & point) const;

@@ -7,6 +7,7 @@
 
 #include "string-utils.h"
 
+
 namespace GeoTemporalLibrary
 {
 namespace LibraryUtils
@@ -44,6 +45,9 @@ Vector2D::Vector2D ()
 
 Vector2D::Vector2D (const double & x, const double & y)
 : m_x (x), m_y (y) { }
+
+Vector2D::Vector2D (const ns3::Vector& ns3_vector)
+: m_x (ns3_vector.x), m_y (ns3_vector.y) { }
 
 Vector2D::Vector2D (const Vector2D & copy)
 : m_x (copy.m_x), m_y (copy.m_y) { }

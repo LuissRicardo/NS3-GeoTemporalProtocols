@@ -313,8 +313,8 @@ GeoTemporalAreasVisitorNodes::GeoTemporalAreasVisitorNodes (const std::string & 
             }
         }
 
-      geo_temporal_area = LibraryUtils::GeoTemporalArea (LibraryUtils::TimePeriod ((uint32_t) std::stoi (tokens.at (1u)),
-                                                                                   (uint32_t) std::stoi (tokens.at (2u))),
+      geo_temporal_area = LibraryUtils::GeoTemporalArea (LibraryUtils::TimePeriod (ns3::Seconds (std::stoi (tokens.at (1u))),
+                                                                                   ns3::Seconds (std::stoi (tokens.at (2u)))),
                                                          areas_list.at ((uint32_t) std::stoi (tokens.at (0u))));
       visitor_nodes.clear ();
 
@@ -493,8 +493,8 @@ GeoTemporalAreasVisitorNodes::ExportToFile (const std::string & filename) const
           ++area_visitor_nodes_it)
     {
       output_file << areas_ids_mapping.at (area_visitor_nodes_it->first.GetArea ()) << ", "
-              << area_visitor_nodes_it->first.GetTimePeriod ().GetStartTime () << ", "
-              << area_visitor_nodes_it->first.GetTimePeriod ().GetEndTime ();
+              << ((uint32_t) area_visitor_nodes_it->first.GetTimePeriod ().GetStartTime ().GetSeconds ()) << ", "
+              << ((uint32_t) area_visitor_nodes_it->first.GetTimePeriod ().GetEndTime ().GetSeconds ());
 
       if (!area_visitor_nodes_it->second.empty ())
         {

@@ -9,6 +9,7 @@
 
 #include "math-utils.h"
 
+#include <ns3/nstime.h>
 #include <ns3/simple-ref-count.h>
 
 namespace GeoTemporalLibrary
@@ -17,169 +18,53 @@ namespace LibraryUtils
 {
 
 // =============================================================================
-//                                  AreaStatus
-// =============================================================================
-
-/**
- * Rectangular area delimited by 2 coordinates (x1, y1) and (x2, y2), and a flag
- * to indicate if the node is located inside or outside the area.
- *
- * \extends Area
- */
-class AreaStatus : public Area
-{
-public:
-
-  bool m_node_inside_area; /// Indicates if a node is inside the area.
-
-  AreaStatus ();
-
-  AreaStatus (const bool inside_area);
-
-  explicit AreaStatus (const Area & area);
-
-  AreaStatus (const Vector2D & vector1, const Vector2D & vector2);
-
-  AreaStatus (const Vector2D & vector1, const Vector2D & vector2,
-              const bool inside_area);
-
-  AreaStatus (const double & x1, const double & y1, const double & x2,
-              const double & y2);
-
-  AreaStatus (const double & x1, const double & y1, const double & x2,
-              const double & y2, const bool inside_area);
-
-  AreaStatus (const AreaStatus & copy);
-
-  /**
-   * Returns a <code>string</code> object containing the representation of this
-   * instance as a sequence of characters.
-   */
-  std::string ToString () const override;
-
-  void Print (std::ostream & os) const override;
-
-};
-
-// AreaStatus relational operators
-
-inline bool
-operator== (const AreaStatus & lhs, const AreaStatus & rhs)
-{
-  return ((Area) lhs) == ((Area) rhs)
-          && lhs.m_node_inside_area == rhs.m_node_inside_area;
-}
-
-inline bool
-operator== (const AreaStatus & lhs, const Area & rhs)
-{
-  // Note that when comparing an AreaStatus vs an Area we ignore the m_node_inside_area.
-  return ((Area) lhs) == rhs;
-}
-
-inline bool
-operator== (const Area & lhs, const AreaStatus & rhs)
-{
-  return operator== (rhs, lhs);
-}
-
-inline bool
-operator!= (const AreaStatus & lhs, const AreaStatus & rhs)
-{
-  return !operator== (lhs, rhs);
-}
-
-inline bool
-operator!= (const AreaStatus & lhs, const Area & rhs)
-{
-  return !operator== (lhs, rhs);
-}
-
-inline bool
-operator!= (const Area & lhs, const AreaStatus & rhs)
-{
-  return !operator== (lhs, rhs);
-}
-
-inline bool
-operator< (const AreaStatus & lhs, const AreaStatus & rhs)
-{
-  return operator< ((Area) lhs, (Area) rhs);
-}
-
-inline bool
-operator> (const AreaStatus & lhs, const AreaStatus & rhs)
-{
-  return operator< (rhs, lhs);
-}
-
-inline bool
-operator<= (const AreaStatus & lhs, const AreaStatus & rhs)
-{
-  return !operator> (lhs, rhs);
-}
-
-inline bool
-operator>= (const AreaStatus & lhs, const AreaStatus & rhs)
-{
-  return !operator< (lhs, rhs);
-}
-
-// AreaStatus stream operators
-
-inline std::ostream &
-operator<< (std::ostream & os, const AreaStatus & obj)
-{
-  obj.Print (os);
-  return os;
-}
-
-// =============================================================================
 //                                   TimePeriod
 // =============================================================================
 
 /**
+ * \ingroup geotemporal-library
+ * 
  * Represents a period of time. It has start time, end time, and duration.
  */
 class TimePeriod
 {
 private:
 
-  uint32_t m_start_time;
-  uint32_t m_end_time;
+  ns3::Time m_start_time;
+  ns3::Time m_end_time;
 
 public:
 
   TimePeriod ();
 
-  TimePeriod (uint32_t start_time, uint32_t end_time);
+  TimePeriod (const ns3::Time & start_time, const ns3::Time & end_time);
 
   TimePeriod (const TimePeriod & copy);
 
 public:
 
   /**
-   * Returns the start time (in seconds) of the period of time.
+   * Returns the start time of the period of time.
    */
-  inline uint32_t
+  inline const ns3::Time &
   GetStartTime () const
   {
     return m_start_time;
   }
 
   /**
-   * Returns the end time (in seconds) of the period of time.
+   * Returns the end time of the period of time.
    */
-  inline uint32_t
+  inline const ns3::Time &
   GetEndTime () const
   {
     return m_end_time;
   }
 
   /**
-   * Returns the duration (in seconds) of the period of time.
+   * Returns the duration of the period of time.
    */
-  inline uint32_t
+  inline ns3::Time
   GetDuration () const
   {
     return m_end_time - m_start_time;
@@ -188,20 +73,18 @@ public:
   /**
    * Using the start time and duration it calculates the end time of a time period.
    */
-  inline static uint32_t
-  CalculateEndTime (uint32_t start_time, uint32_t duration)
+  inline static ns3::Time
+  CalculateEndTime (const ns3::Time & start_time, const ns3::Time & duration)
   {
     return start_time + duration;
   }
 
   /**
-   * Returns <code>true</code> if the specified time instant is in the period
-   * of time. Otherwise returns <code>false</code>.
-   * @param time_instant Time instant (in seconds) to validate if it is inside the
-   * period of time.
+   * Returns <code>true</code> if the specified time instant occurs during the 
+   * time period, otherwise returns <code>false</code>.
    */
   bool
-  IsTimeInstantInTimePeriod (double time_instant) const;
+  IsDuringTimePeriod (const ns3::Time & time_instant) const;
 
   /**
    * Returns a <code>string</code> object containing the representation of this
@@ -233,8 +116,8 @@ operator!= (const TimePeriod & lhs, const TimePeriod & rhs)
 inline bool
 operator< (const TimePeriod & lhs, const TimePeriod & rhs)
 {
-  const uint32_t lhs_duration = lhs.GetDuration ();
-  const uint32_t rhs_duration = rhs.GetDuration ();
+  const ns3::Time lhs_duration = lhs.GetDuration ();
+  const ns3::Time rhs_duration = rhs.GetDuration ();
 
   if (lhs_duration != rhs_duration)
     return lhs_duration < rhs_duration;
@@ -301,6 +184,15 @@ public:
   }
 
   /**
+   * Sets the temporal scope of the geo-temporal area.
+   */
+  inline void
+  SetTimePeriod (const TimePeriod & new_time_period)
+  {
+    m_time_period = new_time_period;
+  }
+
+  /**
    * Returns the geographical area of the geo-temporal area.
    */
   inline const Area &
@@ -310,12 +202,41 @@ public:
   }
 
   /**
-   * Returns the duration (in seconds) of the geo-temporal area.
+   * Sets the geographical area of the geo-temporal area.
    */
-  inline uint32_t
+  inline void
+  SetArea (const Area & new_area)
+  {
+    m_area = new_area;
+  }
+
+  /**
+   * Returns the duration of the geo-temporal area.
+   */
+  inline ns3::Time
   GetDuration () const
   {
     return m_time_period.GetDuration ();
+  }
+
+  /**
+   * Returns <code>true</code> if the specified time instant occurs during the 
+   * time period, otherwise returns <code>false</code>.
+   */
+  inline bool
+  IsDuringTimePeriod (const ns3::Time & time_instant) const
+  {
+    return m_time_period.IsDuringTimePeriod (time_instant);
+  }
+
+  /**
+   * Returns <code>true</code> if the given <code>point</code> is inside the
+   * area, otherwise returns <code>false</code>.
+   */
+  inline bool
+  IsInsideArea (const Vector2D & point) const
+  {
+    return m_area.IsInside (point);
   }
 
   /**
@@ -393,12 +314,35 @@ class DestinationGeoTemporalArea : public GeoTemporalArea
 {
 private:
 
+  /**
+   * Identifier of the node that has as destination the current geo-temporal
+   * area.
+   */
   uint32_t m_node_id;
+
+  /**
+   * The time when the packet to send to the destination geo-temporal area must
+   * be created.
+   */
+  ns3::Time m_creation_time;
 
 public:
 
   DestinationGeoTemporalArea ();
 
+  /**
+   * Initializes the object with the geographical area and temporal scope linked
+   * with the given node ID.
+   * 
+   * By default, the packet's creation time is set to the initial time of the 
+   * given time period. Use <code>DestinationGeoTemporalArea::SetCreationTime 
+   * (const ns3::Time &)</code> setter to change this value.
+   * 
+   * @param node_id Identifier of the node that has as destination the specified
+   * geo-temporal area.
+   * @param time_period Temporal scope of the destination geo-temporal area.
+   * @param area The geographical area of the destination geo-temporal area.
+   */
   DestinationGeoTemporalArea (uint32_t node_id, const TimePeriod & time_period,
                               const Area & area);
 
@@ -411,6 +355,35 @@ public:
   GetNodeId () const
   {
     return m_node_id;
+  }
+
+  /**
+   * Sets the identifier of the node that has as destination the current geo-temporal area.
+   */
+  inline void
+  SetNodeId (uint32_t node_id)
+  {
+    m_node_id = node_id;
+  }
+
+  /**
+   * Returns the time when the packet to send to the destination geo-temporal 
+   * area must be created.
+   */
+  inline const ns3::Time &
+  GetCreationTime () const
+  {
+    return m_creation_time;
+  }
+
+  /**
+   * Sets the time when the packet to send to the destination geo-temporal 
+   * area must be created.
+   */
+  inline void
+  SetCreationTime (const ns3::Time & creation_time)
+  {
+    m_creation_time = creation_time;
   }
 
   /**
@@ -430,7 +403,9 @@ public:
 inline bool
 operator== (const DestinationGeoTemporalArea & lhs, const DestinationGeoTemporalArea & rhs)
 {
-  return lhs.m_node_id == rhs.m_node_id && ((GeoTemporalArea) lhs) == ((GeoTemporalArea) rhs);
+  return lhs.m_node_id == rhs.m_node_id
+          && lhs.m_creation_time == rhs.m_creation_time
+          && ((GeoTemporalArea) lhs) == ((GeoTemporalArea) rhs);
 }
 
 inline bool
@@ -445,7 +420,10 @@ operator< (const DestinationGeoTemporalArea & lhs, const DestinationGeoTemporalA
   if (lhs.m_node_id != rhs.m_node_id)
     return lhs.m_node_id < rhs.m_node_id;
 
-  return operator< ((GeoTemporalArea) lhs, (GeoTemporalArea) rhs);
+  if (operator!= ((GeoTemporalArea) lhs, (GeoTemporalArea) rhs))
+    return operator< ((GeoTemporalArea) lhs, (GeoTemporalArea) rhs);
+
+  return lhs.m_creation_time < rhs.m_creation_time;
 }
 
 inline bool
@@ -474,6 +452,7 @@ operator<< (std::ostream & os, const DestinationGeoTemporalArea & obj)
   obj.Print (os);
   return os;
 }
+
 
 // =============================================================================
 //                     RandomDestinationGeoTemporalAreasLists
@@ -507,7 +486,8 @@ public:
    * If the specified set number or list length doesn't exists then it throws an
    * <code>invalid_argument</code> exception.
    *
-   * @param set_number Number of the set in which the desired list is located.
+   * @param set_number Number of the set in which the desired list is located. This is 
+   * the set index + 1.
    * @param list_length Length of the desired list.
    */
   const std::vector<DestinationGeoTemporalArea> &

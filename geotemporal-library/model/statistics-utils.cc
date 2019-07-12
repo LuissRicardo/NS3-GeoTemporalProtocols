@@ -153,67 +153,100 @@ DataPacketReceptionStats::Print (std::ostream & os) const
 // =============================================================================
 
 DataPacketStatistics::DataPacketStatistics ()
-: m_data_id (), m_source_node_id (0u), m_packet_creation_time (ns3::Seconds (0.0)),
-m_packet_data_size (0u), m_packet_geo_temporal_area (),
-m_expected_receiver_nodes_set_flag (false), m_expected_receiver_nodes_gta_arrival_time_mapping (),
-m_stats_processed_receiver_nodes_ids_set (), m_stats_confirmed_receiver_nodes_ids_set (),
-m_stats_delivery_delay_list () { }
+: m_data_id (),
+m_source_node_id (0u),
+m_packet_creation_time (ns3::Seconds (0.0)),
+m_packet_message_size (0u),
+m_packet_size (0u),
+m_destination_geo_temporal_area (),
+m_expected_receiver_nodes_set_flag (false),
+m_expected_receiver_nodes_map (),
+m_processed_receiver_nodes_ips (),
+m_confirmed_receiver_nodes_ips (),
+m_processed_delivery_delay_list () { }
 
 DataPacketStatistics::DataPacketStatistics (const DataIdentifier & data_id, uint32_t source_node_id,
-                                            const ns3::Time & creation_time, uint32_t data_size,
-                                            const LibraryUtils::GeoTemporalArea & geo_temporal_area)
-: m_data_id (data_id), m_source_node_id (source_node_id), m_packet_creation_time (creation_time),
-m_packet_data_size (data_size), m_packet_geo_temporal_area (geo_temporal_area),
-m_expected_receiver_nodes_set_flag (false), m_expected_receiver_nodes_gta_arrival_time_mapping (),
-m_stats_processed_receiver_nodes_ids_set (), m_stats_confirmed_receiver_nodes_ids_set (),
-m_stats_delivery_delay_list () { }
+                                            const ns3::Time & creation_time,
+                                            uint32_t message_size,
+                                            uint32_t data_header_size,
+                                            const LibraryUtils::GeoTemporalArea & destination_geo_temporal_area)
+: m_data_id (data_id),
+m_source_node_id (source_node_id),
+m_packet_creation_time (creation_time),
+m_packet_message_size (message_size),
+m_packet_size (DataPacketStatistics::CalculateRealPacketSize (data_header_size)),
+m_destination_geo_temporal_area (destination_geo_temporal_area),
+m_expected_receiver_nodes_set_flag (false),
+m_expected_receiver_nodes_map (),
+m_processed_receiver_nodes_ips (),
+m_confirmed_receiver_nodes_ips (),
+m_processed_delivery_delay_list () { }
 
 DataPacketStatistics::DataPacketStatistics (const DataPacketStatistics & copy)
-: m_data_id (copy.m_data_id), m_source_node_id (copy.m_source_node_id),
+: m_data_id (copy.m_data_id),
+m_source_node_id (copy.m_source_node_id),
 m_packet_creation_time (copy.m_packet_creation_time),
-m_packet_data_size (copy.m_packet_data_size),
-m_packet_geo_temporal_area (copy.m_packet_geo_temporal_area),
+m_packet_message_size (copy.m_packet_message_size),
+m_packet_size (copy.m_packet_size),
+m_destination_geo_temporal_area (copy.m_destination_geo_temporal_area),
 m_expected_receiver_nodes_set_flag (copy.m_expected_receiver_nodes_set_flag),
-m_expected_receiver_nodes_gta_arrival_time_mapping (copy.m_expected_receiver_nodes_gta_arrival_time_mapping),
-m_stats_processed_receiver_nodes_ids_set (copy.m_stats_processed_receiver_nodes_ids_set),
-m_stats_confirmed_receiver_nodes_ids_set (copy.m_stats_confirmed_receiver_nodes_ids_set),
-m_stats_delivery_delay_list (copy.m_stats_delivery_delay_list) { }
+m_expected_receiver_nodes_map (copy.m_expected_receiver_nodes_map),
+m_processed_receiver_nodes_ips (copy.m_processed_receiver_nodes_ips),
+m_confirmed_receiver_nodes_ips (copy.m_confirmed_receiver_nodes_ips),
+m_processed_delivery_delay_list (copy.m_processed_delivery_delay_list) { }
 
 void
 DataPacketStatistics::ClearExpectedReceiverNodes ()
 {
   m_expected_receiver_nodes_set_flag = false;
-  m_expected_receiver_nodes_gta_arrival_time_mapping.clear ();
+  m_expected_receiver_nodes_map.clear ();
 
-  // Given that the set of expected nodes is being modified, clear previously computed statistics.
-  m_stats_processed_receiver_nodes_ids_set.clear ();
-  m_stats_confirmed_receiver_nodes_ids_set.clear ();
-  m_stats_delivery_delay_list.clear ();
+  // Given that the set of expected nodes is being modified, clear previously 
+  // computed statistics.
+  m_processed_receiver_nodes_ips.clear ();
+  m_confirmed_receiver_nodes_ips.clear ();
+  m_processed_delivery_delay_list.clear ();
 }
 
-void
-DataPacketStatistics::SetExpectedReceiverNodes (const std::set<NavigationSystem::VisitorNode> & visitor_nodes_set)
+uint32_t
+DataPacketStatistics::SetExpectedReceiverNodes (const std::map<ns3::Ipv4Address, ns3::Time>& candidate_receiver_nodes)
 {
   ClearExpectedReceiverNodes ();
   m_expected_receiver_nodes_set_flag = true;
+  uint32_t inserted_counter = 0u;
 
-  for (std::set<NavigationSystem::VisitorNode>::const_iterator visitor_node_it = visitor_nodes_set.begin ();
-          visitor_node_it != visitor_nodes_set.end (); ++visitor_node_it)
+  // Iterate through the received list of expected receiver nodes to discard 
+  // invalid entries.
+  for (std::map<ns3::Ipv4Address, ns3::Time>::const_iterator expected_receiver_it
+          = candidate_receiver_nodes.begin ();
+          expected_receiver_it != candidate_receiver_nodes.end (); ++expected_receiver_it)
     {
-      if (!m_packet_geo_temporal_area.GetTimePeriod ().IsTimeInstantInTimePeriod (visitor_node_it->GetArrivalTime ()))
-        {
-          // Clear the list of visitor nodes
-          ClearExpectedReceiverNodes ();
-          throw std::runtime_error ("The node's arrival time to the geo-temporal area is invalid.");
-        }
+      // If the node didn't arrive to the geo-temporal area during its active
+      // temporal scope then ignore it and don't insert it.
+      if (!m_destination_geo_temporal_area.IsDuringTimePeriod (expected_receiver_it->second))
+        continue;
 
-      m_expected_receiver_nodes_gta_arrival_time_mapping.insert (std::make_pair (visitor_node_it->GetNodeId (),
-                                                                                 visitor_node_it->GetArrivalTime ()));
+      // If the IP address of the node is the same as the IP address of the 
+      // source node of the packet then ignore it and don't insert it
+      // (the source node shouldn't be an expected receiver node because it 
+      // already knows the packet).
+      if (expected_receiver_it->first == m_data_id.GetSourceIp ())
+        continue;
+
+      // The expected receiver is valid! Insert it.
+      m_expected_receiver_nodes_map.insert (std::make_pair (expected_receiver_it->first,
+                                                            expected_receiver_it->second));
+
+      // Count valid expected receiver node.
+      ++inserted_counter;
     }
+
+  return inserted_counter;
 }
 
 bool
-DataPacketStatistics::CountReception (const uint32_t & receiver_node_id, const DataPacketReceptionStats & reception_stats)
+DataPacketStatistics::CountReception (const ns3::Ipv4Address & receiver_node_ip,
+                                      const DataPacketReceptionStats & reception_stats)
 {
   if (!IsExpectedReceiverNodesSet ())
     throw std::runtime_error ("The nodes that visited the packet's geo-temporal area haven't been set.");
@@ -221,38 +254,45 @@ DataPacketStatistics::CountReception (const uint32_t & receiver_node_id, const D
   if (m_data_id != reception_stats.GetPacketDataIdentifier ())
     throw std::runtime_error ("The packet's DATA ID doesn't match.");
 
-  // If the given node is not an expected receiver node (i.e., didn't visited the geo-temporal area) then stop.
-  std::map<uint32_t, uint32_t>::const_iterator node_arrival_time_it
-          = m_expected_receiver_nodes_gta_arrival_time_mapping.find (receiver_node_id);
+  // Find if the receiver node is an expected receiver node
+  std::map<ns3::Ipv4Address, ns3::Time>::const_iterator expected_receiver_node_it
+          = m_expected_receiver_nodes_map.find (receiver_node_ip);
 
-  if (node_arrival_time_it == m_expected_receiver_nodes_gta_arrival_time_mapping.end ())
+  // Receiver node is not an expected receiver node, don't count reception.
+  if (expected_receiver_node_it == m_expected_receiver_nodes_map.end ())
     return false;
 
-  // If the given node was processed already then stop.
-  if (m_stats_processed_receiver_nodes_ids_set.count (receiver_node_id) == 1u)
+  // If the receiver node was processed already then don't count reception.
+  if (m_processed_receiver_nodes_ips.count (receiver_node_ip) == 1u)
     throw std::runtime_error ("Node ID already processed before.");
 
-  // Mark node as processed.
-  m_stats_processed_receiver_nodes_ids_set.insert (receiver_node_id);
+  // The receiver node is an expected receiver node and it hasn't been processed
+  // before, so mark it as processed and process it.
+  m_processed_receiver_nodes_ips.insert (receiver_node_ip); // Mark as processed
 
   // If the packet was dropped then don't count it as a confirmed receiver.
   if (reception_stats.GetPacketDropped ())
     return false;
 
-  // The node is an expected receiver and hasn't been processed yet,
-  // add it to the list of confirmed receiver nodes.
-  m_stats_confirmed_receiver_nodes_ids_set.insert (receiver_node_id);
+  // The node didn't drop the packet and is an expected receiver, add it to the
+  // list of confirmed receivers.
+  m_confirmed_receiver_nodes_ips.insert (receiver_node_ip);
 
   // Calculate delivery delay
-  const double start_of_area = (double) std::max (node_arrival_time_it->second,
-                                                  m_packet_geo_temporal_area.GetTimePeriod ().GetStartTime ());
-  const double reception_time = reception_stats.GetReceptionTime ().ToDouble (ns3::Time::S);
+  const ns3::Time & start_of_area = std::max (expected_receiver_node_it->second,
+                                              m_destination_geo_temporal_area.GetTimePeriod ().GetStartTime ());
+  const ns3::Time & reception_time = reception_stats.GetReceptionTime ();
 
   // If the packet was received before the node's area arrival time then there was no delay
   if (reception_time <= start_of_area)
-    m_stats_delivery_delay_list.push_back (0.0);
+    m_processed_delivery_delay_list.push_back (0.0); // No delay
   else
-    m_stats_delivery_delay_list.push_back (reception_time - start_of_area);
+    {
+      // The packet was received after the node arrived to the area, calculate the
+      // difference.
+      const ns3::Time delay = reception_time - start_of_area;
+      m_processed_delivery_delay_list.push_back (delay.GetSeconds ());
+    }
 
   return true;
 }
@@ -262,11 +302,11 @@ DataPacketStatistics::GetStatistics (uint32_t & confirmed_packet_receivers_count
                                      double & packet_delivery_ratio, double & packet_average_delivery_delay,
                                      uint32_t & delivered_data_bytes) const
 {
-  if (m_stats_confirmed_receiver_nodes_ids_set.size () != m_stats_delivery_delay_list.size ())
+  if (m_confirmed_receiver_nodes_ips.size () != m_processed_delivery_delay_list.size ())
     throw std::runtime_error ("Unexpected error: list of confirmed receivers and list of delivery delays must have "
                               "the same number of items.");
 
-  if (m_stats_confirmed_receiver_nodes_ids_set.size () > m_expected_receiver_nodes_gta_arrival_time_mapping.size ())
+  if (m_processed_delivery_delay_list.size () > m_expected_receiver_nodes_map.size ())
     throw std::runtime_error ("Unexpected error: the length of the list of confirmed receivers shouldn't be greater "
                               "than the number of expected receivers.");
 
@@ -277,11 +317,7 @@ DataPacketStatistics::GetStatistics (uint32_t & confirmed_packet_receivers_count
   confirmed_packet_receivers_count = GetConfirmedReceiverNodesCount ();
 
   // Sum of the size (in bytes) of all DATA packets successfully delivered to destination nodes.
-  delivered_data_bytes = confirmed_packet_receivers_count * (m_packet_data_size
-                                                             + 72 // Other fields of geo-temporal protocol's DATA packet's header
-                                                             + 24 + 8 // IEEE 802.11 header + LCC header
-                                                             + 20 + 8 // + IP header + UDP header
-                                                             + 4 + 1); // Frame end + Terminator.
+  delivered_data_bytes = confirmed_packet_receivers_count * m_packet_size;
 
   if (expected_packet_receivers_count == 0u)
     {
@@ -305,11 +341,11 @@ DataPacketStatistics::GetStatistics (uint32_t & confirmed_packet_receivers_count
   // Packet delivery ratio: confirmed receivers / expected receivers
   packet_delivery_ratio = ((double) confirmed_packet_receivers_count) / ((double) expected_packet_receivers_count);
 
-  // Average delivery delay of all input receptions
+  // Average delivery delay of all confirmed receptions
   double sum = 0.0;
 
-  for (std::vector<double>::const_iterator delivery_delay_it = m_stats_delivery_delay_list.begin ();
-          delivery_delay_it != m_stats_delivery_delay_list.end (); ++delivery_delay_it)
+  for (std::vector<double>::const_iterator delivery_delay_it = m_processed_delivery_delay_list.begin ();
+          delivery_delay_it != m_processed_delivery_delay_list.end (); ++delivery_delay_it)
     {
       sum += *delivery_delay_it;
     }
@@ -329,29 +365,32 @@ DataPacketStatistics::ToString () const
   std::sprintf (buffer, "%u", m_source_node_id);
   str += "source-node-id=\"" + std::string (buffer) + "\" ";
 
-  std::sprintf (buffer, "%f", m_packet_creation_time.ToDouble (ns3::Time::S));
+  std::sprintf (buffer, "%f", m_packet_creation_time.GetSeconds ());
   str += "creation-time=\"" + std::string (buffer) + "\" ";
 
-  std::sprintf (buffer, "%f", m_packet_geo_temporal_area.GetArea ().GetX1 ());
+  std::sprintf (buffer, "%f", m_destination_geo_temporal_area.GetArea ().GetX1 ());
   str += "destination-area=\"" + std::string (buffer) + ",";
 
-  std::sprintf (buffer, "%f", m_packet_geo_temporal_area.GetArea ().GetY1 ());
+  std::sprintf (buffer, "%f", m_destination_geo_temporal_area.GetArea ().GetY1 ());
   str += std::string (buffer) + ", ";
 
-  std::sprintf (buffer, "%f", m_packet_geo_temporal_area.GetArea ().GetX2 ());
+  std::sprintf (buffer, "%f", m_destination_geo_temporal_area.GetArea ().GetX2 ());
   str += std::string (buffer) + ",";
 
-  std::sprintf (buffer, "%f", m_packet_geo_temporal_area.GetArea ().GetY2 ());
+  std::sprintf (buffer, "%f", m_destination_geo_temporal_area.GetArea ().GetY2 ());
   str += std::string (buffer) + "\" ";
 
-  std::sprintf (buffer, "%u", m_packet_geo_temporal_area.GetTimePeriod ().GetStartTime ());
+  std::sprintf (buffer, "%04.2f", m_destination_geo_temporal_area.GetTimePeriod ().GetStartTime ().GetSeconds ());
   str += "initial-time=\"" + std::string (buffer) + "\" ";
 
-  std::sprintf (buffer, "%u", m_packet_geo_temporal_area.GetTimePeriod ().GetDuration ());
+  std::sprintf (buffer, "%04.2f", m_destination_geo_temporal_area.GetTimePeriod ().GetDuration ().GetSeconds ());
   str += "duration=\"" + std::string (buffer) + "\" ";
 
-  std::sprintf (buffer, "%u", m_packet_data_size);
-  str += "data-size=\"" + std::string (buffer) + "\" ";
+  std::sprintf (buffer, "%u", m_packet_message_size);
+  str += "data-message-size=\"" + std::string (buffer) + "\" ";
+
+  std::sprintf (buffer, "%u", m_packet_size);
+  str += "packet-size=\"" + std::string (buffer) + "\" ";
 
   str += "/>";
   return str;
@@ -370,17 +409,70 @@ DataPacketStatistics::Print (std::ostream & os) const
 
 SimulationStatistics::SimulationStatistics ()
 : m_nodes_transmitted_packets_counters (), m_data_packets_statistics (),
-m_gta_visitor_nodes (), m_known_destination_areas () { }
+m_gta_visitor_nodes (), m_nodes_id_to_ip (), m_nodes_ip_to_id (),
+m_known_destination_areas () { }
 
-SimulationStatistics::SimulationStatistics (const NavigationSystem::GeoTemporalAreasVisitorNodes & gta_visitor_nodes)
+SimulationStatistics::SimulationStatistics (const NavigationSystem::GeoTemporalAreasVisitorNodes & gta_visitor_nodes,
+                                            const std::map<uint32_t, ns3::Ipv4Address> & nodes_id_to_ip)
 : m_nodes_transmitted_packets_counters (), m_data_packets_statistics (),
-m_gta_visitor_nodes (gta_visitor_nodes), m_known_destination_areas () { }
+m_gta_visitor_nodes (gta_visitor_nodes), m_nodes_id_to_ip (nodes_id_to_ip),
+m_nodes_ip_to_id (), m_known_destination_areas ()
+{
+  SetUp ();
+}
+
+SimulationStatistics::SimulationStatistics (const std::string& gta_visitor_nodes_input_filename,
+                                            const std::map<uint32_t, ns3::Ipv4Address> & nodes_id_to_ip)
+: m_nodes_transmitted_packets_counters (), m_data_packets_statistics (),
+m_gta_visitor_nodes (gta_visitor_nodes_input_filename), m_nodes_id_to_ip (nodes_id_to_ip),
+m_nodes_ip_to_id (), m_known_destination_areas ()
+{
+  SetUp ();
+}
 
 SimulationStatistics::SimulationStatistics (const SimulationStatistics & copy)
 : m_nodes_transmitted_packets_counters (copy.m_nodes_transmitted_packets_counters),
 m_data_packets_statistics (copy.m_data_packets_statistics),
 m_gta_visitor_nodes (copy.m_gta_visitor_nodes),
+m_nodes_id_to_ip (copy.m_nodes_id_to_ip),
+m_nodes_ip_to_id (copy.m_nodes_ip_to_id),
 m_known_destination_areas (copy.m_known_destination_areas) { }
+
+void
+SimulationStatistics::SetUp ()
+{
+  // From the mapping of node ID to node IP address create the inverse map: 
+  // node IP address to node ID.
+  for (std::map<uint32_t, ns3::Ipv4Address>::const_iterator it = m_nodes_id_to_ip.begin ();
+          it != m_nodes_id_to_ip.end (); ++it)
+    {
+      m_nodes_ip_to_id.insert (std::make_pair (it->second, it->first));
+    }
+}
+
+const ns3::Ipv4Address &
+SimulationStatistics::GetNodeIpAddressFromId (const uint32_t node_id) const
+{
+  std::map<uint32_t, ns3::Ipv4Address>::const_iterator node_ip_it
+          = m_nodes_id_to_ip.find (node_id);
+
+  if (node_ip_it == m_nodes_id_to_ip.end ())
+    throw std::out_of_range ("Error: the given node ID is unknown.");
+
+  return node_ip_it->second;
+}
+
+uint32_t
+SimulationStatistics::GetNodeIdFromIpAddress (const ns3::Ipv4Address& node_ip) const
+{
+  std::map<ns3::Ipv4Address, uint32_t>::const_iterator node_id_it
+          = m_nodes_ip_to_id.find (node_ip);
+
+  if (node_id_it == m_nodes_ip_to_id.end ())
+    throw std::out_of_range ("Error: the given node IP address is unknown.");
+
+  return node_id_it->second;
+}
 
 const DataPacketStatistics &
 SimulationStatistics::GetDataPacketStatistics (const DataIdentifier & packet_data_id) const
@@ -396,7 +488,7 @@ SimulationStatistics::GetDataPacketStatistics (const DataIdentifier & packet_dat
 }
 
 void
-SimulationStatistics::AddDataPacket (DataPacketStatistics & packet_statistics)
+SimulationStatistics::AddDataPacket (const DataPacketStatistics & packet_statistics)
 {
   const LibraryUtils::GeoTemporalArea & destination_geo_temporal_area
           = packet_statistics.GetPacketDestinationGeoTemporalArea ();
@@ -408,35 +500,50 @@ SimulationStatistics::AddDataPacket (DataPacketStatistics & packet_statistics)
   if (m_data_packets_statistics.count (packet_statistics.GetDataIdentifier ()) > 0u)
     throw std::runtime_error ("The given DataPacketStatistics already exists.");
 
-  packet_statistics.SetExpectedReceiverNodes (m_gta_visitor_nodes.GetGeoTemporalAreaVisitorNodes (destination_geo_temporal_area));
-
-  m_data_packets_statistics.insert (std::make_pair (packet_statistics.GetDataIdentifier (),
-                                                    packet_statistics));
-
+  // Update set of used areas
   m_known_destination_areas.insert (packet_statistics.GetPacketDestinationGeoTemporalArea ().GetArea ());
+
+  // Insert packet statistics object
+  std::pair < std::map<DataIdentifier, DataPacketStatistics>::iterator, bool> insertion_result;
+  insertion_result = m_data_packets_statistics.insert (std::make_pair (packet_statistics.GetDataIdentifier (),
+                                                                       packet_statistics));
+
+  // Construct the set of expected receiver nodes
+  const std::set<NavigationSystem::VisitorNode> & gta_visitor_nodes_set
+          = m_gta_visitor_nodes.GetGeoTemporalAreaVisitorNodes (destination_geo_temporal_area);
+
+  std::map<ns3::Ipv4Address, ns3::Time> expected_receiver_nodes_map;
+
+  for (std::set<NavigationSystem::VisitorNode>::const_iterator visitor_node_it = gta_visitor_nodes_set.begin ();
+          visitor_node_it != gta_visitor_nodes_set.end (); ++visitor_node_it)
+    {
+      expected_receiver_nodes_map.insert (std::make_pair (GetNodeIpAddressFromId (visitor_node_it->GetNodeId ()),
+                                                          ns3::Seconds (visitor_node_it->GetArrivalTime ())));
+    }
+
+  insertion_result.first->second.SetExpectedReceiverNodes (expected_receiver_nodes_map);
 }
 
 bool
 SimulationStatistics::CountDataPacketReceiverNode (const ns3::Ipv4Address & receiver_node_ip,
-                                                   const uint32_t receiver_node_id,
                                                    const DataPacketReceptionStats & reception_stats)
 {
   std::map<DataIdentifier, DataPacketStatistics>::iterator packet_statistics_it
           = m_data_packets_statistics.find (reception_stats.GetPacketDataIdentifier ());
 
   if (packet_statistics_it == m_data_packets_statistics.end ())
-    throw std::runtime_error ("The specified packet doesn't exist. Add it using AddDataPacket "
+    throw std::runtime_error ("The specified packet doesn't exist. Add it using "
+                              "SimulationStatistics::AddDataPacket "
                               "(const DataPacketStatistics &) function.");
 
-  return packet_statistics_it->second.CountReception (receiver_node_id, reception_stats);
+  return packet_statistics_it->second.CountReception (receiver_node_ip, reception_stats);
 }
 
 void
 SimulationStatistics::SetNodeTransmittedPacketsCounter (const ns3::Ipv4Address & node_ip,
-                                                        const uint32_t node_id,
                                                         const PacketsCounter & node_tx_packets_counter)
 {
-  m_nodes_transmitted_packets_counters[node_id] = node_tx_packets_counter;
+  m_nodes_transmitted_packets_counters.insert (std::make_pair (node_ip, node_tx_packets_counter));
 }
 
 bool
@@ -502,7 +609,7 @@ SimulationStatistics::GetStatistics (double & average_delivery_delay, double & a
   data_transmitted_bytes = 0u;
   control_transmitted_bytes = 0u;
 
-  for (std::map<uint32_t, PacketsCounter>::const_iterator node_transmitted_packets_it =
+  for (std::map<ns3::Ipv4Address, PacketsCounter>::const_iterator node_transmitted_packets_it =
           m_nodes_transmitted_packets_counters.begin ();
           node_transmitted_packets_it != m_nodes_transmitted_packets_counters.end ();
           ++node_transmitted_packets_it)
@@ -654,17 +761,24 @@ SimulationStatistics::GetAreaStatistics (const LibraryUtils::Area & destination_
 // =============================================================================
 
 SimulationStatisticsFile::SimulationStatisticsFile ()
-: m_data_packets_str_section () { }
+: SimulationStatistics (), m_data_packets_str_section () { }
 
-SimulationStatisticsFile::SimulationStatisticsFile (const NavigationSystem::GeoTemporalAreasVisitorNodes & gta_visitor_nodes)
-: SimulationStatistics (gta_visitor_nodes), m_data_packets_str_section () { }
+SimulationStatisticsFile::SimulationStatisticsFile (const NavigationSystem::GeoTemporalAreasVisitorNodes & gta_visitor_nodes,
+                                                    const std::map<uint32_t, ns3::Ipv4Address>& nodes_id_to_ip)
+: SimulationStatistics (gta_visitor_nodes, nodes_id_to_ip),
+m_data_packets_str_section () { }
+
+SimulationStatisticsFile::SimulationStatisticsFile (const std::string& gta_visitor_nodes_input_filename,
+                                                    const std::map<uint32_t, ns3::Ipv4Address>& nodes_id_to_ip)
+: SimulationStatistics (gta_visitor_nodes_input_filename, nodes_id_to_ip),
+m_data_packets_str_section () { }
 
 SimulationStatisticsFile::SimulationStatisticsFile (const SimulationStatisticsFile & copy)
 : SimulationStatistics (copy),
 m_data_packets_str_section (copy.m_data_packets_str_section) { }
 
 void
-SimulationStatisticsFile::AddDataPacket (DataPacketStatistics & packet_statistics)
+SimulationStatisticsFile::AddDataPacket (const DataPacketStatistics & packet_statistics)
 {
   SimulationStatistics::AddDataPacket (packet_statistics);
 
@@ -674,22 +788,20 @@ SimulationStatisticsFile::AddDataPacket (DataPacketStatistics & packet_statistic
 
 bool
 SimulationStatisticsFile::CountDataPacketReceiverNode (const ns3::Ipv4Address & receiver_node_ip,
-                                                       const uint32_t receiver_node_id,
                                                        const DataPacketReceptionStats & reception_stats)
 {
   const bool expected_receiver
           = SimulationStatistics::CountDataPacketReceiverNode (receiver_node_ip,
-                                                               receiver_node_id,
                                                                reception_stats);
 
   if (expected_receiver == false)
-    return expected_receiver; // Returns false.
+    return false;
 
   char buffer[30];
   const std::string indentation = "  ";
   const std::string end_line = "\n"; // LibraryUtils::SYSTEM_NEW_LINE_STRING ();
 
-  std::sprintf (buffer, "%u", receiver_node_id);
+  std::sprintf (buffer, "%u", GetNodeIdFromIpAddress (receiver_node_ip));
   std::string reception_str = indentation + indentation
           + "<receiver-node "
           + "node-ip=\"" + LibraryUtils::ToString (receiver_node_ip) + "\" "
@@ -715,19 +827,9 @@ SimulationStatisticsFile::CountDataPacketReceiverNode (const ns3::Ipv4Address & 
   std::sprintf (buffer, "%u", reception_stats.GetReceivedDuplicatesCount ());
   reception_str += "received-duplicates=\"" + std::string (buffer) + "\" />" + end_line;
 
-  m_data_packets_str_section[reception_stats.GetPacketDataIdentifier ()] += reception_str;
+  m_data_packets_str_section.at (reception_stats.GetPacketDataIdentifier ()) += reception_str;
 
-  return expected_receiver; // Returns true
-}
-
-void
-SimulationStatisticsFile::SetNodeTransmittedPacketsCounter (const ns3::Ipv4Address& node_ip,
-                                                            const uint32_t node_id,
-                                                            const PacketsCounter& node_tx_packets_counter)
-{
-  SimulationStatistics::SetNodeTransmittedPacketsCounter (node_ip, node_id,
-                                                          node_tx_packets_counter);
-  m_node_tx_packets_counter_ips.insert (std::make_pair (node_id, node_ip));
+  return true;
 }
 
 void
@@ -737,7 +839,6 @@ SimulationStatisticsFile::SaveToXmlFile (const std::string & output_filename) co
   const std::string end_line = "\n"; // LibraryUtils::SYSTEM_NEW_LINE_STRING ();
   const std::string indentation = "  ";
   char buffer[40];
-  uint32_t current_node_id;
 
   if (output_filename_trimmed.empty ())
     throw std::runtime_error ("Invalid filename: the filename cannot be empty.");
@@ -843,19 +944,16 @@ SimulationStatisticsFile::SaveToXmlFile (const std::string & output_filename) co
   // Print transmission counters
   output_file << "<nodes-transmitted-packets>" << end_line;
 
-  for (std::map<uint32_t, PacketsCounter>::const_iterator node_packets_counter_it
+  for (std::map<ns3::Ipv4Address, PacketsCounter>::const_iterator node_packets_counter_it
           = m_nodes_transmitted_packets_counters.begin ();
           node_packets_counter_it != m_nodes_transmitted_packets_counters.end ();
           ++node_packets_counter_it)
     {
       output_file << indentation << "<node-transmitted-packets ";
 
-      current_node_id = node_packets_counter_it->first;
-      const ns3::Ipv4Address & current_node_ip = m_node_tx_packets_counter_ips.at (current_node_id);
+      output_file << "node-ip=\"" << LibraryUtils::ToString (node_packets_counter_it->first) << "\" ";
 
-      output_file << "node-ip=\"" << LibraryUtils::ToString (current_node_ip) << "\" ";
-
-      std::sprintf (buffer, "%u", current_node_id);
+      std::sprintf (buffer, "%u", GetNodeIdFromIpAddress (node_packets_counter_it->first));
       output_file << "node-id=\"" << buffer << "\" ";
 
       std::sprintf (buffer, "%u", node_packets_counter_it->second.GetControlPacketsCount ());
@@ -909,17 +1007,20 @@ SimulationStatisticsFile::SaveToXmlFile (const std::string & output_filename) co
       std::sprintf (buffer, "%f", geo_temporal_area.GetArea ().GetY2 ());
       output_file << buffer << "\" ";
 
-      std::sprintf (buffer, "%u", geo_temporal_area.GetTimePeriod ().GetStartTime ());
+      std::sprintf (buffer, "%04.2f", geo_temporal_area.GetTimePeriod ().GetStartTime ().GetSeconds ());
       output_file << "temporal-scope=\"" << buffer << ",";
 
-      std::sprintf (buffer, "%u", geo_temporal_area.GetTimePeriod ().GetEndTime ());
+      std::sprintf (buffer, "%04.2f", geo_temporal_area.GetTimePeriod ().GetEndTime ().GetSeconds ());
       output_file << buffer << "\" ";
 
-      std::sprintf (buffer, "%f", data_packet_stats_it->second.GetPacketCreationTime ().ToDouble (ns3::Time::S));
+      std::sprintf (buffer, "%f", data_packet_stats_it->second.GetPacketCreationTime ().GetSeconds ());
       output_file << "creation-time=\"" << buffer << "\" ";
 
-      std::sprintf (buffer, "%u", data_packet_stats_it->second.GetPacketDataSize ());
-      output_file << "data-size=\"" << buffer << "\" ";
+      std::sprintf (buffer, "%u", data_packet_stats_it->second.GetPacketMessageSize ());
+      output_file << "data-message-size=\"" << buffer << "\" ";
+
+      std::sprintf (buffer, "%u", data_packet_stats_it->second.GetPacketSize ());
+      output_file << "packet-size=\"" << buffer << "\" ";
 
       data_packet_stats_it->second.GetStatistics (confirmed_packet_receivers_count,
                                                   expected_packet_receivers_count,

@@ -480,113 +480,140 @@ class DataPacketStatistics
 {
 private:
 
-  /**
-   * Identifier of the data packet (source node IP + packet SEQ number).
-   */
+  /** Identifier of the data packet (source node IP + packet SEQ number). */
   DataIdentifier m_data_id;
 
-  /**
-   * Numeric ID of the source node.
-   */
+  /** Numeric ID of the source node. */
   uint32_t m_source_node_id;
 
-  /**
-   * Time when the packet was created.
-   */
+  /** Time when the packet was created. */
   ns3::Time m_packet_creation_time;
 
-  /**
-   * Size (in bytes) of the packet's data message.
+  /** 
+   * Size (in bytes) of ONLY the message field of the data packet (in other 
+   * words, not counting other fields of the data packet).
    */
-  uint32_t m_packet_data_size;
+  uint32_t m_packet_message_size;
+
+  /** 
+   * Size (in bytes) of the real entire packet (including headers and trailers like 
+   * IP, UDP, etc). 
+   */
+  uint32_t m_packet_size;
+
+  /** The destination geo-temporal area of the data packet. */
+  LibraryUtils::GeoTemporalArea m_destination_geo_temporal_area;
 
   /**
-   * The destination geo-temporal area of the data packet.
-   */
-  LibraryUtils::GeoTemporalArea m_packet_geo_temporal_area;
-
-  /**
-   * Indicates if the set of nodes that should receive the packet is set (<code>true</code>),
-   * otherwise <code>false</code>.
+   * Indicates if the set of nodes that should receive the packet is set 
+   * (<code>true</code>), otherwise <code>false</code>.
    */
   bool m_expected_receiver_nodes_set_flag;
 
   /**
    * This maps all the nodes that visited the packet's geo-temporal area to their
-   * respective area arrival time.
+   * respective arrival time to the area.
    *
-   * The mapping is: <code>Visitor node ID (key) --> node arrival time (value)</code>.
+   * The mapping is: <code>Visitor node IP address --> node's area arrival time</code>.
    */
-  std::map<uint32_t, uint32_t> m_expected_receiver_nodes_gta_arrival_time_mapping;
+  std::map<ns3::Ipv4Address, ns3::Time> m_expected_receiver_nodes_map;
 
   /**
-   * The set of IDs of all the expected receiver nodes that have been processed.
+   * The set of IP addresses of all expected receiver nodes that have been 
+   * processed.
    */
-  std::set<uint32_t> m_stats_processed_receiver_nodes_ids_set;
+  std::set<ns3::Ipv4Address> m_processed_receiver_nodes_ips;
 
   /**
-   * The set of IDs of all the nodes that are confirmed receivers of the packet.
+   * The set of IP addresses of all expected receiver nodes that are confirmed 
+   * that received the packet.
    */
-  std::set<uint32_t> m_stats_confirmed_receiver_nodes_ids_set;
+  std::set<ns3::Ipv4Address> m_confirmed_receiver_nodes_ips;
 
-  /**
-   * The list of all delivery delays.
-   */
-  std::vector<double> m_stats_delivery_delay_list;
+  /** The list of all delivery delays. */
+  std::vector<double> m_processed_delivery_delay_list;
+
 
 public:
 
   DataPacketStatistics ();
 
-  DataPacketStatistics (const DataIdentifier & data_id, uint32_t source_node_id,
-                        const ns3::Time & creation_time, uint32_t data_size,
-                        const LibraryUtils::GeoTemporalArea & geo_temporal_area);
+  /**
+   * Initializes the object.
+   * 
+   * @param data_id Unique identifier of the data packet.
+   * @param source_node_id Numeric identifier of the node that created the packet.
+   * @param creation_time Simulation time when the packet was created.
+   * @param message_size Size (in bytes) of the message of the packet.
+   * @param data_header_size Size (in bytes) of the entire DATA header.
+   * @param destination_geo_temporal_area Destination geo-temporal area of the 
+   * packet.
+   */
+  DataPacketStatistics (const DataIdentifier & data_id,
+                        uint32_t source_node_id,
+                        const ns3::Time & creation_time,
+                        uint32_t message_size,
+                        uint32_t data_header_size,
+                        const LibraryUtils::GeoTemporalArea & destination_geo_temporal_area);
 
   DataPacketStatistics (const DataPacketStatistics & copy);
 
   /**
-   * Returns the identifier of the data packet.
+   * Calculates the size (in bytes) of the entire real packet (DATA header, UDP
+   * header, IP header, IEEE 802.11 header, LCC header and frame end).
+   * 
+   * @param data_header_size Size (in bytes) of the entire DATA header.
+   * 
+   * @return The size (in bytes) of the entire real packet.
    */
+  static inline uint32_t
+  CalculateRealPacketSize (uint32_t data_header_size)
+  {
+    return data_header_size // Entire data packet size
+            + 24 + 8 // IEEE 802.11 header + LCC header
+            + 20 + 8 + 4; // + IP header + UDP header + Frame end.
+  }
+
+  /** Returns the identifier of the data packet. */
   inline const DataIdentifier &
   GetDataIdentifier () const
   {
     return m_data_id;
   }
 
-  /**
-   * Returns the IPv4 address of the source node.
-   */
+  /** Returns the IPv4 address of the source node. */
   inline const ns3::Ipv4Address &
   GetSourceNodeIp () const
   {
     return m_data_id.GetSourceIp ();
   }
 
-  /**
-   * Returns the numeric ID of the source node.
-   */
+  /** Returns the numeric ID of the source node. */
   inline uint32_t
   GetSourceNodeId () const
   {
     return m_source_node_id;
   }
 
-  /**
-   * Returns the time (in seconds) when the packet was created.
-   */
+  /** Returns the time (in seconds) when the packet was created. */
   inline const ns3::Time &
   GetPacketCreationTime () const
   {
     return m_packet_creation_time;
   }
 
-  /**
-   * Returns the size (in bytes) of the packet's data message.
-   */
+  /** Returns the size (in bytes) of the packet's data message. */
   inline uint32_t
-  GetPacketDataSize () const
+  GetPacketMessageSize () const
   {
-    return m_packet_data_size;
+    return m_packet_message_size;
+  }
+
+  /** Returns the size (in bytes) of the whole packet (including headers and trailers). */
+  inline uint32_t
+  GetPacketSize () const
+  {
+    return m_packet_size;
   }
 
   /**
@@ -595,7 +622,7 @@ public:
   inline const LibraryUtils::GeoTemporalArea &
   GetPacketDestinationGeoTemporalArea () const
   {
-    return m_packet_geo_temporal_area;
+    return m_destination_geo_temporal_area;
   }
 
   /**
@@ -604,7 +631,7 @@ public:
   inline uint32_t
   GetExpectedReceiverNodesCount () const
   {
-    return m_expected_receiver_nodes_gta_arrival_time_mapping.size ();
+    return m_expected_receiver_nodes_map.size ();
   }
 
   /**
@@ -613,7 +640,7 @@ public:
   inline uint32_t
   GetConfirmedReceiverNodesCount () const
   {
-    return m_stats_confirmed_receiver_nodes_ids_set.size ();
+    return m_confirmed_receiver_nodes_ips.size ();
   }
 
   /**
@@ -636,22 +663,29 @@ public:
   ClearExpectedReceiverNodes ();
 
   /**
-   * Sets the set of nodes that visited the packet's geo-temporal area. Each item is
-   * a <code>VisitorNode</object> object that contains the ID of the node and its
-   * arrival time. This set can be viewed as the set of nodes that are expected to
-   * receive the packet.
-   *
-   * If the arrival time of at least one visitor node occurs outside the period of
-   * time of the geo-temporal area it will throw an exception and delete all elements
-   * from the set of nodes that visited the packet's geo-temporal area. This is to
-   * avoid undefined behavior. If this happens then the user can start over after
-   * fixing the nodes' arrival time where needed.
-   *
-   * To avoid incongruities, it calls <code>ClearExpectedReceiverNodes ()</code> to
-   * delete all data that may have been collected.
+   * Sets all the valid receiver nodes contained in the specified map of candidate
+   * receiver nodes as the set of expected receiver nodes. 
+   * 
+   * Invalid nodes are those that didn't arrived to the destination geo-temporal
+   * area during its active temporal scope and the packet's source node itself.
+   * 
+   * It returns the number of valid nodes found in the map of candidate receiver
+   * nodes and set as expected receiver nodes.
+   * 
+   * To avoid incongruities, before doing anything else, it calls 
+   * <code>DataPacketStatistics::ClearExpectedReceiverNodes ()</code>
+   * to delete the current set of expected receiver nodes. After this call it 
+   * sets the valid receiver nodes. So all the desired nodes to be set as expected
+   * received nodes must be set in one call to this function.
+   * 
+   * @param candidate_receiver_nodes [IN] Map of candidate receiver nodes that 
+   * contains the node's IP address and its arrival time to the destination 
+   * geo-temporal area.
+   * 
+   * @return The number of valid expected receiver nodes set.
    */
-  void
-  SetExpectedReceiverNodes (const std::set<NavigationSystem::VisitorNode> & visitor_nodes_set);
+  uint32_t
+  SetExpectedReceiverNodes (const std::map<ns3::Ipv4Address, ns3::Time> & candidate_receiver_nodes);
 
   /**
    * Counts the information about the DATA packet reception.
@@ -659,8 +693,8 @@ public:
    * Returns <code>true</code> if the processed packet reception is from an expected receiver node,
    * and therefore it counts. If the packet reception is not from an expected receiver node then it
    * returns <code>false</code> and it is not counted.
-   *
-   * @param receiver_node_id Identifier of the node that received the DATA packet.
+   * 
+   * @param receiver_node_ip IP address of the node that received the DATA packet.
    * @param reception_stats Object that contains information about the packet reception (reception
    * time, transmitter node, etc).
    *
@@ -668,7 +702,7 @@ public:
    * <code>false</code>.
    */
   bool
-  CountReception (const uint32_t & receiver_node_id, const DataPacketReceptionStats & reception_stats);
+  CountReception (const ns3::Ipv4Address & receiver_node_ip, const DataPacketReceptionStats & reception_stats);
 
   /**
    * Computes the final statistics using all the collected reception data that was
@@ -709,13 +743,14 @@ operator== (const DataPacketStatistics & lhs, const DataPacketStatistics & rhs)
   return lhs.m_data_id == rhs.m_data_id
           && lhs.m_source_node_id == rhs.m_source_node_id
           && lhs.m_packet_creation_time == rhs.m_packet_creation_time
-          && lhs.m_packet_geo_temporal_area == rhs.m_packet_geo_temporal_area
-          && lhs.m_packet_data_size == rhs.m_packet_data_size
+          && lhs.m_packet_message_size == rhs.m_packet_message_size
+          && lhs.m_packet_size == rhs.m_packet_size
+          && lhs.m_destination_geo_temporal_area == rhs.m_destination_geo_temporal_area
           && lhs.m_expected_receiver_nodes_set_flag == rhs.m_expected_receiver_nodes_set_flag
-          && lhs.m_expected_receiver_nodes_gta_arrival_time_mapping
-          == rhs.m_expected_receiver_nodes_gta_arrival_time_mapping
-          && lhs.m_stats_confirmed_receiver_nodes_ids_set == rhs.m_stats_confirmed_receiver_nodes_ids_set
-          && lhs.m_stats_delivery_delay_list == rhs.m_stats_delivery_delay_list;
+          && lhs.m_expected_receiver_nodes_map == rhs.m_expected_receiver_nodes_map
+          && lhs.m_processed_receiver_nodes_ips == rhs.m_processed_receiver_nodes_ips
+          && lhs.m_confirmed_receiver_nodes_ips == rhs.m_confirmed_receiver_nodes_ips
+          && lhs.m_processed_delivery_delay_list == rhs.m_processed_delivery_delay_list;
 }
 
 inline bool
@@ -769,25 +804,49 @@ class SimulationStatistics
 {
 protected:
 
-  std::map<uint32_t, PacketsCounter> m_nodes_transmitted_packets_counters;
+  std::map<ns3::Ipv4Address, PacketsCounter> m_nodes_transmitted_packets_counters;
 
   std::map<DataIdentifier, DataPacketStatistics> m_data_packets_statistics;
 
   NavigationSystem::GeoTemporalAreasVisitorNodes m_gta_visitor_nodes;
 
+  std::map<uint32_t, ns3::Ipv4Address> m_nodes_id_to_ip;
+
+  std::map<ns3::Ipv4Address, uint32_t> m_nodes_ip_to_id;
+
   std::set<LibraryUtils::Area> m_known_destination_areas;
+
 
 public:
 
   SimulationStatistics ();
 
-  SimulationStatistics (const NavigationSystem::GeoTemporalAreasVisitorNodes & gta_visitor_nodes);
+  SimulationStatistics (const NavigationSystem::GeoTemporalAreasVisitorNodes & gta_visitor_nodes,
+                        const std::map<uint32_t, ns3::Ipv4Address> & nodes_id_to_ip);
+
+  SimulationStatistics (const std::string & gta_visitor_nodes_input_filename,
+                        const std::map<uint32_t, ns3::Ipv4Address> & nodes_id_to_ip);
 
   SimulationStatistics (const SimulationStatistics & copy);
 
-  /**
-   * Returns the set of known destination areas.
-   */
+
+protected:
+
+  void
+  SetUp ();
+
+
+public:
+
+  /** Returns the IP address of the node with the given node ID. */
+  const ns3::Ipv4Address &
+  GetNodeIpAddressFromId (const uint32_t node_id) const;
+
+  /** Returns the node ID of the node with the given IP address. */
+  uint32_t
+  GetNodeIdFromIpAddress (const ns3::Ipv4Address & node_ip) const;
+
+  /** Returns the set of known destination areas. */
   inline const std::set<LibraryUtils::Area> &
   GetDestinationAreas () const
   {
@@ -805,47 +864,38 @@ public:
   const DataPacketStatistics &
   GetDataPacketStatistics (const DataIdentifier & packet_data_id) const;
 
-  /**
-   * Adds a data packet.
-   *
-   * The given <code>DataPacketStatistics</code> object is modified to set its
-   * expected receiver nodes with the <code>GeoTemporalAreasVisitorNodes</code>
-   * object given in the constructor
-   * (<code>SimulationStatistics (const GeoTemporalAreasVisitorNodes & gta_visitor_nodes)</code>).
-   */
+
+
+  /** Adds a data packet. */
   virtual void
-  AddDataPacket (DataPacketStatistics & packet_statistics);
+  AddDataPacket (const DataPacketStatistics & packet_statistics);
 
   /**
    * Counts the information about the DATA packet reception.
    *
-   * Returns <code>true</code> if the processed packet reception is from an expected receiver node,
-   * and therefore it counts. If the packet reception is not from an expected receiver node then it
-   * returns <code>false</code> and it is not counted.
+   * Returns <code>true</code> if the processed packet reception is from an 
+   * expected receiver node, and therefore it counts. If the packet reception is
+   * not from an expected receiver node then it returns <code>false</code> and 
+   * it is not counted.
    *
    * @param receiver_node_ip IP address of the node that received the DATA packet.
-   * @param receiver_node_id Identifier of the node that received the DATA packet.
-   * @param reception_stats Object that contains information about the packet reception (reception
-   * time, transmitter node, etc).
+   * @param reception_stats Object that contains information about the packet 
+   * reception (reception time, transmitter node, etc).
    *
-   * @return <code>true</code> if packet reception from a expected receiver node, otherwise
-   * <code>false</code>.
+   * @return <code>true</code> if packet reception from a expected receiver node, 
+   * otherwise <code>false</code>.
    */
   virtual bool
   CountDataPacketReceiverNode (const ns3::Ipv4Address & receiver_node_ip,
-                               const uint32_t receiver_node_id,
                                const DataPacketReceptionStats & reception_stats);
 
-  /**
-   * Sets the counter of transmitted packets of the specified node.
-   */
-  virtual void
+  /** Sets the counter of transmitted packets of the specified node. */
+  void
   SetNodeTransmittedPacketsCounter (const ns3::Ipv4Address & node_ip,
-                                    const uint32_t node_id,
                                     const PacketsCounter & node_tx_packets_counter);
 
   /**
-   * Computes the final statistics using all the collected reception data of all
+   * Computes the final statistics using the collected reception data of all
    * entered DATA packets.
    *
    * If there are no data packets in the object then it returns <code>false</code>,
@@ -890,32 +940,30 @@ private:
   /** Used to store the XML string of confirmed receivers of each data packet. */
   std::map<DataIdentifier, std::string> m_data_packets_str_section;
 
-  /** Used to store the IP address of the node. */
-  std::map<uint32_t, ns3::Ipv4Address> m_node_tx_packets_counter_ips;
 
 public:
 
   SimulationStatisticsFile ();
 
-  SimulationStatisticsFile (const NavigationSystem::GeoTemporalAreasVisitorNodes & gta_visitor_nodes);
+  SimulationStatisticsFile (const NavigationSystem::GeoTemporalAreasVisitorNodes & gta_visitor_nodes,
+                            const std::map<uint32_t, ns3::Ipv4Address> & nodes_id_to_ip);
+
+  SimulationStatisticsFile (const std::string & gta_visitor_nodes_input_filename,
+                            const std::map<uint32_t, ns3::Ipv4Address> & nodes_id_to_ip);
 
   SimulationStatisticsFile (const SimulationStatisticsFile & copy);
 
-  void AddDataPacket (DataPacketStatistics & packet_statistics) override;
+
+  void
+  AddDataPacket (const DataPacketStatistics & packet_statistics) override;
 
   bool
   CountDataPacketReceiverNode (const ns3::Ipv4Address & receiver_node_ip,
-                               const uint32_t receiver_node_id,
                                const DataPacketReceptionStats & reception_stats) override;
 
-  void
-  SetNodeTransmittedPacketsCounter (const ns3::Ipv4Address & node_ip,
-                                    const uint32_t node_id,
-                                    const PacketsCounter & node_tx_packets_counter) override;
-
+  /** Stores in the given file the resulting statistics in XML format. */
   void
   SaveToXmlFile (const std::string & output_filename) const;
-
 };
 
 }
