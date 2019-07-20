@@ -797,22 +797,37 @@ RoutingProtocol::NewMessage (const std::string& message,
   m_created_data_packets.push_back (std::make_pair (data_packet, Simulator::Now ()));
 }
 
-void
+bool
 RoutingProtocol::SendUnicastPacket (const Ptr<Packet> packet_to_send,
                                     const Ipv4Address& destination_node) const
 {
-  NS_LOG_FUNCTION (this << packet_to_send << destination_node);
+  NS_LOG_FUNCTION (this << packet_to_send << destination_node
+                   << (m_unicast_socket ? "Node enabled" : "Node disabled"));
+
+  if (m_unicast_socket == 0)
+    {
+      NS_LOG_DEBUG ("Node is disabled, packet [" << packet_to_send << "] was not sent.");
+      return false;
+    }
+
   m_unicast_socket->SendTo (packet_to_send, 0,
                             InetSocketAddress (destination_node,
                                                SPRAY_AND_WAIT_ROUTING_PROTOCOL_PORT));
   NS_LOG_DEBUG ("Packet [" << packet_to_send << "] send to node "
                 << destination_node << " (unicast).");
+  return true;
 }
 
-void
+bool
 RoutingProtocol::SendBroadcastPacket (const Ptr<Packet> packet_to_send) const
 {
-  NS_LOG_FUNCTION (this << packet_to_send);
+  NS_LOG_FUNCTION (this << packet_to_send << (m_unicast_socket ? "Node enabled" : "Node disabled"));
+
+  if (m_unicast_socket == 0)
+    {
+      NS_LOG_DEBUG ("Node is disabled, packet [" << packet_to_send << "] was not sent.");
+      return false;
+    }
 
   Ipv4Address destination_broadcast;
 
@@ -828,6 +843,7 @@ RoutingProtocol::SendBroadcastPacket (const Ptr<Packet> packet_to_send) const
                                                SPRAY_AND_WAIT_ROUTING_PROTOCOL_PORT));
   NS_LOG_DEBUG ("Packet [" << packet_to_send << "] broadcasted to "
                 << destination_broadcast << ".");
+  return true;
 }
 
 void
@@ -843,13 +859,19 @@ RoutingProtocol::SendHelloPacket ()
   packet_to_send->AddHeader (hello_header);
   packet_to_send->AddHeader (TypeHeader (PacketType::Hello));
 
-  // Count the transmitted packet
-  uint32_t packet_size = RoutingProtocol::CalculateCompletePacketSize (packet_to_send);
-  m_tx_packets_counter.CountPacket (PacketClass::Control, packet_size);
-
   // Broadcast the hello
-  SendBroadcastPacket (packet_to_send);
-  NS_LOG_DEBUG ("HELLO packet sent from " << m_selected_interface_address.GetLocal ());
+  if (SendBroadcastPacket (packet_to_send))
+    {
+      // Count the transmitted packet
+      uint32_t packet_size = RoutingProtocol::CalculateCompletePacketSize (packet_to_send);
+      m_tx_packets_counter.CountPacket (PacketClass::Control, packet_size);
+
+      NS_LOG_DEBUG ("HELLO packet broadcasted from " << m_selected_interface_address.GetLocal ());
+    }
+  else
+    {
+      NS_LOG_DEBUG ("HELLO packet could not be broadcasted (maybe node is disabled).");
+    }
 }
 
 void
@@ -870,14 +892,21 @@ RoutingProtocol::SendReplyPacket (const Ipv4Address& destination_node)
   packet_to_send->AddHeader (reply_header);
   packet_to_send->AddHeader (TypeHeader (PacketType::Reply));
 
-  // Count the transmitted packet
-  uint32_t packet_size = RoutingProtocol::CalculateCompletePacketSize (packet_to_send);
-  m_tx_packets_counter.CountPacket (PacketClass::Control, packet_size);
-
   // Transmit the packet
-  SendUnicastPacket (packet_to_send, destination_node);
-  NS_LOG_DEBUG ("REPLY packet sent from " << m_selected_interface_address.GetLocal ()
-                << " to " << destination_node);
+  if (SendUnicastPacket (packet_to_send, destination_node))
+    {
+      // Count the transmitted packet
+      uint32_t packet_size = RoutingProtocol::CalculateCompletePacketSize (packet_to_send);
+      m_tx_packets_counter.CountPacket (PacketClass::Control, packet_size);
+
+      NS_LOG_DEBUG ("REPLY packet sent from " << m_selected_interface_address.GetLocal ()
+                    << " to " << destination_node);
+    }
+  else
+    {
+      NS_LOG_DEBUG ("REPLY packet could not be sent to " << destination_node
+                    << " (maybe node is disabled).");
+    }
 }
 
 void
@@ -906,14 +935,21 @@ RoutingProtocol::SendReplyBackPacket (const Ipv4Address& destination_node,
   packet_to_send->AddHeader (reply_back_header);
   packet_to_send->AddHeader (TypeHeader (PacketType::ReplyBack));
 
-  // Count the transmitted packet
-  uint32_t packet_size = RoutingProtocol::CalculateCompletePacketSize (packet_to_send);
-  m_tx_packets_counter.CountPacket (PacketClass::Control, packet_size);
-
   // Transmit the packet
-  SendUnicastPacket (packet_to_send, destination_node);
-  NS_LOG_DEBUG ("REPLY_BACK packet sent from " << m_selected_interface_address.GetLocal ()
-                << " to " << destination_node);
+  if (SendUnicastPacket (packet_to_send, destination_node))
+    {
+      // Count the transmitted packet
+      uint32_t packet_size = RoutingProtocol::CalculateCompletePacketSize (packet_to_send);
+      m_tx_packets_counter.CountPacket (PacketClass::Control, packet_size);
+
+      NS_LOG_DEBUG ("REPLY_BACK packet sent from " << m_selected_interface_address.GetLocal ()
+                    << " to " << destination_node);
+    }
+  else
+    {
+      NS_LOG_DEBUG ("REPLY_BACK packet could not be sent to " << destination_node
+                    << " (maybe node is disabled).");
+    }
 }
 
 void
@@ -1006,17 +1042,24 @@ RoutingProtocol::SendDataPacket (const Ipv4Address& destination_ip,
   packet_to_send->AddHeader (data_to_send);
   packet_to_send->AddHeader (TypeHeader (PacketType::Data));
 
-  // Count the transmitted packet
-  uint32_t packet_size = RoutingProtocol::CalculateCompletePacketSize (packet_to_send);
-  m_tx_packets_counter.CountPacket (PacketClass::Data, packet_size);
-
-  // Log the transmission
-  m_packets_queue.LogPacketTransmitted (data_to_send.GetDataIdentifier ());
-
   // Transmit the packet
-  SendUnicastPacket (packet_to_send, destination_ip);
-  NS_LOG_DEBUG ("DATA packet sent from " << m_selected_interface_address.GetLocal ()
-                << " to " << destination_ip);
+  if (SendUnicastPacket (packet_to_send, destination_ip))
+    {
+      // Count the transmitted packet
+      uint32_t packet_size = RoutingProtocol::CalculateCompletePacketSize (packet_to_send);
+      m_tx_packets_counter.CountPacket (PacketClass::Data, packet_size);
+
+      // Log the transmission
+      m_packets_queue.LogPacketTransmitted (data_to_send.GetDataIdentifier ());
+
+      NS_LOG_DEBUG ("DATA packet sent from " << m_selected_interface_address.GetLocal ()
+                    << " to " << destination_ip);
+    }
+  else
+    {
+      NS_LOG_DEBUG ("DATA packet could not be sent to " << destination_ip
+                    << " (maybe node is disabled).");
+    }
 }
 
 void

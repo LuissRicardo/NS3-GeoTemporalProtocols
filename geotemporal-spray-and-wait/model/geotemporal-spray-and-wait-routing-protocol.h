@@ -375,13 +375,23 @@ public:
 
 private:
 
-  /** Transmits via unicast the given packet to the specified destination node. */
-  void
+  /**
+   * Transmits via unicast the given packet to the specified destination node.
+   * 
+   * Returns <code>true</code> if the packet was transmitted successfully, 
+   * otherwise it returns <code>false</code>.
+   */
+  bool
   SendUnicastPacket (const Ptr<Packet> packet_to_send,
                      const Ipv4Address & destination_node) const;
 
-  /** Broadcasts the given packet. */
-  void
+  /**
+   * Broadcasts the given packet.
+   * 
+   * Returns <code>true</code> if the packet was transmitted successfully, 
+   * otherwise it returns <code>false</code>.
+   */
+  bool
   SendBroadcastPacket (const Ptr<Packet> packet_to_send) const;
 
   /** Broadcasts a HELLO packet. */
