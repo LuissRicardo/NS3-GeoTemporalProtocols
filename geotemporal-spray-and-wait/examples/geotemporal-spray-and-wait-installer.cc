@@ -71,9 +71,9 @@ m_data_packet_source_vehicles_count (8u), m_data_packets_per_source (2u),
 m_data_packet_message_size (128u), m_data_packets_data_rate (1000u),
 m_mobility_scenario_id ("60"),
 m_vehicles_count (2u), m_fixed_nodes_distance (200u),
-m_use_80211p_mac_protocol (false), m_hello_packets_interval (1000u),
-m_packet_queue_max_length (128u), m_max_packet_replicas (32u),
-m_neighbor_expiration_time (10u), m_binary_mode (false),
+m_use_80211p_mac_protocol (false), m_progress_report_time_interval (25u),
+m_hello_packets_interval (1000u), m_packet_queue_max_length (128u),
+m_max_packet_replicas (32u), m_neighbor_expiration_time (10u), m_binary_mode (false),
 m_streets_graph_input_filename (""), m_street_junctions_input_filename (""),
 m_vehicles_routes_input_filename (""), m_vehicles_mobility_trace_filename (""),
 m_random_destination_gta_input_filename (""), m_gta_visitor_vehicles_input_filename (""),
@@ -99,6 +99,7 @@ m_mobility_scenario_id (copy.m_mobility_scenario_id),
 m_vehicles_count (copy.m_vehicles_count),
 m_fixed_nodes_distance (copy.m_fixed_nodes_distance),
 m_use_80211p_mac_protocol (copy.m_use_80211p_mac_protocol),
+m_progress_report_time_interval (copy.m_progress_report_time_interval),
 m_hello_packets_interval (copy.m_hello_packets_interval),
 m_packet_queue_max_length (copy.m_packet_queue_max_length),
 m_max_packet_replicas (copy.m_max_packet_replicas),
@@ -178,10 +179,16 @@ GeoTemporalSprayAndWaitInstaller::Configure (int argc, char** argv)
                 "[Default value: false]",
                 m_use_80211p_mac_protocol);
 
+  cmd.AddValue ("progressReportInterval",
+                "Time interval (in seconds) between progress reports. If set to "
+                "zero then progress reports are disabled. "
+                "[Default value: 25]",
+                m_progress_report_time_interval);
+
   // Routing protocol parameters
 
   cmd.AddValue ("helloPacketsInterval",
-                "Interval (in milliseconds) between HELLO packets transmissions. "
+                "Time interval (in milliseconds) between HELLO packets transmissions. "
                 "[Default value: 1,000]",
                 m_hello_packets_interval);
 
@@ -500,13 +507,18 @@ GeoTemporalSprayAndWaitInstaller::Run ()
     std::cout << " (Using mobile nodes, parameter ignored)\n";
   else
     std::cout << " (Using fixed position nodes, parameter used)\n";
-  std::cout << " - Use 802.11p MAC protocol        :  " << (m_use_80211p_mac_protocol ? "true" : "false") << "\n";
+  std::cout << " - Use 802.11p MAC protocol        :  " << (m_use_80211p_mac_protocol ? "Enabled" : "Disabled") << "\n";
+  std::cout << " - Progress reports time interval  :  ";
+  if (m_progress_report_time_interval == 0u)
+    std::cout << "Disabled\n";
+  else
+    std::cout << m_progress_report_time_interval << " seconds\n";
   std::cout << "\n";
 
-  std::cout << " - Hello packets interval          :  " << m_hello_packets_interval << " milliseconds\n";
+  std::cout << " - Hello packets time interval     :  " << m_hello_packets_interval << " milliseconds\n";
   std::cout << " - Maximum data packet replicas    :  " << m_max_packet_replicas << " packet replicas\n";
   std::cout << " - Neighbor expiration time        :  " << m_neighbor_expiration_time << " seconds\n";
-  std::cout << " - Binary mode                     :  " << (m_binary_mode ? "true" : "false") << "\n";
+  std::cout << " - Binary mode                     :  " << (m_binary_mode ? "Enabled" : "Disabled") << "\n";
   std::cout << "\n";
 
   std::cout << " - Output statistics XML file      :  " << m_statistics_output_filename << "\n";
@@ -523,13 +535,14 @@ GeoTemporalSprayAndWaitInstaller::Run ()
   InstallAplications ();
 
   std::cout << "Running simulation with a duration of " << m_simulation_duration
-          << " second(s)... ";
+          << " second(s)...\n";
 
+  ScheduleNextProgressReport ();
   Simulator::Stop (Seconds (m_simulation_duration));
   Simulator::Run ();
   Simulator::Destroy ();
 
-  std::cout << "Finished.\n";
+  std::cout << "Simulation finished.\n";
 
   Report (m_statistics_output_filename);
 }
@@ -845,8 +858,8 @@ GeoTemporalSprayAndWaitInstaller::InstallAplications ()
           node_ip = m_ipv4_interfaces_container.GetAddress (node_id);
           node = m_nodes_container.Get (node_id);
 
-          std::cout << "\tInstalling application in node #" << node_id << " with IP "
-                  << node_ip << "... ";
+          // std::cout << "\tInstalling application in node #" << node_id << " with IP "
+          //         << node_ip << "... ";
 
           app = CreateObject<GeoTemporalSprayAndWaitApplication> ();
 
@@ -860,11 +873,34 @@ GeoTemporalSprayAndWaitInstaller::InstallAplications ()
 
           node->AddApplication (app);
 
-          std::cout << "Done.\n";
+          // std::cout << "Done.\n";
         }
 
       std::cout << "Finished installing application in mobile source nodes.\n";
     }
+}
+
+void
+GeoTemporalSprayAndWaitInstaller::ScheduleNextProgressReport ()
+{
+  NS_LOG_FUNCTION (this);
+
+  // It set to zero then progress reports are disabled.
+  if (m_progress_report_time_interval == 0u) return;
+
+  // Progress reports are enabled, schedule the next one.
+  Simulator::Schedule (Seconds (m_progress_report_time_interval),
+                       &GeoTemporalSprayAndWaitInstaller::DoProgressReport,
+                       this);
+}
+
+void
+GeoTemporalSprayAndWaitInstaller::DoProgressReport ()
+{
+  NS_LOG_FUNCTION (this);
+
+  std::cout << "\t" << Simulator::Now ().GetSeconds () << " seconds simulated.\n";
+  ScheduleNextProgressReport ();
 }
 
 void

@@ -150,12 +150,18 @@ private:
    */
   bool m_use_80211p_mac_protocol;
 
+  /**
+   * Time interval (in seconds) between progress reports. If set to zero then
+   * progress report are disabled.
+   */
+  uint32_t m_progress_report_time_interval;
+
 
   // --------------------------
   // Routing protocol parameters
   // --------------------------
 
-  /** Interval (in milliseconds) between HELLO packets transmissions. */
+  /** Time interval (in milliseconds) between HELLO packets transmissions. */
   uint32_t m_hello_packets_interval;
 
   /** 
@@ -265,6 +271,12 @@ private:
 
   void
   InstallAplications ();
+
+  void
+  ScheduleNextProgressReport ();
+
+  void
+  DoProgressReport ();
 
 public:
 
