@@ -29,10 +29,11 @@
 #include <utility>
 #include <vector>
 
-#include <ns3/geotemporal-spray-and-wait-duplicate-detector.h>
-#include <ns3/geotemporal-spray-and-wait-neighbors-table.h>
-#include <ns3/geotemporal-spray-and-wait-packets-queue.h>
-#include <ns3/geotemporal-spray-and-wait-packets.h>
+#include "geotemporal-spray-and-wait-duplicate-detector.h"
+#include "geotemporal-spray-and-wait-neighbors-table.h"
+#include "geotemporal-spray-and-wait-packets-queue.h"
+#include "geotemporal-spray-and-wait-packets.h"
+
 #include <ns3/packet-utils.h>
 #include <ns3/statistics-utils.h>
 
@@ -82,14 +83,14 @@ private:
   Timer m_hello_timer;
 
   /** The maximum number of packets that we allow a routing protocol to buffer. */
-  uint32_t m_max_length_packet_queue;
+  uint32_t m_packets_queue_capacity;
 
   /** Time interval in which a recently contacted neighbor node is not contacted
    * again. */
   Time m_neighbor_expiration_time;
 
-  /** Maximum number of replicas of each data packet allowed to be trasmitted. */
-  uint32_t m_default_max_replicas;
+  /** Number of replicas of each data packet allowed to be transmitted. */
+  uint32_t m_default_data_packet_replicas;
 
   /** Flag that indicates if the Spray And Wait protocol works in Binary or normal mode. 
    * \c true for Binary mode,
@@ -309,7 +310,7 @@ private:
    * appropriate function.
    */
   void
-  RecvSprayAndWait (Ptr<Socket> socket);
+  RecvSprayAndWaitPacket (Ptr<Socket> socket);
 
   /**
    * Processes the received HELLO packets.
@@ -320,7 +321,7 @@ private:
    * @param sender_node_ip [IN] IP address of the node that sent the packet.
    */
   void
-  RecvHello (Ptr<Packet> received_packet, const Ipv4Address & sender_node_ip);
+  RecvHelloPacket (Ptr<Packet> received_packet, const Ipv4Address & sender_node_ip);
 
   /**
    * Processes the received REPLY packets.
@@ -331,7 +332,7 @@ private:
    * @param sender_node_ip [IN] IP address of the node that sent the packet.
    */
   void
-  RecvReply (Ptr<Packet> received_packet, const Ipv4Address & sender_node_ip);
+  RecvReplyPacket (Ptr<Packet> received_packet, const Ipv4Address & sender_node_ip);
 
   /**
    * Processes the received REPLY_BACK packets.
@@ -342,7 +343,7 @@ private:
    * @param sender_node_ip [IN] IP address of the node that sent the packet.
    */
   void
-  RecvReplyBack (Ptr<Packet> received_packet, const Ipv4Address & sender_node_ip);
+  RecvReplyBackPacket (Ptr<Packet> received_packet, const Ipv4Address & sender_node_ip);
 
   /**
    * Processes the received DATA packets.
@@ -353,7 +354,7 @@ private:
    * @param sender_node_ip [IN] IP address of the node that sent the packet.
    */
   void
-  RecvData (Ptr<Packet> received_packet, const Ipv4Address & sender_node_ip);
+  RecvDataPacket (Ptr<Packet> received_packet, const Ipv4Address & sender_node_ip);
 
 
 
@@ -433,7 +434,7 @@ private:
    * IP address.
    */
   void
-  SendDataPacket (const Ipv4Address & destination_ip, const DataHeader & data_to_send);
+  SendDataPacket (const Ipv4Address destination_ip, const DataHeader data_to_send);
 
 
 

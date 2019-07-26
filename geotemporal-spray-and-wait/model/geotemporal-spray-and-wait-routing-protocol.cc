@@ -58,9 +58,9 @@ NS_OBJECT_ENSURE_REGISTERED (RoutingProtocol);
 RoutingProtocol::RoutingProtocol () :
 m_hello_timeout (MilliSeconds (1000)),
 m_hello_timer (Timer::CANCEL_ON_DESTROY),
-m_max_length_packet_queue (128u),
+m_packets_queue_capacity (128u),
 m_neighbor_expiration_time (Seconds (10)),
-m_default_max_replicas (32u),
+m_default_data_packet_replicas (32u),
 m_binary_mode (false),
 m_node_id (-1),
 m_ipv4 (0),
@@ -70,7 +70,7 @@ m_selected_interface_address (),
 m_unicast_socket (0),
 m_broadcast_socket (0),
 m_data_sequential_id (0u),
-m_packets_queue (m_binary_mode, m_max_length_packet_queue),
+m_packets_queue (m_binary_mode, m_packets_queue_capacity),
 m_neighbors_table (m_neighbor_expiration_time),
 m_duplicate_detector (MilliSeconds (5600)),
 m_tx_packets_counter (),
@@ -95,17 +95,17 @@ RoutingProtocol::GetTypeId ()
                          TimeValue (Seconds (1)),
                          MakeTimeAccessor (&RoutingProtocol::m_hello_timeout),
                          MakeTimeChecker ())
-          .AddAttribute ("PacketsQueueMaxLength", "The maximum number of packets that we allow the routing protocol to buffer.",
+          .AddAttribute ("PacketsQueueCapacity", "The maximum number of packets that we allow the routing protocol to buffer.",
                          UintegerValue (128),
-                         MakeUintegerAccessor (&RoutingProtocol::m_max_length_packet_queue),
+                         MakeUintegerAccessor (&RoutingProtocol::m_packets_queue_capacity),
                          MakeUintegerChecker<uint32_t> (8))
           .AddAttribute ("NeighborsExpirationTime", "Time interval in which a recently contacted neighbor node is not contacted again.",
                          TimeValue (Seconds (10)),
                          MakeTimeAccessor (&RoutingProtocol::m_neighbor_expiration_time),
                          MakeTimeChecker ())
-          .AddAttribute ("MaxDataPacketReplicas", "Maximum number of replicas of each data packet allowed to be trasmitted.",
+          .AddAttribute ("DataPacketReplicas", "Number of replicas of each data packet allowed to be transmitted.",
                          UintegerValue (32),
-                         MakeUintegerAccessor (&RoutingProtocol::m_default_max_replicas),
+                         MakeUintegerAccessor (&RoutingProtocol::m_default_data_packet_replicas),
                          MakeUintegerChecker<uint32_t> (1))
           .AddAttribute ("BinaryMode", "Indicates if the Spray And Wait protocol works in Binary mode (true) or normal mode (false).",
                          BooleanValue (false),
@@ -277,7 +277,7 @@ RoutingProtocol::NotifyAddAddress (uint32_t interface_index,
   Ptr<Socket> socket = Socket::CreateSocket (GetObject<Node> (),
                                              UdpSocketFactory::GetTypeId ());
   NS_ASSERT (socket != 0);
-  socket->SetRecvCallback (MakeCallback (&RoutingProtocol::RecvSprayAndWait, this));
+  socket->SetRecvCallback (MakeCallback (&RoutingProtocol::RecvSprayAndWaitPacket, this));
   socket->BindToNetDevice (ipv4_l3->GetNetDevice (m_selected_interface_index));
   socket->Bind (InetSocketAddress (m_selected_interface_address.GetLocal (),
                                    SPRAY_AND_WAIT_ROUTING_PROTOCOL_PORT));
@@ -290,7 +290,7 @@ RoutingProtocol::NotifyAddAddress (uint32_t interface_index,
   socket = Socket::CreateSocket (GetObject <Node> (),
                                  UdpSocketFactory::GetTypeId ());
   NS_ASSERT (socket != 0);
-  socket->SetRecvCallback (MakeCallback (&RoutingProtocol::RecvSprayAndWait, this));
+  socket->SetRecvCallback (MakeCallback (&RoutingProtocol::RecvSprayAndWaitPacket, this));
   socket->BindToNetDevice (ipv4_l3->GetNetDevice (m_selected_interface_index));
   socket->Bind (InetSocketAddress (m_selected_interface_address.GetBroadcast (),
                                    SPRAY_AND_WAIT_ROUTING_PROTOCOL_PORT));
@@ -354,7 +354,7 @@ RoutingProtocol::NotifyRemoveAddress (uint32_t interface_index,
       Ptr<Socket> socket = Socket::CreateSocket (GetObject<Node> (),
                                                  UdpSocketFactory::GetTypeId ());
       NS_ASSERT (socket != 0);
-      socket->SetRecvCallback (MakeCallback (&RoutingProtocol::RecvSprayAndWait, this));
+      socket->SetRecvCallback (MakeCallback (&RoutingProtocol::RecvSprayAndWaitPacket, this));
       socket->BindToNetDevice (ipv4_l3->GetNetDevice (interface_index));
       socket->Bind (InetSocketAddress (interface_address.GetLocal (),
                                        SPRAY_AND_WAIT_ROUTING_PROTOCOL_PORT));
@@ -366,7 +366,7 @@ RoutingProtocol::NotifyRemoveAddress (uint32_t interface_index,
       socket = Socket::CreateSocket (GetObject <Node> (),
                                      UdpSocketFactory::GetTypeId ());
       NS_ASSERT (socket != 0);
-      socket->SetRecvCallback (MakeCallback (&RoutingProtocol::RecvSprayAndWait, this));
+      socket->SetRecvCallback (MakeCallback (&RoutingProtocol::RecvSprayAndWaitPacket, this));
       socket->BindToNetDevice (ipv4_l3->GetNetDevice (interface_index));
       socket->Bind (InetSocketAddress (interface_address.GetBroadcast (),
                                        SPRAY_AND_WAIT_ROUTING_PROTOCOL_PORT));
@@ -441,7 +441,7 @@ RoutingProtocol::NotifyInterfaceUp (uint32_t interface_index)
   Ptr<Socket> socket = Socket::CreateSocket (GetObject<Node> (),
                                              UdpSocketFactory::GetTypeId ());
   NS_ASSERT (socket != 0);
-  socket->SetRecvCallback (MakeCallback (&RoutingProtocol::RecvSprayAndWait, this));
+  socket->SetRecvCallback (MakeCallback (&RoutingProtocol::RecvSprayAndWaitPacket, this));
   socket->BindToNetDevice (ipv4_l3->GetNetDevice (m_selected_interface_index));
   socket->Bind (InetSocketAddress (m_selected_interface_address.GetLocal (),
                                    SPRAY_AND_WAIT_ROUTING_PROTOCOL_PORT));
@@ -454,7 +454,7 @@ RoutingProtocol::NotifyInterfaceUp (uint32_t interface_index)
   socket = Socket::CreateSocket (GetObject <Node> (),
                                  UdpSocketFactory::GetTypeId ());
   NS_ASSERT (socket != 0);
-  socket->SetRecvCallback (MakeCallback (&RoutingProtocol::RecvSprayAndWait, this));
+  socket->SetRecvCallback (MakeCallback (&RoutingProtocol::RecvSprayAndWaitPacket, this));
   socket->BindToNetDevice (ipv4_l3->GetNetDevice (m_selected_interface_index));
   socket->Bind (InetSocketAddress (m_selected_interface_address.GetBroadcast (),
                                    SPRAY_AND_WAIT_ROUTING_PROTOCOL_PORT));
@@ -631,7 +631,7 @@ RoutingProtocol::RouteOutput (Ptr<Packet> output_packet, const Ipv4Header& ipv4_
 }
 
 void
-RoutingProtocol::RecvSprayAndWait (Ptr<Socket> socket)
+RoutingProtocol::RecvSprayAndWaitPacket (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
@@ -667,16 +667,16 @@ RoutingProtocol::RecvSprayAndWait (Ptr<Socket> socket)
   switch (type_header.GetPacketType ())
     {
     case PacketType::Hello:
-      RecvHello (received_packet, sender_node_ip);
+      RecvHelloPacket (received_packet, sender_node_ip);
       return;
     case PacketType::Reply:
-      RecvReply (received_packet, sender_node_ip);
+      RecvReplyPacket (received_packet, sender_node_ip);
       return;
     case PacketType::ReplyBack:
-      RecvReplyBack (received_packet, sender_node_ip);
+      RecvReplyBackPacket (received_packet, sender_node_ip);
       return;
     case PacketType::Data:
-      RecvData (received_packet, sender_node_ip);
+      RecvDataPacket (received_packet, sender_node_ip);
       return;
     default:
       NS_ABORT_MSG ("ERROR: Unknown packet type.");
@@ -684,7 +684,7 @@ RoutingProtocol::RecvSprayAndWait (Ptr<Socket> socket)
 }
 
 void
-RoutingProtocol::RecvHello (Ptr<Packet> received_packet, const Ipv4Address& sender_node_ip)
+RoutingProtocol::RecvHelloPacket (Ptr<Packet> received_packet, const Ipv4Address& sender_node_ip)
 {
   NS_LOG_FUNCTION (this << received_packet << sender_node_ip);
 
@@ -705,7 +705,8 @@ RoutingProtocol::RecvHello (Ptr<Packet> received_packet, const Ipv4Address& send
       return;
     }
 
-  // Neighbor hasn't been contacted recently, add it in the neighbors table.
+  // Neighbor hasn't been contacted recently, add it to the table of recently
+  // contacted neighbors.
   m_neighbors_table.Insert (sender_node_ip);
 
   // Answer with a REPLY packet
@@ -714,7 +715,7 @@ RoutingProtocol::RecvHello (Ptr<Packet> received_packet, const Ipv4Address& send
 }
 
 void
-RoutingProtocol::RecvReply (Ptr<Packet> received_packet, const Ipv4Address& sender_node_ip)
+RoutingProtocol::RecvReplyPacket (Ptr<Packet> received_packet, const Ipv4Address& sender_node_ip)
 {
   NS_LOG_FUNCTION (this << received_packet << sender_node_ip);
 
@@ -729,7 +730,7 @@ RoutingProtocol::RecvReply (Ptr<Packet> received_packet, const Ipv4Address& send
 }
 
 void
-RoutingProtocol::RecvReplyBack (Ptr<Packet> received_packet, const Ipv4Address& sender_node_ip)
+RoutingProtocol::RecvReplyBackPacket (Ptr<Packet> received_packet, const Ipv4Address& sender_node_ip)
 {
   NS_LOG_FUNCTION (this << received_packet << sender_node_ip);
 
@@ -752,14 +753,14 @@ RoutingProtocol::RecvReplyBack (Ptr<Packet> received_packet, const Ipv4Address& 
 }
 
 void
-RoutingProtocol::RecvData (Ptr<Packet> received_packet, const Ipv4Address& sender_node_ip)
+RoutingProtocol::RecvDataPacket (Ptr<Packet> received_packet, const Ipv4Address& sender_node_ip)
 {
   NS_LOG_FUNCTION (this << received_packet << sender_node_ip);
 
-  NS_LOG_DEBUG ("Processing DATA packet received from " << sender_node_ip);
-
   DataHeader data_header;
   received_packet->RemoveHeader (data_header);
+  NS_LOG_DEBUG ("Received DATA packet " << data_header.GetDataIdentifier ()
+                << " from " << sender_node_ip);
 
   if (m_packets_queue.Enqueue (data_header, sender_node_ip))
     {
@@ -784,16 +785,15 @@ RoutingProtocol::NewMessage (const std::string& message,
   const DataHeader data_packet (/*Data ID*/ data_id,
                                 /*Dest. geo-temporal area*/ destination_gta,
                                 /*Message*/ message,
-                                /*Replicas to forward*/ m_default_max_replicas);
+                                /*Replicas to forward*/ m_default_data_packet_replicas);
 
   const bool enqueued = m_packets_queue.Enqueue (data_packet, local_ip);
-  NS_ASSERT_MSG (enqueued, "Message must be enqueued successfully.");
+  NS_ABORT_MSG_UNLESS (enqueued, "Message must be enqueued successfully.");
   NS_LOG_DEBUG ("DATA packet " << data_id << " constructed and stored in packets "
                 "queue successfully: " << data_packet);
 
   // Store the data packet in a list to keep a log of all created data packets
   // in the node and its creation time.
-  data_packet.GetSerializedSize ();
   m_created_data_packets.push_back (std::make_pair (data_packet, Simulator::Now ()));
 }
 
@@ -966,6 +966,7 @@ RoutingProtocol::SendRequestedDataPackets (const std::set<DataIdentifier>& reque
   uint16_t incremental_time_slot = 0u;
 
   PacketQueueEntry packet_entry;
+  DataHeader data_to_send;
   const Time current_time = Simulator::Now ();
   uint32_t replicas_to_forward = 0u;
 
@@ -977,6 +978,7 @@ RoutingProtocol::SendRequestedDataPackets (const std::set<DataIdentifier>& reque
       if (!m_packets_queue.Find (*requested_packet_it, packet_entry))
         {
           NS_LOG_DEBUG ("Packet " << *requested_packet_it << " not in packets queue.");
+          continue;
         }
 
       const DataHeader & data_packet = packet_entry.GetDataPacket ();
@@ -984,8 +986,8 @@ RoutingProtocol::SendRequestedDataPackets (const std::set<DataIdentifier>& reque
 
       // Check if the requesting node is inside the destination area AND the 
       // current time is the active time of the packet.
-      if (destination_gta.IsInsideArea (destination_node_position)
-          && destination_gta.IsDuringTimePeriod (current_time))
+      if (destination_gta.IsInsideGeoTemporalArea (destination_node_position,
+                                                   current_time))
         {
           // Given that the requesting node actually is inside the destination 
           // area during the active time of the data packet then the requesting
@@ -1018,23 +1020,24 @@ RoutingProtocol::SendRequestedDataPackets (const std::set<DataIdentifier>& reque
         }
 
       // Construct the packet to send
-      DataHeader data_to_send (data_packet);
+      data_to_send = DataHeader (data_packet);
       data_to_send.SetReplicasToForward (replicas_to_forward);
       NS_LOG_DEBUG ("Constructed DATA packet: " << data_to_send);
 
-      NS_LOG_DEBUG ("Scheduled DATA packet " << data_to_send.GetDataIdentifier ()
-                    << " in " << incremental_time_slot << " milliseconds.");
-      Simulator::Schedule (MilliSeconds (incremental_time_slot++),
+      Simulator::Schedule (MilliSeconds (incremental_time_slot),
                            &RoutingProtocol::SendDataPacket,
                            this,
                            destination_ip,
                            data_to_send);
+      NS_LOG_DEBUG ("Scheduled DATA packet " << data_to_send.GetDataIdentifier ()
+                    << " in " << incremental_time_slot << " milliseconds.");
+      ++incremental_time_slot;
     }
 }
 
 void
-RoutingProtocol::SendDataPacket (const Ipv4Address& destination_ip,
-                                 const DataHeader& data_to_send)
+RoutingProtocol::SendDataPacket (const Ipv4Address destination_ip,
+                                 const DataHeader data_to_send)
 {
   NS_LOG_FUNCTION (this << destination_ip << data_to_send);
 
@@ -1067,12 +1070,12 @@ RoutingProtocol::Start ()
 {
   NS_LOG_FUNCTION (this);
 
-  NS_LOG_DEBUG ("Initialize packets queue with: binary mode "
+  NS_LOG_DEBUG ("Initialize packets queue with binary mode "
                 << (m_binary_mode ? "enabled" : "disabled") << " and "
-                << "maximum length " << m_max_length_packet_queue << " packets.");
-  m_packets_queue = PacketsQueue (m_binary_mode, m_max_length_packet_queue);
+                << "a capacity of " << m_packets_queue_capacity << " packets.");
+  m_packets_queue = PacketsQueue (m_binary_mode, m_packets_queue_capacity);
 
-  NS_LOG_DEBUG ("Initialize neighbors table with: neighbor expiration time "
+  NS_LOG_DEBUG ("Initialize neighbors table with an expiration time of "
                 << m_neighbor_expiration_time.GetSeconds () << " seconds.");
   m_neighbors_table = NeighborsTable (m_neighbor_expiration_time);
 

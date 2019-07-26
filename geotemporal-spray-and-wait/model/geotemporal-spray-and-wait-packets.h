@@ -25,7 +25,6 @@
 #ifndef GEOTEMPORAL_SPRAY_AND_WAIT_PACKETS_H
 #define GEOTEMPORAL_SPRAY_AND_WAIT_PACKETS_H
 
-#include <algorithm>
 #include <set>
 #include <string>
 
@@ -521,14 +520,14 @@ class ReplyBackHeader : public ReplyHeader
 private:
 
   /** Geographic position of the packet sender node. */
-  Vector2D m_position;
+  GeoTemporalLibrary::LibraryUtils::Vector2D m_position;
 
 public:
 
   ReplyBackHeader ();
 
   ReplyBackHeader (const std::set<DataIdentifier> & summary_vector,
-                   const Vector2D & position);
+                   const GeoTemporalLibrary::LibraryUtils::Vector2D & position);
 
   ReplyBackHeader (const ReplyBackHeader & copy);
 
@@ -537,14 +536,14 @@ public:
   // Getters & Setters
   // --------------------------
 
-  inline const Vector2D &
+  inline const GeoTemporalLibrary::LibraryUtils::Vector2D &
   GetPosition () const
   {
     return m_position;
   }
 
   inline void
-  SetPosition (const Vector2D & position)
+  SetPosition (const GeoTemporalLibrary::LibraryUtils::Vector2D & position)
   {
     m_position = position;
   }
@@ -592,12 +591,8 @@ public:
 inline bool
 operator== (const ReplyBackHeader & lhs, const ReplyBackHeader & rhs)
 {
-  std::set<DataIdentifier> difference;
-  std::set_symmetric_difference (lhs.m_summary_vector.begin (), lhs.m_summary_vector.end (),
-                                 rhs.m_summary_vector.begin (), rhs.m_summary_vector.end (),
-                                 std::inserter (difference, difference.begin ()));
-
-  return lhs.m_position == rhs.m_position && difference.size () == 0;
+  return ((ReplyHeader) lhs) == ((ReplyHeader) rhs)
+          && lhs.m_position == rhs.m_position;
 }
 
 inline bool

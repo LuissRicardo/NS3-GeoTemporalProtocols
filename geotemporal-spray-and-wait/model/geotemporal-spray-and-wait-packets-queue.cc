@@ -173,12 +173,12 @@ void
 PacketsQueue::ProcessDisjointVector (const std::set<DataIdentifier>& summary_vector,
                                      std::set<DataIdentifier>& disjoint_vector) const
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION (this << " summary vector entries count " << summary_vector.size ());
 
   // Clean the disjoint vector.
   disjoint_vector.clear ();
 
-  // Iterate through all data identifiers of the summary vector
+  // Iterate through all data identifiers in the summary vector
   for (std::set<DataIdentifier>::const_iterator it = summary_vector.begin ();
           it != summary_vector.end (); ++it)
     {
@@ -205,12 +205,8 @@ PacketsQueue::Enqueue (const DataHeader& data_header, const Ipv4Address& transmi
 {
   NS_LOG_FUNCTION (this << data_header << transmitter_ip);
 
-  Purge ();
-
-  NS_LOG_DEBUG (m_packets_table.size () << " / " << m_max_queue_length
-                << " packets before insertion.");
-
   // Check if the packet entry already exists in the queue.
+  // Find will call Purge () to purge expired entries before performing the search
   if (Find (data_header.GetDataIdentifier ()))
     {
       // Packet already exists in queue, cancel.
@@ -221,6 +217,9 @@ PacketsQueue::Enqueue (const DataHeader& data_header, const Ipv4Address& transmi
 
       return false;
     }
+
+  NS_LOG_DEBUG (m_packets_table.size () << " / " << m_max_queue_length
+                << " packets before insertion.");
 
   // Check if the queue is full.
   if (m_packets_table.size () == m_max_queue_length)

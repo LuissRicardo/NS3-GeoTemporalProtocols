@@ -18,9 +18,6 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * Author: Luis Ricardo Gallego Tercero <luiss_121314@hotmail.com>
- *         (written after ns3::aodv::IdCache by 
- *          Elena Buchatskaia <borovkovaes@iitp.ru> and 
- *          Pavel Boyko <boyko@iitp.ru>).
  * 
  * Detector of received duplicated packets.
  */

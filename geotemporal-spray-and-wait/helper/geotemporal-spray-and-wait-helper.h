@@ -50,8 +50,8 @@ private:
 public:
 
   /**
-   * Create an SprayAndWaitHelper that makes life easier for people who want to
-   * install Spray And Wait routing protocol to nodes.
+   * Create a GeoTemporalSprayAndWaitHelper that makes life easier for people 
+   * who want to install Spray And Wait routing protocol to nodes.
    */
   GeoTemporalSprayAndWaitHelper ();
 
@@ -91,7 +91,7 @@ public:
    * previously called by the user.
    * 
    * @param nodes NodeContainer of the set of nodes for which the 
-   * SprayAndWaitRoutingProtocol should be modified to use a fixed stream.
+   * Spray & Wait routing protocol should be modified to use a fixed stream.
    * @param stream First stream index to use.
    * @return 
    */

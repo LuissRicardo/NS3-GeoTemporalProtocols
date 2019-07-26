@@ -72,8 +72,8 @@ m_data_packet_message_size (128u), m_data_packets_data_rate (1000u),
 m_mobility_scenario_id ("60"),
 m_vehicles_count (2u), m_fixed_nodes_distance (200u),
 m_use_80211p_mac_protocol (false), m_progress_report_time_interval (25u),
-m_hello_packets_interval (1000u), m_packet_queue_max_length (128u),
-m_max_packet_replicas (32u), m_neighbor_expiration_time (10u), m_binary_mode (false),
+m_hello_packets_interval (1000u), m_packets_queue_capacity (128u),
+m_neighbor_expiration_time (10u), m_data_packet_replicas (32u), m_binary_mode (false),
 m_streets_graph_input_filename (""), m_street_junctions_input_filename (""),
 m_vehicles_routes_input_filename (""), m_vehicles_mobility_trace_filename (""),
 m_random_destination_gta_input_filename (""), m_gta_visitor_vehicles_input_filename (""),
@@ -101,9 +101,9 @@ m_fixed_nodes_distance (copy.m_fixed_nodes_distance),
 m_use_80211p_mac_protocol (copy.m_use_80211p_mac_protocol),
 m_progress_report_time_interval (copy.m_progress_report_time_interval),
 m_hello_packets_interval (copy.m_hello_packets_interval),
-m_packet_queue_max_length (copy.m_packet_queue_max_length),
-m_max_packet_replicas (copy.m_max_packet_replicas),
+m_packets_queue_capacity (copy.m_packets_queue_capacity),
 m_neighbor_expiration_time (copy.m_neighbor_expiration_time),
+m_data_packet_replicas (copy.m_data_packet_replicas),
 m_binary_mode (copy.m_binary_mode),
 m_streets_graph_input_filename (copy.m_streets_graph_input_filename),
 m_street_junctions_input_filename (copy.m_street_junctions_input_filename),
@@ -192,22 +192,23 @@ GeoTemporalSprayAndWaitInstaller::Configure (int argc, char** argv)
                 "[Default value: 1,000]",
                 m_hello_packets_interval);
 
-  cmd.AddValue ("packetQueueMaximumLength",
+  cmd.AddValue ("packetQueueCapacity",
                 "The maximum number of packets that we allow the routing "
-                "protocol to buffer. [Default value: 128]",
-                m_packet_queue_max_length);
-
-  cmd.AddValue ("maximumPacketReplicas",
-                "The maximum number of packet replicas of each packet that we "
-                "allow the routing protocol to transmit. "
-                "[Default value: 32]",
-                m_max_packet_replicas);
+                "protocol to buffer. "
+                "[Default value: 128]",
+                m_packets_queue_capacity);
 
   cmd.AddValue ("neighborExpirationTime",
                 "Time (in seconds) interval in which a recently contacted "
                 "neighbor node is not contacted again. "
                 "[Default value: 10]",
                 m_neighbor_expiration_time);
+
+  cmd.AddValue ("dataPacketReplicas",
+                "The number of packet replicas of each DATA packet that we "
+                "allow the routing protocol to transmit. "
+                "[Default value: 32]",
+                m_data_packet_replicas);
 
   cmd.AddValue ("binaryMode",
                 "Flag that indicates if the Spray And Wait protocol works in "
@@ -516,12 +517,16 @@ GeoTemporalSprayAndWaitInstaller::Run ()
   std::cout << "\n";
 
   std::cout << " - Hello packets time interval     :  " << m_hello_packets_interval << " milliseconds\n";
-  std::cout << " - Maximum data packet replicas    :  " << m_max_packet_replicas << " packet replicas\n";
+  std::cout << " - Packets queue capacity          :  " << m_packets_queue_capacity << " packets\n";
   std::cout << " - Neighbor expiration time        :  " << m_neighbor_expiration_time << " seconds\n";
+  std::cout << " - Data packet replicas            :  " << m_data_packet_replicas << " packet replicas\n";
   std::cout << " - Binary mode                     :  " << (m_binary_mode ? "Enabled" : "Disabled") << "\n";
   std::cout << "\n";
 
-  std::cout << " - Output statistics XML file      :  " << m_statistics_output_filename << "\n";
+  if (m_mobility_scenario_id != "fixed")
+    std::cout << " - Output statistics XML file      :  " << m_statistics_output_filename << "\n";
+  else
+    std::cout << " - Output statistics XML file      :  Disabled (Using fixed position nodes)\n";
   std::cout << "\n\n";
 
   // Configures the seed number of the random number generator used in the 
@@ -533,6 +538,7 @@ GeoTemporalSprayAndWaitInstaller::Run ()
   InstallInternetStack ();
   ConfigureNodesMobility ();
   InstallAplications ();
+  FreeUnnecessaryResources ();
 
   std::cout << "Running simulation with a duration of " << m_simulation_duration
           << " second(s)...\n";
@@ -648,9 +654,9 @@ GeoTemporalSprayAndWaitInstaller::InstallInternetStack ()
   GeoTemporalSprayAndWaitHelper saw_helper;
 
   saw_helper.Set ("HelloInterval", TimeValue (MilliSeconds (m_hello_packets_interval)));
-  saw_helper.Set ("PacketsQueueMaxLength", UintegerValue (m_packet_queue_max_length));
+  saw_helper.Set ("PacketsQueueCapacity", UintegerValue (m_packets_queue_capacity));
   saw_helper.Set ("NeighborsExpirationTime", TimeValue (Seconds (m_neighbor_expiration_time)));
-  saw_helper.Set ("MaxDataPacketReplicas", UintegerValue (m_max_packet_replicas));
+  saw_helper.Set ("DataPacketReplicas", UintegerValue (m_data_packet_replicas));
   saw_helper.Set ("BinaryMode", BooleanValue (m_binary_mode));
 
   InternetStackHelper internet_stack;
@@ -881,6 +887,21 @@ GeoTemporalSprayAndWaitInstaller::InstallAplications ()
 }
 
 void
+GeoTemporalSprayAndWaitInstaller::FreeUnnecessaryResources ()
+{
+  std::cout << "Freeing up unnecessary resources... ";
+
+  // After being used to set the source nodes we don't need this anymore
+  m_random_destination_gtas = 0;
+
+  // We don't need the GPS system anymore in the simulation for the Spray & Wait
+  // routing protocol.
+  m_gps_system = 0;
+
+  std::cout << "Done.\n";
+}
+
+void
 GeoTemporalSprayAndWaitInstaller::ScheduleNextProgressReport ()
 {
   NS_LOG_FUNCTION (this);
@@ -944,7 +965,7 @@ GeoTemporalSprayAndWaitInstaller::Report (const std::string& output_xml_filename
                                                /*Source node ID*/ node_id,
                                                /*Creation time*/ packet_it->second,
                                                /*Message size*/ packet_it->first.GetMessage ().size (),
-                                               /*Data header size*/ packet_it->first.GetSerializedSize (),
+                                               /*Data header size*/ packet_it->first.GetSerializedSize () + 1u, // DATA header size + Type header size
                                                /*Destination geo-temporal area*/ packet_it->first.GetDestinationGeoTemporalArea ());
 
           simulation_stats.AddDataPacket (packet_stats);

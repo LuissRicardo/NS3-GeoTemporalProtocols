@@ -167,19 +167,19 @@ private:
   /** 
    * The maximum number of packets that we allow the routing protocol to buffer.
    */
-  uint32_t m_packet_queue_max_length;
-
-  /**
-   * The maximum number of packet replicas of each packet that we allow the 
-   * routing protocol to transmit.
-   */
-  uint32_t m_max_packet_replicas;
+  uint32_t m_packets_queue_capacity;
 
   /**
    * Time (in seconds) interval in which a recently contacted neighbor node is 
    * not contacted again.
    */
   uint32_t m_neighbor_expiration_time;
+
+  /**
+   * The number of packet replicas of each DATA packet that we allow the 
+   * routing protocol to transmit.
+   */
+  uint32_t m_data_packet_replicas;
 
   /**
    * Flag that indicates if the Spray And Wait protocol works in Binary mode or 
@@ -243,9 +243,6 @@ public:
    * Receives user input and configures the simulation, mobility and routing 
    * protocol parameters.
    * 
-   * @param argc
-   * @param argv
-   * 
    * @return Returns <code>true</code> if the configuration was set successfully, 
    * otherwise returns <code>false</code>.
    */
@@ -271,6 +268,9 @@ private:
 
   void
   InstallAplications ();
+
+  void
+  FreeUnnecessaryResources ();
 
   void
   ScheduleNextProgressReport ();

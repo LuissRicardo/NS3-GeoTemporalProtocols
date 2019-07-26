@@ -393,7 +393,7 @@ ReplyBackHeader::ReplyBackHeader ()
 : ReplyHeader (), m_position () { }
 
 ReplyBackHeader::ReplyBackHeader (const std::set<DataIdentifier>& summary_vector,
-                                  const Vector2D& position)
+                                  const GeoTemporalLibrary::LibraryUtils::Vector2D& position)
 : ReplyHeader (summary_vector), m_position (position) { }
 
 ReplyBackHeader::ReplyBackHeader (const ReplyBackHeader& copy)
