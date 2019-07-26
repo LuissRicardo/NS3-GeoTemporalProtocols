@@ -545,7 +545,7 @@ public:
    * @param source_node_id Numeric identifier of the node that created the packet.
    * @param creation_time Simulation time when the packet was created.
    * @param message_size Size (in bytes) of the message of the packet.
-   * @param data_header_size Size (in bytes) of the entire DATA header.
+   * @param data_packet_size Size (in bytes) of the entire DATA packet.
    * @param destination_geo_temporal_area Destination geo-temporal area of the 
    * packet.
    */
@@ -553,7 +553,7 @@ public:
                         uint32_t source_node_id,
                         const ns3::Time & creation_time,
                         uint32_t message_size,
-                        uint32_t data_header_size,
+                        uint32_t data_packet_size,
                         const LibraryUtils::GeoTemporalArea & destination_geo_temporal_area);
 
   DataPacketStatistics (const DataPacketStatistics & copy);

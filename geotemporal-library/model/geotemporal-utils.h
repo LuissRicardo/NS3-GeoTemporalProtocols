@@ -240,6 +240,21 @@ public:
   }
 
   /**
+   * Returns <code>true</code> if the given <code>point</code> is inside the
+   * area and the specified <code>time_instant</code> occurs during the time
+   * period, otherwise returns <code>false</code>.
+   * 
+   * This is equivalent to calling 
+   * <code>geo_temporal_area.IsDuringTimePeriod (time_instant) &&
+   * geo_temporal_area.IsInsideArea (point)</code>.
+   */
+  inline bool
+  IsInsideGeoTemporalArea (const Vector2D & point, const ns3::Time & time_instant) const
+  {
+    return m_area.IsInside (point) && m_time_period.IsDuringTimePeriod (time_instant);
+  }
+
+  /**
    * Returns a <code>string</code> object containing the representation of this
    * instance as a sequence of characters.
    */
