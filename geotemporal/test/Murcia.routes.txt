@@ -1,0 +1,31 @@
+# Route Step Index, Node ID, Time, Coordinate X, Coordinate Y, Street Name, Distance to Initial Junction, Distance to Ending Junction
+0, 0, 9, 127.52, 3934.73, 103, 143.05, 142.993702
+0, 1, 151, 111.63, 3945.48, 103, 161.99, 124.053702   # Vehicle 1 going away from destination area
+1, 1, 152, 103.74, 3949.85, 103, 171.01, 115.033702
+2, 1, 153, 95.89, 3954.28, 103, 180.02, 106.023702
+0, 2, 74, 1774.42, 3758.08, 34, 225.01, 227.737170    # Vehicle 2 getting closer to destination area
+1, 2, 75, 1770.54, 3762.67, 34, 231.00, 221.747170
+2, 2, 76, 1764.74, 3769.56, 34, 240.00, 212.747170
+3, 2, 77, 1758.92, 3776.42, 34, 249.01, 212.747170
+0, 3, 321, 1758.90, 3776.40, 34, 249.00, 203.747170   # Vehicle 3 closer than vehicle 4 at time 321
+1, 3, 322, 1899.77, 3584.63, 46, 768.00, 16.917830    # Vehicle 3 closer than vehicle 4 at time 322
+2, 3, 323, 2075.78, 2023.56, 51, 367.81, 104.194237   # Vehicle 3 farther than vehicle 4 at time 323
+0, 4, 321, 1755.98, 3769.67, 87, 207.00, 245.747170   # Vehicle 4 farther than vehicle 3 at time 321
+1, 4, 322, 1943.68, 3543.95, 47, 48.02, 566.629493    # Vehicle 4 farther than vehicle 3 at time 322
+2, 4, 323, 2190.90, 2004.26, 16, 90.75, 25.667352     # Vehicle 4 closer than vehicle 3 at time 323
+0, 5, 274, 1322.76, 4318.29, 41, 492.04, 516.864851   # Vehicle 5 is inside the area and vehicle 6 isn't at time 274
+1, 5, 275, 2197.60, 2916.12, 79, 204.00, 199.834124   # To determine that vehicle 5 is going away in the next second
+2, 5, 276, 2193.66, 2908.09, 79, 212.95, 190.884124   # Vehicle 5 is farther than vehicles 6 & 7 and going away at time 276
+0, 6, 274, 1084.39, 4179.96, 52, 548.19, 421.950711   # Vehicle 6 isn't inside the area and vehicle 5 is at time 274
+1, 6, 275, 2225.50, 2957.11, 26, 248.98, 154.854124   # To determine that vehicle 6 is getting closer in the next second
+2, 6, 276, 2232.23, 2970.56, 26, 264.02, 139.814124   # Vehicle 6 is closer than vehicle 5 & 8 and getting closer at time 276
+0, 7, 275, 2227.17, 2975.06, 79, 138.06, 265.774124   # To determine if vehicle 7 is going away the next second
+1, 7, 276, 2219.14, 2958.99, 79, 156.05, 247.784124   # Vehicle 7 is going away and closer than vehicles 5 & 8 at time 276
+0, 8, 275, 2197.31, 2900.80, 26, 186.01, 217.824124   # To determine if vehicle 8 is getting closer the next second
+1, 8, 276, 2204.03, 2914.21, 26, 201.00, 202.834124   # Vehicle 8 is getting closer and is farther than vehicles 6 & 7 at time 276
+0, 20, 1, 1745.720000, 2027.920000, 51, 37.728475, 434.275762     # Initial time. Closest vehicle to area
+1, 20, 2, 1755.560000, 2028.130000, 51, 47.567497, 424.436741     # Getting closer to area
+2, 20, 3, 1730.490000, 2032.040000, 51, 22.481154, 449.523083     # Getting away from area
+0, 21, 1, 1704.480000, 2056.050000, 101, 25.827582, 1202.084874   # Initial time. Vehicle that is farther away from area
+1, 21, 2, 1701.090000, 2065.040000, 101, 35.428161, 1192.484295   # Getting closer to area
+2, 21, 3, 1701.410000, 2042.090000, 101, 13.552896, 1214.359560   # Getting away from area

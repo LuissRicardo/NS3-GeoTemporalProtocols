@@ -19,6 +19,9 @@
 # Geo-Temporal Library
 !/geotemporal-library/
 
+# Geo-Temporal
+!/geotemporal/
+
 # Geo-Temporal Spray & Wait
 !/geotemporal-spray-and-wait/
 
