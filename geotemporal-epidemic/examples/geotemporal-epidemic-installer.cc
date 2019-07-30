@@ -885,7 +885,7 @@ GeoTemporalEpidemicInstaller::FreeUnnecessaryResources ()
   // After being used to set the source nodes we don't need this anymore
   m_random_destination_gtas = 0;
 
-  // We don't need the GPS system anymore in the simulation for the Spray & Wait
+  // We don't need the GPS system anymore in the simulation for the Epidemic
   // routing protocol.
   m_gps_system = 0;
 

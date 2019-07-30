@@ -25,7 +25,6 @@
 #ifndef GEOTEMPORAL_EPIDEMIC_PACKETS_H
 #define GEOTEMPORAL_EPIDEMIC_PACKETS_H
 
-#include <algorithm>
 #include <set>
 #include <string>
 
@@ -44,8 +43,6 @@ namespace ns3
 {
 namespace geotemporal_epidemic
 {
-
-using GeoTemporalLibrary::LibraryUtils::Vector2D;
 
 // =============================================================================
 //                                  PacketType

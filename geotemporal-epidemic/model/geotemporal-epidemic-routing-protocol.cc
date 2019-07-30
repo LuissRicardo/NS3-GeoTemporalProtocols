@@ -24,9 +24,6 @@
 
 #include "geotemporal-epidemic-routing-protocol.h"
 
-#include "geotemporal-epidemic-packets-queue.h"
-#include "geotemporal-epidemic-packets.h"
-
 #include <ns3/math-utils.h>
 
 #include <ns3/address.h>

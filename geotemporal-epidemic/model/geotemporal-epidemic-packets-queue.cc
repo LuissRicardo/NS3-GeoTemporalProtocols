@@ -33,6 +33,8 @@
 #include <ns3/log.h>
 #include <ns3/simulator.h>
 
+#include <ns3/math-utils.h>
+
 
 NS_LOG_COMPONENT_DEFINE ("GeoTemporalEpidemicPacketsQueue");
 
@@ -180,7 +182,8 @@ PacketsQueue::ProcessDisjointVector (const SummaryVectorHeader& summary_vector_h
 
   const Time current_time = Simulator::Now ();
   const std::set<DataIdentifier> & summary_vector = summary_vector_header.GetSummaryVector ();
-  const Vector2D & receiver_node_position = summary_vector_header.GetPosition ();
+  const GeoTemporalLibrary::LibraryUtils::Vector2D & receiver_node_position
+          = summary_vector_header.GetPosition ();
 
   // Iterate through all the packets in queue
   for (ConstIterator_t entry_it = m_packets_table.begin ();

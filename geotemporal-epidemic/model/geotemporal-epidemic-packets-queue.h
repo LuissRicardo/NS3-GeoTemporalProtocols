@@ -34,17 +34,17 @@
 #include <ns3/nstime.h>
 #include <ns3/simulator.h>
 
-#include <ns3/math-utils.h>
 #include <ns3/geotemporal-utils.h>
+#include <ns3/packet-utils.h>
 #include <ns3/statistics-utils.h>
+
+using namespace GeoTemporalLibrary::LibraryUtils;
 
 
 namespace ns3
 {
 namespace geotemporal_epidemic
 {
-
-using GeoTemporalLibrary::LibraryUtils::Vector2D;
 
 // =============================================================================
 //                                PacketQueueEntry
@@ -370,7 +370,7 @@ public:
   /**
    * Given a Summary Vector header that contains a summary vector (a set of data
    * packet identifiers) and the geographical position of the receiver node 
-   * process the disjoint vector, that is, the set of data packet identifiers 
+   * processes the disjoint vector, that is, the set of data packet identifiers 
    * that aren't contained in the summary vector.
    * 
    * The <code>disjoint_vector</code> parameter is always emptied. And then the
