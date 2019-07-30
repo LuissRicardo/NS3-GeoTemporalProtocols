@@ -35,7 +35,10 @@
 #include <ns3/simulator.h>
 
 #include <ns3/geotemporal-utils.h>
+#include <ns3/packet-utils.h>
 #include <ns3/statistics-utils.h>
+
+using namespace GeoTemporalLibrary::LibraryUtils;
 
 
 namespace ns3

@@ -24,9 +24,6 @@
 
 #include "geotemporal-spray-and-wait-routing-protocol.h"
 
-#include "geotemporal-spray-and-wait-packets-queue.h"
-#include "geotemporal-spray-and-wait-packets.h"
-
 #include <ns3/math-utils.h>
 
 #include <ns3/address.h>

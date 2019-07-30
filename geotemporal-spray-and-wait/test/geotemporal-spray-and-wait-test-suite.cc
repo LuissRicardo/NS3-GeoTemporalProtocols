@@ -27,15 +27,44 @@
 #include <map>
 #include <set>
 
+#include <ns3/geotemporal-spray-and-wait-module.h>
+
 #include <ns3/geotemporal-utils.h>
 #include <ns3/math-utils.h>
 #include <ns3/packet.h>
+#include <ns3/packet-utils.h>
 
-#include <ns3/geotemporal-spray-and-wait-module.h>
+using namespace GeoTemporalLibrary::LibraryUtils;
 
 
-using namespace ns3;
-using namespace ns3::geotemporal_spray_and_wait;
+namespace ns3
+{
+namespace geotemporal_spray_and_wait
+{
+namespace test
+{
+
+// =============================================================================
+//                             Needed free functions
+// =============================================================================
+
+static std::ostream &
+operator<< (std::ostream & os, const std::set<DataIdentifier> & obj)
+{
+  os << "Set of DataIdentifiers with " << obj.size () << " items";
+
+  if (obj.size () == 0) return os;
+
+  os << ":";
+
+  for (std::set<DataIdentifier>::const_iterator it = obj.begin (); it != obj.end (); ++it)
+    {
+      os << " " << it->ToString ();
+    }
+
+  return os;
+}
+
 
 // =============================================================================
 //                                 TestCasePlus
@@ -1890,10 +1919,10 @@ public:
     //     9. 9. 9. 9: 9  -           second 5
     //    10.10.10.10:10  -           second 7
     //    11.11.11.11:11  -           second 9
-    //     1. 1. 1. 3: 3  -           second 3
-    //     1. 1. 1. 2: 2  -           second 8
-    //     1. 1. 1. 4: 4  -           second 11
-    //     1. 1. 1. 5: 5  -           second 10
+    //     1. 1. 1. 1: 3  -           second 3
+    //     1. 1. 1. 1: 2  -           second 8
+    //     1. 1. 1. 1: 4  -           second 11
+    //     1. 1. 1. 1: 5  -           second 10
 
     // All entries are expired and a call to Purge () would remove them from the queue.
 
@@ -1914,7 +1943,7 @@ public:
   TestProcessDisjointVector ()
   {
     std::set<DataIdentifier> received_summary_vector, disjoint_vector, expected_disjoint_vector;
-    m_packets_queue = PacketsQueue (false, 5);
+    m_packets_queue = PacketsQueue (false, 15);
 
     received_summary_vector = {DataIdentifier ("1.1.1.1:1"), DataIdentifier ("1.1.1.1:2"),
       DataIdentifier ("1.1.1.1:3"), DataIdentifier ("1.1.1.1:4"), DataIdentifier ("1.1.1.1:5")};
@@ -1987,10 +2016,10 @@ public:
     NS_TEST_EXPECT_MSG_EQ (disjoint_vector, expected_disjoint_vector, "Disjoint vector must be the expected.");
 
     // New entry expires at second 3
-    data_packet.SetDataIdentifier (DataIdentifier ("1.1.1.3:3"));
+    data_packet.SetDataIdentifier (DataIdentifier ("1.1.1.1:3"));
     data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (Seconds (1), Seconds (3)),
                                                                 Area (0, 0, 100, 100)));
-    m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.3"));
+    m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.1"));
 
     // The packets queue now looks like this:
     //        Data ID     -   Packet entry expiration time
@@ -1998,7 +2027,7 @@ public:
     //     9. 9. 9. 9: 9  -           second 5
     //    10.10.10.10:10  -           second 7
     //    11.11.11.11:11  -           second 9
-    //     1. 1. 1. 3: 3  -           second 3
+    //     1. 1. 1. 1: 3  -           second 3
 
     // Test when 2 packets from the summary vector are present in the queue among 
     // other packets not included in the summary vector
@@ -2009,22 +2038,22 @@ public:
     NS_TEST_EXPECT_MSG_EQ (disjoint_vector, expected_disjoint_vector, "Disjoint vector must be the expected.");
 
     // New entry expires at second 8
-    data_packet.SetDataIdentifier (DataIdentifier ("1.1.1.2:2"));
+    data_packet.SetDataIdentifier (DataIdentifier ("1.1.1.1:2"));
     data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (Seconds (1), Seconds (8)),
                                                                 Area (0, 0, 100, 100)));
-    m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.2"));
+    m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.1"));
 
     // New entry expires at second 11
-    data_packet.SetDataIdentifier (DataIdentifier ("1.1.1.4:4"));
+    data_packet.SetDataIdentifier (DataIdentifier ("1.1.1.1:4"));
     data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (Seconds (1), Seconds (11)),
                                                                 Area (0, 0, 100, 100)));
-    m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.4"));
+    m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.1"));
 
     // New entry expires at second 10
-    data_packet.SetDataIdentifier (DataIdentifier ("1.1.1.5:5"));
+    data_packet.SetDataIdentifier (DataIdentifier ("1.1.1.1:5"));
     data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (Seconds (1), Seconds (10)),
                                                                 Area (0, 0, 100, 100)));
-    m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.5"));
+    m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.1"));
 
     // The packets queue now looks like this:
     //        Data ID     -   Packet entry expiration time
@@ -2032,10 +2061,10 @@ public:
     //     9. 9. 9. 9: 9  -           second 5
     //    10.10.10.10:10  -           second 7
     //    11.11.11.11:11  -           second 9
-    //     1. 1. 1. 3: 3  -           second 3
-    //     1. 1. 1. 2: 2  -           second 8
-    //     1. 1. 1. 4: 4  -           second 11
-    //     1. 1. 1. 5: 5  -           second 10
+    //     1. 1. 1. 1: 3  -           second 3
+    //     1. 1. 1. 1: 2  -           second 8
+    //     1. 1. 1. 1: 4  -           second 11
+    //     1. 1. 1. 1: 5  -           second 10
 
     // Test when all packets from the summary vector are present in the queue among 
     // other packets not included in the summary vector
@@ -2975,6 +3004,7 @@ public:
     TestGettersSetters ();
     TestGetSize ();
     TestGetSummaryVector ();
+    TestProcessDisjointVector ();
     TestFindFunctions ();
     TestEnqueueFunction ();
     TestDiscountPacketReplicasToForward_NormalMode ();
@@ -3178,3 +3208,7 @@ public:
 
 static GeoTemporalSprayAndWaitTestSuite g_geotemporal_spray_and_wait_test_suite;
 
+
+} // namespace test
+} // namespace geotemporal_spray_and_wait
+} // namespace ns3
