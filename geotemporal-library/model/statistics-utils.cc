@@ -448,6 +448,9 @@ SimulationStatistics::SetUp ()
     {
       m_nodes_ip_to_id.insert (std::make_pair (it->second, it->first));
     }
+
+  NS_ABORT_MSG_IF (m_nodes_ip_to_id.size () != m_nodes_id_to_ip.size (),
+                   "There are duplicated IP addresses.");
 }
 
 const ns3::Ipv4Address &
