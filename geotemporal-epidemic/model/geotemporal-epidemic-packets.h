@@ -351,7 +351,7 @@ operator<< (std::ostream & os, const HelloHeader & obj)
   0                   1                   2                   3
   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-  |   TypeHeader  |    Reserved   |  16 bit Summary Vector Length |
+  |   TypeHeader  |     Flags     |  16 bit Summary Vector Length |
   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
   |                    SUMMARY VECTOR sender's                    |
   +                     x-coordinate position                     +
@@ -388,7 +388,6 @@ private:
   /** Geographic position of the packet sender node. */
   GeoTemporalLibrary::LibraryUtils::Vector2D m_position;
 
-  uint8_t m_reserved; // Not used
 
 public:
 
@@ -478,8 +477,7 @@ inline bool
 operator== (const SummaryVectorHeader & lhs, const SummaryVectorHeader & rhs)
 {
   return lhs.m_summary_vector == rhs.m_summary_vector
-          && lhs.m_position == rhs.m_position
-          && lhs.m_reserved == rhs.m_reserved;
+          && lhs.m_position == rhs.m_position;
 }
 
 inline bool

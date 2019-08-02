@@ -424,10 +424,21 @@ public:
     NS_TEST_EXPECT_MSG_EQ (header.GetSummaryVector (), summary_vector, "Summary vector must be equal to summary_vector");
     NS_TEST_EXPECT_MSG_EQ (header.GetPosition (), position, "Summary vector size must be " << position);
 
+    summary_vector = {DataIdentifier (Ipv4Address ("9.9.9.9"), 9),
+      DataIdentifier (Ipv4Address ("9.9.9.9"), 19),
+      DataIdentifier (Ipv4Address ("9.9.9.9"), 29),
+      DataIdentifier (Ipv4Address ("9.9.9.9"), 39),
+      DataIdentifier (Ipv4Address ("9.9.9.9"), 49)};
+    header.SetSummaryVector (summary_vector);
+
+    NS_TEST_EXPECT_MSG_EQ (header.GetSummaryVectorSize (), 5u, "Summary vector size must be 5");
+    NS_TEST_EXPECT_MSG_EQ (header.GetSummaryVector (), summary_vector, "Summary vector must be equal to summary_vector");
+    NS_TEST_EXPECT_MSG_EQ (header.GetPosition (), position, "Summary vector size must be " << position);
+
     position = GeoTemporalLibrary::LibraryUtils::Vector2D (99, 88);
     header.SetPosition (position);
 
-    NS_TEST_EXPECT_MSG_EQ (header.GetSummaryVectorSize (), 3u, "Summary vector size must be 3");
+    NS_TEST_EXPECT_MSG_EQ (header.GetSummaryVectorSize (), 5u, "Summary vector size must be 5");
     NS_TEST_EXPECT_MSG_EQ (header.GetSummaryVector (), summary_vector, "Summary vector must be equal to summary_vector");
     NS_TEST_EXPECT_MSG_EQ (header.GetPosition (), position, "Summary vector size must be " << position);
   }

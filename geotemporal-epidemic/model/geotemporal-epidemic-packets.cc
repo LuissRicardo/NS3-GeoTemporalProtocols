@@ -262,15 +262,14 @@ HelloHeader::ToString () const
 NS_OBJECT_ENSURE_REGISTERED (SummaryVectorHeader);
 
 SummaryVectorHeader::SummaryVectorHeader ()
-: m_summary_vector (), m_position (), m_reserved (0u) { }
+: m_summary_vector (), m_position () { }
 
 SummaryVectorHeader::SummaryVectorHeader (const std::set<DataIdentifier>& summary_vector,
                                           const GeoTemporalLibrary::LibraryUtils::Vector2D& position)
-: m_summary_vector (summary_vector), m_position (position), m_reserved (0u) { }
+: m_summary_vector (summary_vector), m_position (position) { }
 
 SummaryVectorHeader::SummaryVectorHeader (const SummaryVectorHeader& copy)
-: m_summary_vector (copy.m_summary_vector), m_position (copy.m_position),
-m_reserved (copy.m_reserved) { }
+: m_summary_vector (copy.m_summary_vector), m_position (copy.m_position) { }
 
 
 // --------------------------

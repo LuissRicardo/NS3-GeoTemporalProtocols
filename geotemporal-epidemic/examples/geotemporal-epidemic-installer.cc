@@ -68,7 +68,7 @@ m_ipv4_interfaces_container (), m_net_devices_container (), m_nodes_container ()
 m_gps_system (0), m_random_destination_gtas (0), m_node_id_to_ip (),
 m_simulation_number (1u), m_simulation_duration (600u),
 m_data_packet_source_vehicles_count (8u), m_data_packets_per_source (2u),
-m_data_packet_message_size (128u), m_data_packets_data_rate (1000u),
+m_data_packet_message_size (128u), m_data_packets_data_rate (5u),
 m_mobility_scenario_id ("60"),
 m_vehicles_count (2u), m_fixed_nodes_distance (200u),
 m_use_80211p_mac_protocol (false), m_progress_report_time_interval (25u),
@@ -150,7 +150,7 @@ GeoTemporalEpidemicInstaller::Configure (int argc, char** argv)
 
   cmd.AddValue ("dataPacketsDataRate",
                 "Interval (in milliseconds) between DATA packets transmissions. "
-                "[Default value: 1,000]",
+                "[Default value: 5u]",
                 m_data_packets_data_rate);
 
   cmd.AddValue ("mobilityScenarioId",
@@ -947,6 +947,8 @@ GeoTemporalEpidemicInstaller::Report (const std::string& output_xml_filename)
 
       const std::vector<std::pair<geotemporal_epidemic::DataHeader, Time> > & created_packets
               = routing_protocol->GetCreatedDataPackets ();
+      NS_ABORT_MSG_IF (created_packets.size () != m_data_packets_per_source,
+                       "Wrong number of data packets in source node.");
 
       for (std::vector<std::pair<geotemporal_epidemic::DataHeader, Time> >::const_iterator
         packet_it = created_packets.begin ();
