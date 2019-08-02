@@ -956,8 +956,6 @@ GeoTemporalSprayAndWaitInstaller::Report (const std::string& output_xml_filename
 
       const std::vector<std::pair<geotemporal_spray_and_wait::DataHeader, Time> > & created_packets
               = routing_protocol->GetCreatedDataPackets ();
-      NS_ABORT_MSG_IF (created_packets.size () != m_data_packets_per_source,
-                       "Wrong number of data packets in source node.");
 
       for (std::vector<std::pair<geotemporal_spray_and_wait::DataHeader, Time> >::const_iterator
         packet_it = created_packets.begin ();
