@@ -929,7 +929,7 @@ GeoTemporalSprayAndWaitInstaller::Report (const std::string& output_xml_filename
 {
   NS_LOG_FUNCTION (this);
 
-  // The fixed mobility scenario lacks the information to calculate statitics,
+  // The fixed mobility scenario lacks the information to calculate statistics,
   // so don't calculate them.
   if (m_mobility_scenario_id == "fixed")
     return;

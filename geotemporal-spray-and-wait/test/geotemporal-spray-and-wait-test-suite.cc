@@ -2454,7 +2454,7 @@ public:
     // Expected failure of already inserted entry
     // We execute twice the Enqueue call to count 2 received duplicates.
     enqueued = m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.2"));
-    enqueued = m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.2")); // Not a accidentally duplicated line
+    enqueued = m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.2")); // Not an accidentally duplicated line
 
     NS_TEST_EXPECT_MSG_EQ (enqueued, false, "Packet queue entry 1.1.1.2:2 must have not been enqueued.");
     NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 2u, "Size of the packets queue must be 2.");
@@ -2555,13 +2555,16 @@ public:
   void
   TestDiscountPacketReplicasToForward_NormalMode ()
   {
-    bool discounted;
-    uint32_t replicas;
+    bool discounted = true; // This value must be modified
+    uint32_t replicas = 98761u; // We test that this value is not modified.
     PacketQueueEntry packet_entry;
 
     // Test that it returns false for a non-existent data packet entry
     m_packets_queue = PacketsQueue (false, 1u);
     discounted = m_packets_queue.DiscountPacketReplicasToForward (DataIdentifier ("1.1.1.1:1"), replicas);
+
+    NS_TEST_EXPECT_MSG_EQ (discounted, false, "Replicas must not be discounted.");
+    NS_TEST_EXPECT_MSG_EQ (replicas, 98761u, "Replicas to forward must not be modified.");
 
     DataHeader data_packet (/* Data ID */ DataIdentifier ("1.1.1.1:1"),
                             /* Geo-temporal area */ GeoTemporalArea (TimePeriod (Seconds (0), Seconds (10)),
@@ -2635,13 +2638,16 @@ public:
   void
   TestDiscountPacketReplicasToForward_BinaryMode ()
   {
-    bool discounted;
-    uint32_t replicas;
+    bool discounted = true; // This value must be modified
+    uint32_t replicas = 98761u; // We test that this value is not modified.
     PacketQueueEntry packet_entry;
 
     // Test that it returns false for a non-existent data packet entry
-    m_packets_queue = PacketsQueue (true, 1u);
+    m_packets_queue = PacketsQueue (false, 1u);
     discounted = m_packets_queue.DiscountPacketReplicasToForward (DataIdentifier ("1.1.1.1:1"), replicas);
+
+    NS_TEST_EXPECT_MSG_EQ (discounted, false, "Replicas must not be discounted.");
+    NS_TEST_EXPECT_MSG_EQ (replicas, 98761u, "Replicas to forward must not be modified.");
 
     DataHeader data_packet (/* Data ID */ DataIdentifier ("1.1.1.1:1"),
                             /* Geo-temporal area */ GeoTemporalArea (TimePeriod (Seconds (0), Seconds (10)),
