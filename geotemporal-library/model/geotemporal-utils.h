@@ -494,6 +494,16 @@ public:
 
   RandomDestinationGeoTemporalAreasLists (const RandomDestinationGeoTemporalAreasLists & copy);
 
+  /** 
+   * Returns a vector with all the possible geographical areas used as destination
+   * geo-temporal areas.
+   */
+  const std::vector<Area> &
+  GetDestinationAreasList () const
+  {
+    return m_destination_areas_list;
+  }
+
   /**
    * Returns a vector of destination geo-temporal areas from the desired set and length in a
    * const reference.

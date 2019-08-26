@@ -288,7 +288,7 @@ RandomDestinationGeoTemporalAreasLists::RandomDestinationGeoTemporalAreasLists (
                                              std::stod (tokens.at (4u)));
     }
 
-  // Expected emtpy line.
+  // Expected empty line.
   if (!LibraryUtils::GetInputStreamNextLine (input_file, text_line) || !text_line.empty ())
     {
       input_file.close ();

@@ -11,6 +11,7 @@
 #include "graph-utils.h"
 #include "math-utils.h"
 
+#include <ns3/ipv4-address.h>
 #include <ns3/simple-ref-count.h>
 
 namespace GeoTemporalLibrary
@@ -525,6 +526,12 @@ private:
    */
   std::map<LibraryUtils::Area, SuperNodeStreetGraph> m_super_node_graphs_cache;
 
+  /**
+   * Contains the equivalences of node IP address to ID.
+   */
+  std::map<ns3::Ipv4Address, uint32_t> m_node_ip_to_id;
+
+
 public:
 
   GpsSystem ();
@@ -572,6 +579,21 @@ public:
   GetAllStreetJunctionsData () const
   {
     return m_street_junctions_data;
+  }
+
+  /**
+   * Sets the mapping of node Ipv4Address to node ID.
+   */
+  inline void
+  SetNodeIpAddressToIdMapping (const std::map<ns3::Ipv4Address, uint32_t> & node_ip_to_id)
+  {
+    m_node_ip_to_id = node_ip_to_id;
+  }
+
+  inline void
+  ClearNodeIpAddressToIdMapping ()
+  {
+    m_node_ip_to_id.clear ();
   }
 
   /**
@@ -646,6 +668,34 @@ public:
                               const uint32_t current_time);
 
   /**
+   * Computes if the given vehicle is getting closer to the area at the specified
+   * time.
+   *
+   * To compute it, it uses the previous vehicle's location and compares it
+   * to its current location. If the vehicle doesn't has a previous location at
+   * the given time it returns <code>false</code> (because then we can't know if
+   * it's getting closer).
+   * 
+   * It uses the mapping of nodes IP addresses to nodes IDs to determine the node
+   * ID of the given node IP address. If the specified IP address does not exist 
+   * in the mapping an exception of type <code>std::out_of_range</code>
+   * is thrown. So, before using this function you must set the mapping by calling
+   * the member function <code>GpsSystem::SetNodeIpAddressToIdMapping (const 
+   * std::map&#60ns3::Ipv4Address, uint32_t&#62; &)</code>.
+   *
+   * @param vehicle_ip IP address of the vehicle to evaluate.
+   * @param destination_area Destination area.
+   * @param current_time Current simulation time.
+   *
+   * @return <code>true</code> if the vehicle is getting closer to the area,
+   * <code>false</code> otherwise.
+   */
+  bool
+  VehicleGettingCloserToArea (const ns3::Ipv4Address & vehicle_ip,
+                              const LibraryUtils::Area & destination_area,
+                              const uint32_t current_time);
+
+  /**
    * Computes if the given vehicle is going away from the area at the specified
    * time.
    *
@@ -665,6 +715,65 @@ public:
   VehicleGoingAwayFromArea (const uint32_t vehicle_id,
                             const LibraryUtils::Area & destination_area,
                             const uint32_t current_time);
+
+  /**
+   * Computes if the given vehicle is going away from the area at the specified
+   * time.
+   *
+   * To compute it, it uses the previous vehicle's location and compares it
+   * to its current location. If the vehicle doesn't has a previous location at
+   * the given time it returns <code>false</code> (because then we can't know if
+   * it's going away).
+   * 
+   * It uses the mapping of nodes IP addresses to nodes IDs to determine the node
+   * ID of the given node IP address. If the specified IP address does not exist 
+   * in the mapping an exception of type <code>std::out_of_range</code>
+   * is thrown. So, before using this function you must set the mapping by calling
+   * the member function <code>GpsSystem::SetNodeIpAddressToIdMapping (const 
+   * std::map&#60ns3::Ipv4Address, uint32_t&#62; &)</code>.
+   *
+   * @param vehicle_ip IP address of the vehicle to evaluate.
+   * @param destination_area Destination area.
+   * @param current_time Current simulation time.
+   *
+   * @return <code>true</code> if the vehicle is going away from the area,
+   * <code>false</code> otherwise.
+   */
+  bool
+  VehicleGoingAwayFromArea (const ns3::Ipv4Address & vehicle_ip,
+                            const LibraryUtils::Area & destination_area,
+                            const uint32_t current_time);
+
+  /**
+   * Computes if a given vehicle to be evaluated is closer to the specified destination
+   * area than a base vehicle to be compared with.
+   *
+   * It returns the distance difference between base vehicle and evaluated vehicle, that
+   * is <code>base_vehicle_distance_to_area - evaluated_vehicle_distance_to_area</code>,
+   * in the output parameter <code>distance_difference</code>. If difference is:
+   * <ul>
+   *  <li>Positive: evaluated vehicle is closer & base vehicle is farther away.</li>
+   *  <li>Zero: At equal distance from the area.</li>
+   *  <li>Negative: evaluated vehicle is farther away & base vehicle is closer.</li>
+   * </ul>
+   *
+   * @param evaluated_vehicle_location [IN] Location of the vehicle being evaluated.
+   * @param base_vehicle_location [IN] Location of the vehicle used as comparison.
+   * @param destination_area [IN] Destination area.
+   * @param current_time [IN] Current simulation time.
+   * @param distance_difference [OUT] Distance difference between base vehicle and
+   * evaluated vehicle.
+   *
+   * @return <code>true</code> if evaluated vehicle is closer (i.e. at LESS distance from
+   * the destination area) than the base vehicle or both vehicles at equal distance from
+   * area. Otherwise, returns <code>false</code>.
+   */
+  bool
+  IsVehicleCloserToArea (const RouteStep & evaluated_vehicle_location,
+                         const RouteStep & base_vehicle_location,
+                         const LibraryUtils::Area & destination_area,
+                         const uint32_t current_time,
+                         double & distance_difference);
 
   /**
    * Computes if a given vehicle to be evaluated is closer to the specified destination
@@ -698,8 +807,64 @@ public:
                          double & distance_difference);
 
   /**
+   * Computes if a given vehicle to be evaluated is closer to the specified destination
+   * area than a base vehicle to be compared with.
+   *
+   * It returns the distance difference between base vehicle and evaluated vehicle, that
+   * is <code>base_vehicle_distance_to_area - evaluated_vehicle_distance_to_area</code>,
+   * in the output parameter <code>distance_difference</code>. If difference is:
+   * <ul>
+   *  <li>Positive: evaluated vehicle is closer & base vehicle is farther away.</li>
+   *  <li>Zero: At equal distance from the area.</li>
+   *  <li>Negative: evaluated vehicle is farther away & base vehicle is closer.</li>
+   * </ul>
+   * 
+   * It uses the mapping of nodes IP addresses to nodes IDs to determine the nodes
+   * IDs of the given nodes IP addresses. If any of the specified IP addresses
+   * do not exist in the mapping an exception of type <code>std::out_of_range</code>
+   * is thrown. So, before using this function you must set the mapping by calling
+   * the member function <code>GpsSystem::SetNodeIpAddressToIdMapping (const 
+   * std::map&#60ns3::Ipv4Address, uint32_t&#62; &)</code>.
+   *
+   * @param evaluated_vehicle_ip [IN] IP address of the vehicle being evaluated.
+   * @param base_vehicle_ip [IN] IP address of the vehicle used as comparison.
+   * @param destination_area [IN] Destination area.
+   * @param current_time [IN] Current simulation time.
+   * @param distance_difference [OUT] Distance difference between base vehicle and
+   * evaluated vehicle.
+   *
+   * @return <code>true</code> if evaluated vehicle is closer (i.e. at LESS distance from
+   * the destination area) than the base vehicle or both vehicles at equal distance from
+   * area. Otherwise, returns <code>false</code>.
+   */
+  bool
+  IsVehicleCloserToArea (const ns3::Ipv4Address & evaluated_vehicle_ip,
+                         const ns3::Ipv4Address & base_vehicle_ip,
+                         const LibraryUtils::Area & destination_area,
+                         const uint32_t current_time,
+                         double & distance_difference);
+
+  /**
    * Computes if a candidate vehicle is a valid packet carrier comparing its current
    * position to the position of the current packet carrier vehicle.
+   * 
+   * @Important
+   * With the geographical position and velocity vector of a node and a streets
+   * map it is possible to determine the exact location of the node in the 
+   * streets map and the direction it is headed. Using this information
+   * (geographical position and direction), of the local and neighbor nodes, it
+   * can be determined if the neighbor node is a valid packet carrier or not.
+   * 
+   * But given that this process might take a long time to be computed depending
+   * on the size of the streets map and the streets topology, in order to 
+   * decrease the needed time to run the simulations, we pre-computed the
+   * information where the nodes are in the streets map.
+   * 
+   * Using this pre-computed information, this function computes (in a
+   * seamless way) if a node is a valid packet carrier or not. It only needs the
+   * identifiers (numeric ID or IP address) of the local node and  neighbor 
+   * node, and the current simulation time to read from a file the pre-computed
+   * information.
    *
    * @param candidate_vehicle_id [IN] Vehicle being evaluated as candidate carrier.
    * @param current_carrier_vehicle_id [IN] Current packet carrier.
@@ -718,6 +883,53 @@ public:
                                const uint32_t current_time,
                                const double & minimum_valid_distance_difference);
 
+  /**
+   * Computes if a candidate vehicle is a valid packet carrier comparing its current
+   * position against the position of the current packet carrier vehicle.
+   * 
+   * It uses the mapping of nodes IP addresses to nodes IDs to determine the nodes
+   * IDs of the given nodes IP addresses. If any of the specified IP addresses
+   * do not exist in the mapping an exception of type <code>std::out_of_range</code>
+   * is thrown. So, before using this function you must set the mapping by calling
+   * the member function <code>GpsSystem::SetNodeIpAddressToIdMapping (const 
+   * std::map&#60ns3::Ipv4Address, uint32_t&#62; &)</code>.
+   * 
+   * @Important
+   * With the geographical position and velocity vector of a node and a streets
+   * map it is possible to determine the exact location of the node in the 
+   * streets map and the direction it is headed. Using this information
+   * (geographical position and direction), of the local and neighbor nodes, it
+   * can be determined if the neighbor node is a valid packet carrier or not.
+   * 
+   * But given that this process might take a long time to be computed depending
+   * on the size of the streets map and the streets topology, in order to 
+   * decrease the needed time to run the simulations, we pre-computed the
+   * information where the nodes are in the streets map.
+   * 
+   * Using this pre-computed information, this function computes (in a
+   * seamless way) if a node is a valid packet carrier or not. It only needs the
+   * identifiers (numeric ID or IP address) of the local node and  neighbor 
+   * node, and the current simulation time to read from a file the pre-computed
+   * information.
+   *
+   * @param candidate_vehicle_ip [IN] Vehicle being evaluated as candidate carrier.
+   * @param current_carrier_vehicle_ip [IN] Current packet carrier.
+   * @param destination_area [IN] Packet's destination area.
+   * @param current_time [IN] Current simulation time.
+   * @param minimum_valid_distance_difference [IN] Minimum valid difference between
+   * candidate and current carrier vehicles.
+   *
+   * @return <code>true</code> if the candidate vehicle is a valid packet carrier,
+   * <code>false</code> otherwise.
+   */
+  bool
+  IsVehicleValidPacketCarrier (const ns3::Ipv4Address & candidate_vehicle_ip,
+                               const ns3::Ipv4Address & current_carrier_vehicle_ip,
+                               const LibraryUtils::Area & destination_area,
+                               const uint32_t current_time,
+                               const double & minimum_valid_distance_difference);
+
+
   friend bool operator== (const GpsSystem & lhs, const GpsSystem & rhs);
 };
 
@@ -727,7 +939,8 @@ operator== (const GpsSystem & lhs, const GpsSystem & rhs)
   return lhs.m_streets_graph == rhs.m_streets_graph
           && lhs.m_vehicles_routes_data == rhs.m_vehicles_routes_data
           && lhs.m_street_junctions_data == rhs.m_street_junctions_data
-          && lhs.m_super_node_graphs_cache == rhs.m_super_node_graphs_cache;
+          && lhs.m_super_node_graphs_cache == rhs.m_super_node_graphs_cache
+          && lhs.m_node_ip_to_id == rhs.m_node_ip_to_id;
 }
 
 inline bool

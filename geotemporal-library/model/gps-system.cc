@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "string-utils.h"
+#include "packet-utils.h"
 
 namespace GeoTemporalLibrary
 {
@@ -361,7 +362,7 @@ GeoTemporalAreasVisitorNodes::AddVisitorNode (const LibraryUtils::GeoTemporalAre
   // If there's no entry then add it with a a new set.
   if (gta_entry_it == m_geo_temporal_areas_visitors.end ())
     {
-      std::set<VisitorNode> new_set{visitor_node};
+      std::set<VisitorNode> new_set {visitor_node};
       m_geo_temporal_areas_visitors.insert (std::make_pair (geo_temporal_area, new_set));
     }
   else // There's an entry with the specified geo-temporal area
@@ -565,8 +566,7 @@ SuperNodeStreetGraph::SuperNodeStreetGraph (const LibraryUtils::Area & destinati
 
   // 2.- Locate the node closest to the area's center. Use it as root to compute shortest-paths
   // Dijkstra's alg. to all other nodes in nodes_inside.
-  const LibraryUtils::Vector2D area_center_coord (
-                                                  (destination_area.GetCoordinate1 ().m_x + destination_area.GetCoordinate2 ().m_x) / 2.0,
+  const LibraryUtils::Vector2D area_center_coord ((destination_area.GetCoordinate1 ().m_x + destination_area.GetCoordinate2 ().m_x) / 2.0,
                                                   (destination_area.GetCoordinate1 ().m_y + destination_area.GetCoordinate2 ().m_y) / 2.0);
 
   double minimum_distance_found = std::numeric_limits<double>::max ();
@@ -749,14 +749,14 @@ SuperNodeStreetGraph::Print (std::ostream & os) const
 
 GpsSystem::GpsSystem ()
 : m_streets_graph (), m_vehicles_routes_data (), m_street_junctions_data (),
-m_super_node_graphs_cache () { }
+m_super_node_graphs_cache (), m_node_ip_to_id () { }
 
 GpsSystem::GpsSystem (const std::string & street_graph_filename,
                       const std::string & vehicles_routes_filename,
                       const std::string & street_junctions_data_filename)
 : m_streets_graph (street_graph_filename), m_vehicles_routes_data (vehicles_routes_filename),
 m_street_junctions_data (StreetJunction::ImportStreetJunctionsFile (street_junctions_data_filename)),
-m_super_node_graphs_cache ()
+m_super_node_graphs_cache (), m_node_ip_to_id ()
 {
   // If the number of street junctions and nodes in the graph doesn't match throw exception
   if (m_street_junctions_data.size () != m_streets_graph.GetNodesCount ())
@@ -766,7 +766,8 @@ m_super_node_graphs_cache ()
 GpsSystem::GpsSystem (const GpsSystem & copy)
 : m_streets_graph (copy.m_streets_graph), m_vehicles_routes_data (copy.m_vehicles_routes_data),
 m_street_junctions_data (copy.m_street_junctions_data),
-m_super_node_graphs_cache (copy.m_super_node_graphs_cache) { }
+m_super_node_graphs_cache (copy.m_super_node_graphs_cache),
+m_node_ip_to_id (copy.m_node_ip_to_id) { }
 
 const StreetJunction &
 GpsSystem::GetStreetJunctionData (const std::string & junction_name) const
@@ -787,7 +788,7 @@ GpsSystem::GetCloserJunctionName (const RouteStep & route_step) const
 
   // The street must exist in the streets graph, otherwise throw an exception.
   if (!m_streets_graph.GetEdge (route_step.GetStreetName (), street_edge))
-    throw std::runtime_error ("Invalid street: street ' " + route_step.GetStreetName ()
+    throw std::runtime_error ("Invalid street: street '" + route_step.GetStreetName ()
                               + "' doesn't exist in the streets graph.");
 
   if (route_step.GetDistanceToInitialJunction () <= route_step.GetDistanceToEndingJunction ())
@@ -803,7 +804,7 @@ GpsSystem::GetFartherJunctionName (const RouteStep & route_step) const
 
   // The street must exist in the streets graph, otherwise throw an exception.
   if (!m_streets_graph.GetEdge (route_step.GetStreetName (), street_edge))
-    throw std::runtime_error ("Invalid street: street ' " + route_step.GetStreetName ()
+    throw std::runtime_error ("Invalid street: street '" + route_step.GetStreetName ()
                               + "' doesn't exist in the streets graph.");
 
   if (route_step.GetDistanceToInitialJunction () > route_step.GetDistanceToEndingJunction ())
@@ -827,10 +828,7 @@ GpsSystem::GetSuperNodeStreetGraph (const LibraryUtils::Area & destination_area)
       return super_node_cache_it->second;
     }
 
-  // Not processed before, process it
-  SuperNodeStreetGraph super_node (destination_area, *this);
-
-  // 7.- Store computation result in cache, to avoid repetitive computation.
+  // Not processed before, process it and store result in cache, to avoid repetitive computation.
   std::pair < std::map<LibraryUtils::Area, SuperNodeStreetGraph>::const_iterator, bool> inserted_it;
   std::pair<LibraryUtils::Area, SuperNodeStreetGraph> pair_to_insert;
 
@@ -920,6 +918,16 @@ GpsSystem::VehicleGettingCloserToArea (const uint32_t vehicle_id,
 }
 
 bool
+GpsSystem::VehicleGettingCloserToArea (const ns3::Ipv4Address& vehicle_ip,
+                                       const LibraryUtils::Area& destination_area,
+                                       const uint32_t current_time)
+{
+  return VehicleGettingCloserToArea (m_node_ip_to_id.at (vehicle_ip),
+                                     destination_area,
+                                     current_time);
+}
+
+bool
 GpsSystem::VehicleGoingAwayFromArea (const uint32_t vehicle_id,
                                      const LibraryUtils::Area & destination_area,
                                      const uint32_t current_time)
@@ -928,20 +936,20 @@ GpsSystem::VehicleGoingAwayFromArea (const uint32_t vehicle_id,
 }
 
 bool
-GpsSystem::IsVehicleCloserToArea (const uint32_t evaluated_vehicle_id,
-                                  const uint32_t base_vehicle_id,
-                                  const LibraryUtils::Area & destination_area,
-                                  const uint32_t current_time,
-                                  double & distance_difference)
+GpsSystem::VehicleGoingAwayFromArea (const ns3::Ipv4Address& vehicle_ip,
+                                     const LibraryUtils::Area& destination_area,
+                                     const uint32_t current_time)
 {
-  // Get the location of the vehicle being evaluated in the streets graph.
-  const RouteStep & evaluated_vehicle_location = m_vehicles_routes_data.GetNodeRouteData (evaluated_vehicle_id)
-          .GetRouteStep (current_time);
+  return !VehicleGettingCloserToArea (vehicle_ip, destination_area, current_time);
+}
 
-  // Get the location of the vehicle being used as base for comparison in the streets graph.
-  const RouteStep & base_vehicle_location = m_vehicles_routes_data.GetNodeRouteData (base_vehicle_id)
-          .GetRouteStep (current_time);
-
+bool
+GpsSystem::IsVehicleCloserToArea (const RouteStep& evaluated_vehicle_location,
+                                  const RouteStep& base_vehicle_location,
+                                  const LibraryUtils::Area& destination_area,
+                                  const uint32_t current_time,
+                                  double& distance_difference)
+{
   // Calculate distance from evaluated vehicle towards the area.
   const double evaluated_vehicle_dist_to_area =
           CalculateDistanceToArea (evaluated_vehicle_location, destination_area);
@@ -960,7 +968,42 @@ GpsSystem::IsVehicleCloserToArea (const uint32_t evaluated_vehicle_id,
   // Returns true if evaluated vehicle is CLOSER (i.e. at LESS distance from area)
   // or both at equal distance.
   return evaluated_vehicle_dist_to_area <= base_vehicle_dist_to_area;
+}
 
+bool
+GpsSystem::IsVehicleCloserToArea (const uint32_t evaluated_vehicle_id,
+                                  const uint32_t base_vehicle_id,
+                                  const LibraryUtils::Area & destination_area,
+                                  const uint32_t current_time,
+                                  double & distance_difference)
+{
+  // Get the location of the vehicle being evaluated in the streets graph.
+  const RouteStep & evaluated_vehicle_location = m_vehicles_routes_data.GetNodeRouteData (evaluated_vehicle_id)
+          .GetRouteStep (current_time);
+
+  // Get the location of the vehicle being used as base for comparison in the streets graph.
+  const RouteStep & base_vehicle_location = m_vehicles_routes_data.GetNodeRouteData (base_vehicle_id)
+          .GetRouteStep (current_time);
+
+  return IsVehicleCloserToArea (evaluated_vehicle_location,
+                                base_vehicle_location,
+                                destination_area,
+                                current_time,
+                                distance_difference);
+}
+
+bool
+GpsSystem::IsVehicleCloserToArea (const ns3::Ipv4Address& evaluated_vehicle_ip,
+                                  const ns3::Ipv4Address& base_vehicle_ip,
+                                  const LibraryUtils::Area& destination_area,
+                                  const uint32_t current_time,
+                                  double& distance_difference)
+{
+  return IsVehicleCloserToArea (m_node_ip_to_id.at (evaluated_vehicle_ip),
+                                m_node_ip_to_id.at (base_vehicle_ip),
+                                destination_area,
+                                current_time,
+                                distance_difference);
 }
 
 bool
@@ -984,7 +1027,7 @@ GpsSystem::IsVehicleValidPacketCarrier (const uint32_t candidate_vehicle_id,
   // Compute if candidate vehicle is closer to the area.
   double distance_difference = 0;
   const bool candidate_closer_to_area =
-          IsVehicleCloserToArea (candidate_vehicle_id, current_carrier_vehicle_id,
+          IsVehicleCloserToArea (candidate_vehicle_location, carrier_vehicle_location,
                                  destination_area, current_time, distance_difference);
 
   const bool candidate_getting_closer = VehicleGettingCloserToArea (candidate_vehicle_id,
@@ -1025,6 +1068,20 @@ GpsSystem::IsVehicleValidPacketCarrier (const uint32_t candidate_vehicle_id,
 
   // Candidate is a valid carrier.
   return true;
+}
+
+bool
+GpsSystem::IsVehicleValidPacketCarrier (const ns3::Ipv4Address& candidate_vehicle_ip,
+                                        const ns3::Ipv4Address& current_carrier_vehicle_ip,
+                                        const LibraryUtils::Area& destination_area,
+                                        const uint32_t current_time,
+                                        const double& minimum_valid_distance_difference)
+{
+  return IsVehicleValidPacketCarrier (m_node_ip_to_id.at (candidate_vehicle_ip),
+                                      m_node_ip_to_id.at (current_carrier_vehicle_ip),
+                                      destination_area,
+                                      current_time,
+                                      minimum_valid_distance_difference);
 }
 
 }
