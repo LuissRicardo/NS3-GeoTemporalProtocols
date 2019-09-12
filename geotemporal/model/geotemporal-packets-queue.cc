@@ -401,7 +401,10 @@ PacketsQueue::Enqueue (const DataHeader& data_header, const Vector2D& current_no
       // Find the packet with highest priority to be dropped (the one with the
       // highest hops count).
       DataIdentifier entry_to_delete;
-      NS_ASSERT (FindHighestDropPriorityPacket (current_node_position, entry_to_delete));
+
+      const bool to_delete_found = FindHighestDropPriorityPacket (current_node_position,
+                                                                  entry_to_delete);
+      NS_ASSERT (to_delete_found);
 
       NS_LOG_DEBUG ("Drops the packet with highest priority to be dropped due "
                     "to a full queue : " << entry_to_delete);
@@ -409,7 +412,8 @@ PacketsQueue::Enqueue (const DataHeader& data_header, const Vector2D& current_no
       // Log statistics about the packet drop
       LogPacketDropped (entry_to_delete);
 
-      m_packets_table.erase (entry_to_delete);
+      const bool deleted = m_packets_table.erase (entry_to_delete) > 0u;
+      NS_ABORT_MSG_UNLESS (deleted == true, "Packet entry should have been deleted.");
     }
 
   std::pair<Iterator_t, bool> inserted_result;
