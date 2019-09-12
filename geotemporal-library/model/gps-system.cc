@@ -816,7 +816,7 @@ GpsSystem::GetFartherJunctionName (const RouteStep & route_step) const
 const SuperNodeStreetGraph &
 GpsSystem::GetSuperNodeStreetGraph (const LibraryUtils::Area & destination_area)
 {
-  std::cout << "Processing destination area " << destination_area << "... ";
+  // std::cout << "Processing destination area " << destination_area << "... ";
 
   // Check if the given area has already been processed before. If so, retrieve it.
   std::map<LibraryUtils::Area, SuperNodeStreetGraph>::const_iterator super_node_cache_it =
@@ -824,7 +824,7 @@ GpsSystem::GetSuperNodeStreetGraph (const LibraryUtils::Area & destination_area)
 
   if (super_node_cache_it != m_super_node_graphs_cache.end ())
     {
-      std::cout << "Retrieved from cache.\n";
+      // std::cout << "Retrieved from cache.\n";
       return super_node_cache_it->second;
     }
 
@@ -834,7 +834,7 @@ GpsSystem::GetSuperNodeStreetGraph (const LibraryUtils::Area & destination_area)
 
   pair_to_insert = std::make_pair (destination_area, SuperNodeStreetGraph (destination_area, *this));
   inserted_it = m_super_node_graphs_cache.insert (pair_to_insert);
-  std::cout << "Done.\n";
+  // std::cout << "Done.\n";
 
   // Return the just inserted object into the map to return the right reference.
   return inserted_it.first->second;
