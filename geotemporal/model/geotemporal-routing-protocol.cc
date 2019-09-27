@@ -785,6 +785,11 @@ RoutingProtocol::RecvReplyPacket (Ptr<Packet> received_packet, const Ipv4Address
   m_neighbors_table.Insert (/*Neighbor node*/ sender_node_ip,
                             /*Neighbor unknown packets*/ neighbor_unknown_packets);
 
+  // Store the neighbor node as a known packet carrier of each packet contained
+  // in the summary vector
+  m_packets_queue.AddKnownPacketCarriers (reply_header.GetSummaryVector (),
+                                          sender_node_ip);
+
   // If the neighbor node has at least 1 packet that I don't know then I send a
   // REPLY BACK packet to request the unknown packets.
   if (!locally_unknown_packets.empty ())

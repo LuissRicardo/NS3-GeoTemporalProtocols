@@ -226,38 +226,6 @@ PacketsQueue::ProcessDisjointVectors (const std::set<DataIdentifier>& summary_ve
 }
 
 bool
-PacketsQueue::ComparePacketDropPriority (const std::map<DataIdentifier, PacketQueueEntry>::value_type& entry_1,
-                                         const std::map<DataIdentifier, PacketQueueEntry>::value_type& entry_2)
-{
-  const DataHeader & packet_1 = entry_1.second.GetDataPacket ();
-  const DataHeader & packet_2 = entry_2.second.GetDataPacket ();
-
-  /* The first criteria to select the packet with higher priority to be dropped
-   * is the hops count.
-   * 
-   * This way, the packet that has traveled farther away is dropped to give 
-   * opportunity to the other packets to travel more.
-   */
-  if (packet_1.GetHopsCount () != packet_2.GetHopsCount ())
-    {
-      // If packet 1 has traveled LESS hops than packet 2 then it has LOWER 
-      // priority, return true. Otherwise return false because packet 1 has
-      // traveled MORE hops than packet 2.
-      return packet_1.GetHopsCount () < packet_2.GetHopsCount ();
-    }
-
-  /* Both have traveled an equal number of hops, the criteria to break the tie
-   * is the number of nodes that know the packets.
-   * 
-   * The packet that is known by LESS number of nodes has LOWER priority to be dropped.
-   * The packet that is known by MORE or EQUAL number of nodes has HIGHER priority to be dropped.
-   * 
-   * This is to give chance to less known packets to be known.
-   */
-  return entry_1.second.GetKnownCarrierNodesCount () < entry_2.second.GetKnownCarrierNodesCount ();
-}
-
-bool
 PacketsQueue::ComparePacketTransmissionPriority (const std::map<DataIdentifier, PacketQueueEntry>::value_type& entry_1,
                                                  const std::map<DataIdentifier, PacketQueueEntry>::value_type& entry_2)
 {
@@ -310,62 +278,82 @@ PacketsQueue::FindHighestDropPriorityPacket (const Vector2D& current_node_positi
       return true;
     }
 
-  // Find the packet that has traveled the most hops.
-  // If possible, try to find a packet that is not inside its destination area
-  // during its active time.
+  /* We drop the packet with the lowest transmission priority. So the packet
+   * with the lowest transmission priority also has the highest drop priority.
+   * 
+   * We use ComparePacketTransmissionPriority (A, B) that returns true if A has
+   * lower transmission priority than B. Because another way to look at it is
+   * that A has higher drop priority than B.
+   * 
+   * The packet with the lowest transmission priority is the one that has
+   * traveled the most hops.
+   * 
+   * If possible, try to find a packet that is not inside its destination area
+   * during its active time and has the lowest possible transmission priority.
+   */
 
   const Time current_time = Simulator::Now ();
-  ConstIterator_t highest_priority_it = m_packets_table.begin ();
-  ConstIterator_t not_in_gta_highest_priority_it;
+
+  // The first packet in the queue has the lowest transmission priority seen so far.
+  ConstIterator_t lowest_priority_it = m_packets_table.begin ();
+
+  // If the first packet in the queue is not inside its destination geo-temporal area
+  // then it has the lowest transmission priority from the packets that are not
+  // inside its destination GTA seen so far.
+  ConstIterator_t lowest_priority_not_in_gta_it;
 
   if (!m_packets_table.begin ()->second.GetDataPacket ().GetDestinationGeoTemporalArea ()
       .IsInsideGeoTemporalArea (current_node_position, current_time))
     {
-      not_in_gta_highest_priority_it = m_packets_table.begin ();
+      lowest_priority_not_in_gta_it = m_packets_table.begin ();
     }
   else
     {
-      not_in_gta_highest_priority_it = m_packets_table.end ();
+      lowest_priority_not_in_gta_it = m_packets_table.end ();
     }
 
+  // Iterate through the rest of the packets (starts from the second one).
   for (ConstIterator_t entry_it = std::next (m_packets_table.begin ());
           entry_it != m_packets_table.end (); ++entry_it)
     {
-      // First, from all the packets find the one with the highest priority.
-      if (ComparePacketDropPriority (*highest_priority_it, *entry_it))
+      // First, from all the packets find the one with the lowest transmission 
+      // priority.
+      if (ComparePacketTransmissionPriority (*entry_it, *lowest_priority_it))
         {
-          // Entry_it has HIGHER priority than highest_priority_it, so entry_it
-          // becomes the packet with highest priority so far
-          highest_priority_it = entry_it;
+          // Entry_it has LOWER transmission priority than lowest_priority_it,
+          // so entry_it becomes the packet with the lowest transmission
+          // priority so far.
+          lowest_priority_it = entry_it;
         }
 
-      // Second, only from the packets that are NOT inside its destination geo-temporal
-      // area, if any exists, find the one with highest priority.
+      // Second, only from the packets that are NOT inside its destination GTA,
+      // if any exists, find the one with the lowest transmission priority.
       if (entry_it->second.GetDataPacket ().GetDestinationGeoTemporalArea ()
           .IsInsideGeoTemporalArea (current_node_position, current_time))
-        continue; // Packet is inside its destination area, continue to the next.
+        continue; // Packet is inside its destination GTA, continue to the next.
 
-      // The packet is not inside its destination geo-temporal area, it may be dropped
-      if (not_in_gta_highest_priority_it == m_packets_table.end ()
-          || ComparePacketDropPriority (*not_in_gta_highest_priority_it, *entry_it))
+      // The packet is not inside its destination geo-temporal area, it may be 
+      // safely dropped
+      if (lowest_priority_not_in_gta_it == m_packets_table.end ()
+          || ComparePacketTransmissionPriority (*entry_it, *lowest_priority_not_in_gta_it))
         {
-          // Entry_it has HIGHER priority than not_in_gta_highest_priority_it, 
-          // so entry_it becomes the packet with highest priority so far that
-          // is not inside its destination geo-temporal area.
-          not_in_gta_highest_priority_it = entry_it;
+          // Entry_it has LOWER transmission priority than not_in_gta_lowest_priority_it,
+          // so entry_it becomes the packet with the lowest transmission priority
+          // so far that is not inside its destination geo-temporal area.
+          lowest_priority_not_in_gta_it = entry_it;
         }
     }
 
-  // If a packet not inside its destination area was found then it is the selected.
-  // Otherwise return the one with highest priority.
-  if (not_in_gta_highest_priority_it != m_packets_table.end ())
+  // If a packet not inside its destination GTA was found then it is the selected.
+  // Otherwise return the one with lowest tranmission priority.
+  if (lowest_priority_not_in_gta_it != m_packets_table.end ())
     {
-      selected_packet = not_in_gta_highest_priority_it->first;
+      selected_packet = lowest_priority_not_in_gta_it->first;
       NS_LOG_DEBUG ("Packet not inside its destination geo-temporal area selected: " << selected_packet);
     }
   else
     {
-      selected_packet = highest_priority_it->first;
+      selected_packet = lowest_priority_it->first;
       NS_LOG_DEBUG ("Packet inside its destination geo-temporal area selected: " << selected_packet);
     }
 
@@ -493,13 +481,17 @@ PacketsQueue::FindHighestTransmitPriorityPacket (const Ipv4Address & local_node_
        * broadcasted before other packets that aren't inside its destination 
        * geo-temporal area are transmitted.
        */
+      const bool local_node_inside_gta
+              = destination_gta.IsInsideGeoTemporalArea (local_position, current_time);
+      const bool neighbor_node_inside_gta
+              = destination_gta.IsInsideGeoTemporalArea (neighbor_position, current_time);
 
       // If the current packet has higher priority than the currently selected high priority packet
-      // AND is inside its destination geo-temporal area,
+      // either the current node or the neighbor node is inside the destination geo-temporal area,
       // then select it as the high priority packet.
       if ((high_priority_packet_it == m_packets_table.end ()
            || ComparePacketTransmissionPriority (*high_priority_packet_it, *requested_packet_it))
-          && destination_gta.IsInsideGeoTemporalArea (neighbor_position, current_time))
+          && (local_node_inside_gta || neighbor_node_inside_gta))
         {
           NS_LOG_DEBUG ("High priority packet " << *data_id_it << " selected.");
           high_priority_packet_it = requested_packet_it;
@@ -650,6 +642,30 @@ PacketsQueue::AddKnownPacketCarrier (const DataIdentifier& packet_data_id,
   NS_LOG_DEBUG ("Added confirmed carrier node " << carrier_node_ip
                 << " to packet " << packet_data_id);
   return true;
+}
+
+void
+PacketsQueue::AddKnownPacketCarriers (const std::set<DataIdentifier>& packet_data_ids_set,
+                                      const Ipv4Address& carrier_node_ip)
+{
+  NS_LOG_FUNCTION (this << packet_data_ids_set.size () << carrier_node_ip);
+
+  if (packet_data_ids_set.empty ()) return; // When set is empty do nothing
+
+  Iterator_t packet_entry_it;
+
+  for (std::set<DataIdentifier>::const_iterator packet_data_id_it = packet_data_ids_set.begin ();
+          packet_data_id_it != packet_data_ids_set.end (); ++packet_data_id_it)
+    {
+      packet_entry_it = m_packets_table.find (*packet_data_id_it);
+
+      if (packet_entry_it == m_packets_table.end ()) continue; // Packet not found
+
+      packet_entry_it->second.AddKnownCarrierNode (carrier_node_ip);
+
+      NS_LOG_DEBUG ("Added confirmed carrier node " << carrier_node_ip
+                    << " to packet " << *packet_data_id_it);
+    }
 }
 
 void

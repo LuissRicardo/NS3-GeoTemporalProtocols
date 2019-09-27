@@ -524,20 +524,6 @@ public:
 private:
 
   /**
-   * Compares the drop priority of 2 packet queue entries and returns 
-   * <code>true</code> if <code>entry_1</code> has <i>lower</i> drop priority
-   * than <code>entry_2</code>.
-   * 
-   * This comparison function object satisfies the requirements of Compare.
-   * 
-   * @return <code>true</code> if <code>entry_1</code> has <i>lower</i> priority
-   * than <code>entry_2</code>.
-   */
-  static bool
-  ComparePacketDropPriority (const std::map<DataIdentifier, PacketQueueEntry>::value_type & entry_1,
-                             const std::map<DataIdentifier, PacketQueueEntry>::value_type & entry_2);
-
-  /**
    * Compares the transmission priority of 2 packet queue entries and returns
    * <code>true</code> if <code>entry_1</code> has <i>lower</i> transmission 
    * priority than <code>entry_2</code>.
@@ -763,6 +749,18 @@ public:
   bool
   AddKnownPacketCarrier (const DataIdentifier & packet_data_id,
                          const Ipv4Address & carrier_node_ip);
+
+  /**
+   * Adds the IP address of a node that we know that carries all the data 
+   * packets specified in the set of data packet identifiers.
+   * 
+   * @param packet_data_ids_set [IN] Set of data packet identifiers of the 
+   * packets to add a known carrier.
+   * @param carrier_node_ip [IN] IP address of the known carrier.
+   */
+  void
+  AddKnownPacketCarriers (const std::set<DataIdentifier> & packet_data_ids_set,
+                          const Ipv4Address & carrier_node_ip);
 
 
 public:
