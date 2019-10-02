@@ -368,6 +368,15 @@ public:
   // --------------------------
 
   /**
+   * Removes all packet entries from the packets queue.
+   */
+  inline void
+  Clear ()
+  {
+    m_packets_table.clear ();
+  }
+
+  /**
    * Given a Summary Vector header that contains a summary vector (a set of data
    * packet identifiers) and the geographical position of the receiver node 
    * processes the disjoint vector, that is, the set of data packet identifiers 
