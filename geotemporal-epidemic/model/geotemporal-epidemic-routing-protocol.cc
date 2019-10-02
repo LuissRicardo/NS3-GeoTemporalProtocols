@@ -1140,8 +1140,15 @@ RoutingProtocol::Enable ()
       return;
     }
 
-  // The call to SetUp (uint32_t) will call RoutingProtocol::Start ().
+  // The call to SetUp (uint32_t) will call RoutingProtocol::NotifyInterfaceUp (uint32_t).
   m_ipv4->SetUp (m_last_known_selected_interface_index);
+
+  // RoutingProtocol::NotifyInterfaceUp (uint32_t) enables the device interface,
+  // but to fully enable the operation of the node we call RoutingProtocol::Start ()
+  // that starts the regular transmission of HELLO packets and initializes the
+  // packets queue and neighbors table.
+  Start ();
+
   NS_LOG_DEBUG ("Node " << m_selected_interface_address.GetLocal () << " (#"
                 << m_node_id << ") enabled at " << Simulator::Now ().GetSeconds ()
                 << " seconds.");
@@ -1158,7 +1165,8 @@ RoutingProtocol::Disable ()
       return;
     }
 
-  // The call to SetDown (uint32_t) will call RoutingProtocol::Stop ().
+  // The call to SetDown (uint32_t) will call RoutingProtocol::NotifyInterfaceDown (uint32_t),
+  // and NotifyInterfaceDown will call RoutingProtocol::Stop ().
   m_ipv4->SetDown (m_selected_interface_index);
   NS_LOG_DEBUG ("Node with ID " << m_node_id << " disabled at "
                 << Simulator::Now ().GetSeconds () << " seconds.");
