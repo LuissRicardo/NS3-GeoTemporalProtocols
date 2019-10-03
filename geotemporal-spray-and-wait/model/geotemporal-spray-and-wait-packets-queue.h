@@ -408,6 +408,15 @@ public:
   // --------------------------
 
   /**
+   * Removes all packet entries from the packets queue.
+   */
+  inline void
+  Clear ()
+  {
+    m_packets_table.clear ();
+  }
+
+  /**
    * Given a summary vector (a set of data packet identifiers) processes a 
    * disjoint vector, that is, the set of data packet identifiers of the data
    * packets that don't exist in this packets queue.

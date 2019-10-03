@@ -1096,7 +1096,10 @@ RoutingProtocol::Stop ()
   NS_LOG_FUNCTION (this);
 
   CancelHelloPacketTransmission ();
+
+  // Clear memory that won't be used
   m_neighbors_table.Clear ();
+  m_packets_queue.Clear ();
 }
 
 bool

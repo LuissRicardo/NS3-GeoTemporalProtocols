@@ -1951,6 +1951,69 @@ public:
   }
 
   void
+  TestClear ()
+  {
+    m_packets_queue = PacketsQueue (false, 15);
+
+    DataHeader data_packet (/* Data ID */ DataIdentifier ("1.1.1.1:1"),
+                            /* Geo-temporal area */ GeoTemporalArea (TimePeriod (Seconds (0), Seconds (10)),
+                                                                     Area (0, 0, 100, 100)),
+                            /* Message */ "Message",
+                            /* Replicas */ 5);
+
+    Ipv4Address ip ("1.1.1.1");
+
+    for (uint32_t id = 0; id < 10; ++id)
+      {
+        data_packet.SetDataIdentifier (DataIdentifier (ip, id));
+
+        m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.1"));
+      }
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 10, "Must be 10");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.GetPacketReceptionStats ().size (), 10, "Must be 10");
+
+    m_packets_queue.Clear ();
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 0, "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.GetPacketReceptionStats ().size (), 10, "Must be 10");
+
+    ip = Ipv4Address ("1.1.1.2");
+
+    for (uint32_t id = 0; id < 15; ++id)
+      {
+        data_packet.SetDataIdentifier (DataIdentifier (ip, id));
+
+        m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.2"));
+      }
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 15, "Must be 15");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.GetPacketReceptionStats ().size (), 25, "Must be 25");
+
+    m_packets_queue.Clear ();
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 0, "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.GetPacketReceptionStats ().size (), 25, "Must be 25");
+
+    ip = Ipv4Address ("1.1.1.3");
+
+    for (uint32_t id = 0; id < 25; ++id)
+      {
+        data_packet.SetDataIdentifier (DataIdentifier (ip, id));
+
+        m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.3"));
+      }
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 15, "Must be 15");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.GetPacketReceptionStats ().size (), 50, "Must be 50");
+
+    m_packets_queue.Clear ();
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 0, "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.GetPacketReceptionStats ().size (), 50, "Must be 50");
+  }
+
+  void
   TestProcessDisjointVector ()
   {
     std::set<DataIdentifier> received_summary_vector, disjoint_vector, expected_disjoint_vector;
@@ -2671,7 +2734,7 @@ public:
     m_packets_queue.Find (DataIdentifier ("1.1.1.1:1"), packet_entry);
     NS_TEST_EXPECT_MSG_EQ (packet_entry.GetReplicasCounter (), 1u, "Packet entry must have 1 replica(s).");
 
-    // Test that only 1 replica is discounted at a time, until there are no more
+    // Test that floor(replicas / 2) replicas are discounted at a time, until there are no more
     // replicas available
     uint8_t discounts_counter;
     uint32_t expected_replicas_to_keep, expected_replicas_to_forward;
@@ -3021,6 +3084,7 @@ public:
     TestGettersSetters ();
     TestGetSize ();
     TestGetSummaryVector ();
+    TestClear ();
     TestProcessDisjointVector ();
     TestFindFunctions ();
     TestEnqueueFunction ();
