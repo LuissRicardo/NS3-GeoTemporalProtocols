@@ -1689,6 +1689,69 @@ public:
   }
 
   void
+  TestClear ()
+  {
+    m_packets_queue = PacketsQueue (15);
+
+    DataHeader data_packet (/* Data ID */ DataIdentifier ("1.1.1.1:1"),
+                            /* Geo-temporal area */ GeoTemporalArea (TimePeriod (Seconds (0), Seconds (10)),
+                                                                     Area (0, 0, 100, 100)),
+                            /* Message */ "Message",
+                            /* Hops */ 5);
+
+    Ipv4Address ip ("1.1.1.1");
+
+    for (uint32_t id = 0; id < 10; ++id)
+      {
+        data_packet.SetDataIdentifier (DataIdentifier (ip, id));
+
+        m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.1"));
+      }
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 10, "Must be 10");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.GetPacketReceptionStats ().size (), 10, "Must be 10");
+
+    m_packets_queue.Clear ();
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 0, "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.GetPacketReceptionStats ().size (), 10, "Must be 10");
+
+    ip = Ipv4Address ("1.1.1.2");
+
+    for (uint32_t id = 0; id < 15; ++id)
+      {
+        data_packet.SetDataIdentifier (DataIdentifier (ip, id));
+
+        m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.2"));
+      }
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 15, "Must be 15");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.GetPacketReceptionStats ().size (), 25, "Must be 25");
+
+    m_packets_queue.Clear ();
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 0, "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.GetPacketReceptionStats ().size (), 25, "Must be 25");
+
+    ip = Ipv4Address ("1.1.1.3");
+
+    for (uint32_t id = 0; id < 25; ++id)
+      {
+        data_packet.SetDataIdentifier (DataIdentifier (ip, id));
+
+        m_packets_queue.Enqueue (data_packet, Ipv4Address ("1.1.1.3"));
+      }
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 15, "Must be 15");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.GetPacketReceptionStats ().size (), 50, "Must be 50");
+
+    m_packets_queue.Clear ();
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 0, "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.GetPacketReceptionStats ().size (), 50, "Must be 50");
+  }
+
+  void
   TestGetSummaryVector ()
   {
     std::set<DataIdentifier> summary_vector, expected_summary_vector;
@@ -2947,6 +3010,7 @@ public:
     TestGettersSetters ();
     TestGetSize ();
     TestGetSummaryVector ();
+    TestClear ();
     TestProcessDisjointVector ();
     TestFindFunctions ();
     TestEnqueueFunction ();
