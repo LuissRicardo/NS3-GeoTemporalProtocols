@@ -773,9 +773,9 @@ GeoTemporalInstaller::ConfigureNodesMobility ()
 
               if (node_initial_time < m_simulation_duration)
                 {
-                  Simulator::Schedule (Seconds (node_initial_time),
-                                       &geotemporal::RoutingProtocol::Enable,
-                                       routing_protocol);
+                  Simulator::ScheduleWithContext (node_id, Seconds (node_initial_time),
+                                                  &geotemporal::RoutingProtocol::Enable,
+                                                  routing_protocol);
                 }
             }
 
@@ -783,9 +783,9 @@ GeoTemporalInstaller::ConfigureNodesMobility ()
           // schedule a disable.
           if (node_end_time < m_simulation_duration)
             {
-              Simulator::Schedule (Seconds (node_end_time),
-                                   &geotemporal::RoutingProtocol::Disable,
-                                   routing_protocol);
+              Simulator::ScheduleWithContext (node_id, Seconds (node_end_time),
+                                              &geotemporal::RoutingProtocol::Disable,
+                                              routing_protocol);
             }
         }
 
