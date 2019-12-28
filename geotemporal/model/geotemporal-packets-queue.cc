@@ -460,67 +460,75 @@ PacketsQueue::FindHighestTransmitPriorityPacket (const Ipv4Address & local_node_
   // Normal priority packet: Is not inside its destination geo-temporal area.
   ConstIterator_t normal_priority_packet_it = m_packets_table.end ();
 
-  // Iterate through all the requested packets.
-  for (std::set<DataIdentifier>::const_iterator data_id_it = disjoint_vector.begin ();
-          data_id_it != disjoint_vector.end (); ++data_id_it)
+  try
     {
-      requested_packet_it = m_packets_table.find (*data_id_it);
-
-      // If the requested packet doesn't exist in the queue continue to the next one.
-      if (requested_packet_it == m_packets_table.end ())
+      // Iterate through all the requested packets.
+      for (std::set<DataIdentifier>::const_iterator data_id_it = disjoint_vector.begin ();
+              data_id_it != disjoint_vector.end (); ++data_id_it)
         {
-          NS_LOG_DEBUG ("Requested packet " << *data_id_it << " doesn't exist in queue.");
-          continue;
+          requested_packet_it = m_packets_table.find (*data_id_it);
+
+          // If the requested packet doesn't exist in the queue continue to the next one.
+          if (requested_packet_it == m_packets_table.end ())
+            {
+              NS_LOG_DEBUG ("Requested packet " << *data_id_it << " doesn't exist in queue.");
+              continue;
+            }
+
+          const DataHeader & data_packet = requested_packet_it->second.GetDataPacket ();
+          const GeoTemporalArea & destination_gta = data_packet.GetDestinationGeoTemporalArea ();
+
+          /* Determine if there's is a packet inside its destination geo-temporal area,
+           * if so, it has higher priority to be dequeued because it needs to be 
+           * broadcasted before other packets that aren't inside its destination 
+           * geo-temporal area are transmitted.
+           */
+          const bool local_node_inside_gta
+                  = destination_gta.IsInsideGeoTemporalArea (local_position, current_time);
+          const bool neighbor_node_inside_gta
+                  = destination_gta.IsInsideGeoTemporalArea (neighbor_position, current_time);
+
+          // If the current packet has higher priority than the currently selected high priority packet
+          // either the current node or the neighbor node is inside the destination geo-temporal area,
+          // then select it as the high priority packet.
+          if ((high_priority_packet_it == m_packets_table.end ()
+               || ComparePacketTransmissionPriority (*high_priority_packet_it, *requested_packet_it))
+              && (local_node_inside_gta || neighbor_node_inside_gta))
+            {
+              NS_LOG_DEBUG ("High priority packet " << *data_id_it << " selected.");
+              high_priority_packet_it = requested_packet_it;
+              continue;
+            }
+
+          // If a high priority packet is selected stop testing normal priority.
+          if (high_priority_packet_it != m_packets_table.end ())
+            continue;
+
+          /* The packet has normal priority, compare it against the currently selected
+           * normal priority packet. */
+
+          // If the current packet has higher priority than the currently selected normal priority packet
+          // AND has packet replicas remaining
+          // AND the destination node is a valid carrier,
+          // then select it as the normal priority packet.
+          if ((normal_priority_packet_it == m_packets_table.end ()
+               || ComparePacketTransmissionPriority (*normal_priority_packet_it, *requested_packet_it))
+              && requested_packet_it->second.GetReplicasCounter () > 0
+              && m_gps->IsVehicleValidPacketCarrier (/*Neighbor node IP*/ neighbor_node_ip,
+                                                     /*Carrier node IP*/ local_node_ip,
+                                                     /*Destination area*/ destination_gta.GetArea (),
+                                                     /*Current time (sec)*/ current_second,
+                                                     /*Min dist. diff.*/ m_min_vehicles_distance_diff))
+            {
+              NS_LOG_DEBUG ("Normal priority packet " << *data_id_it << " selected.");
+              normal_priority_packet_it = requested_packet_it;
+            }
         }
-
-      const DataHeader & data_packet = requested_packet_it->second.GetDataPacket ();
-      const GeoTemporalArea & destination_gta = data_packet.GetDestinationGeoTemporalArea ();
-
-      /* Determine if there's is a packet inside its destination geo-temporal area,
-       * if so, it has higher priority to be dequeued because it needs to be 
-       * broadcasted before other packets that aren't inside its destination 
-       * geo-temporal area are transmitted.
-       */
-      const bool local_node_inside_gta
-              = destination_gta.IsInsideGeoTemporalArea (local_position, current_time);
-      const bool neighbor_node_inside_gta
-              = destination_gta.IsInsideGeoTemporalArea (neighbor_position, current_time);
-
-      // If the current packet has higher priority than the currently selected high priority packet
-      // either the current node or the neighbor node is inside the destination geo-temporal area,
-      // then select it as the high priority packet.
-      if ((high_priority_packet_it == m_packets_table.end ()
-           || ComparePacketTransmissionPriority (*high_priority_packet_it, *requested_packet_it))
-          && (local_node_inside_gta || neighbor_node_inside_gta))
-        {
-          NS_LOG_DEBUG ("High priority packet " << *data_id_it << " selected.");
-          high_priority_packet_it = requested_packet_it;
-          continue;
-        }
-
-      // If a high priority packet is selected stop testing normal priority.
-      if (high_priority_packet_it != m_packets_table.end ())
-        continue;
-
-      /* The packet has normal priority, compare it against the currently selected
-       * normal priority packet. */
-
-      // If the current packet has higher priority than the currently selected normal priority packet
-      // AND has packet replicas remaining
-      // AND the destination node is a valid carrier,
-      // then select it as the normal priority packet.
-      if ((normal_priority_packet_it == m_packets_table.end ()
-           || ComparePacketTransmissionPriority (*normal_priority_packet_it, *requested_packet_it))
-          && requested_packet_it->second.GetReplicasCounter () > 0
-          && m_gps->IsVehicleValidPacketCarrier (/*Neighbor node IP*/ neighbor_node_ip,
-                                                 /*Carrier node IP*/ local_node_ip,
-                                                 /*Destination area*/ destination_gta.GetArea (),
-                                                 /*Current time (sec)*/ current_second,
-                                                 /*Min dist. diff.*/ m_min_vehicles_distance_diff))
-        {
-          NS_LOG_DEBUG ("Normal priority packet " << *data_id_it << " selected.");
-          normal_priority_packet_it = requested_packet_it;
-        }
+    }
+  catch (const std::exception & ex)
+    {
+      NS_LOG_WARN ("No packet was selected: Unexpected exception (" << ex.what () << ").");
+      return false;
     }
 
   // If no packet was selected return false
