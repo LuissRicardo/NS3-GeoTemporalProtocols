@@ -755,9 +755,9 @@ GeoTemporalSprayAndWaitInstaller::ConfigureNodesMobility ()
 
               if (node_initial_time < m_simulation_duration)
                 {
-                  Simulator::Schedule (Seconds (node_initial_time),
-                                       &geotemporal_spray_and_wait::RoutingProtocol::Enable,
-                                       routing_protocol);
+                  Simulator::ScheduleWithContext (node_id, Seconds (node_initial_time),
+                                                  &geotemporal_spray_and_wait::RoutingProtocol::Enable,
+                                                  routing_protocol);
                 }
             }
 
@@ -765,9 +765,9 @@ GeoTemporalSprayAndWaitInstaller::ConfigureNodesMobility ()
           // schedule a disable.
           if (node_end_time < m_simulation_duration)
             {
-              Simulator::Schedule (Seconds (node_end_time),
-                                   &geotemporal_spray_and_wait::RoutingProtocol::Disable,
-                                   routing_protocol);
+              Simulator::ScheduleWithContext (node_id, Seconds (node_end_time),
+                                              &geotemporal_spray_and_wait::RoutingProtocol::Disable,
+                                              routing_protocol);
             }
         }
 
