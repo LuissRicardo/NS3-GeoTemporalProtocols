@@ -83,6 +83,15 @@ private:
 
   /** The number of DATA packets generated at each source node. */
   uint32_t m_data_packets_per_source;
+  
+  /** The ratio of emergency DATA packets generated at each source node. */
+  double m_emergency_data_packets_ratio;
+  
+  /** The number of emergency DATA packets generated at each source node. */
+  uint32_t m_emergency_data_packets_per_source;
+  
+  /** The number of normal DATA packets generated at each source node. */
+  uint32_t m_normal_data_packets_per_source;
 
   /** The size (in bytes) of the message to disseminate. */
   uint32_t m_data_packet_message_size;

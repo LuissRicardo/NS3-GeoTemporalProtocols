@@ -38,9 +38,10 @@ namespace ns3
 NS_LOG_COMPONENT_DEFINE ("GeoTemporalApplication");
 
 GeoTemporalApplication::GeoTemporalApplication ()
-: m_node (0), m_message (), m_destination_gta (), m_running_flag (false),
-m_event (), m_sent_packets_counter (0), m_data_rate (1000), m_packet_size (128),
-m_packets_number (2), m_multiple_messages (true), m_characters_list ()
+: m_node (0u), m_message (), m_destination_gta (), m_running_flag (false),
+m_event (), m_sent_packets_counter (0u), m_data_rate (1000u), m_packet_size (128u),
+m_normal_packets_number (2u), m_emergency_packets_number (0u), m_total_packets_number (2u),
+m_multiple_messages (true), m_characters_list ()
 {
   char chars[] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '/', '*', '-', '+', '!', '@', '#', '$', '%', '^', '&', '(', ')', '_', '='};
   m_characters_list = std::vector<char> (chars, chars + sizeof (chars) / sizeof (char));
@@ -55,7 +56,9 @@ m_event (copy.m_event),
 m_sent_packets_counter (copy.m_sent_packets_counter),
 m_data_rate (copy.m_data_rate),
 m_packet_size (copy.m_packet_size),
-m_packets_number (copy.m_packets_number),
+m_normal_packets_number (copy.m_normal_packets_number),
+m_emergency_packets_number (copy.m_emergency_packets_number),
+m_total_packets_number (copy.m_total_packets_number),
 m_multiple_messages (copy.m_multiple_messages),
 m_characters_list (copy.m_characters_list) { }
 
@@ -82,13 +85,27 @@ GeoTemporalApplication::ConfigureMultipleMessages (Ptr<Node> source_node,
                                                    const uint32_t packets_size,
                                                    const uint32_t packets_number)
 {
+  ConfigureMultipleMessages (source_node, destination_geo_temporal_area, data_rate,
+                             packets_size, packets_number, 0u);
+}
+
+void
+GeoTemporalApplication::ConfigureMultipleMessages (Ptr<Node> source_node,
+                                                   const GeoTemporalArea& destination_geo_temporal_area,
+                                                   const uint32_t data_rate,
+                                                   const uint32_t packets_size,
+                                                   const uint32_t normal_packets_number,
+                                                   const uint32_t emergency_packets_number)
+{
   m_multiple_messages = true;
   m_node = source_node;
   m_destination_gta = destination_geo_temporal_area;
 
   m_data_rate = data_rate;
   m_packet_size = packets_size;
-  m_packets_number = packets_number;
+  m_normal_packets_number = normal_packets_number;
+  m_emergency_packets_number = emergency_packets_number;
+  m_total_packets_number = normal_packets_number + emergency_packets_number;
 }
 
 void
@@ -129,11 +146,19 @@ GeoTemporalApplication::SendPacket ()
       m_message = "";
       m_message.append (m_packet_size, m_characters_list[char_index]);
 
-      routing_protocol->NewMessage (m_message, m_destination_gta);
+      bool emergency_packet_flag = false;
+
+      if (m_emergency_packets_number > 0u
+          && m_sent_packets_counter < m_emergency_packets_number)
+        {
+          emergency_packet_flag = true;
+        }
+
+      routing_protocol->NewMessage (m_message, m_destination_gta, emergency_packet_flag);
 
       ++m_sent_packets_counter;
 
-      if (m_sent_packets_counter < m_packets_number)
+      if (m_sent_packets_counter < m_total_packets_number)
         {
           ScheduleTransmission ();
         }

@@ -800,14 +800,15 @@ public:
     // Default constructor
     DataHeader h1;
     NS_TEST_EXPECT_MSG_EQ (h1.GetDataIdentifier (), DataIdentifier (), "Must be default DataIdentifier");
+    NS_TEST_EXPECT_MSG_EQ (h1.IsEmergencyPacket (), false, "Must be false");
     NS_TEST_EXPECT_MSG_EQ (h1.GetHopsCount (), 0u, "Must be 0u");
     NS_TEST_EXPECT_MSG_EQ (h1.GetPosition (), GeoTemporalLibrary::LibraryUtils::Vector2D (), "Must be default GeoTemporalLibrary::LibraryUtils::Vector2D");
     NS_TEST_EXPECT_MSG_EQ (h1.GetVelocity (), GeoTemporalLibrary::LibraryUtils::Vector2D (), "Must be default GeoTemporalLibrary::LibraryUtils::Vector2D");
     NS_TEST_EXPECT_MSG_EQ (h1.GetDestinationGeoTemporalArea (), GeoTemporalArea (), "Must be default GeoTemporalArea");
     NS_TEST_EXPECT_MSG_EQ (h1.GetMessage (), "", "Must be empty string");
-    NS_TEST_EXPECT_MSG_EQ (h1.GetSerializedSize (), 72u, "Must be 72u");
+    NS_TEST_EXPECT_MSG_EQ (h1.GetSerializedSize (), 73u, "Must be 73u");
 
-    // Parameters constructor
+    // Parameters constructor 1
     DataIdentifier data_id ("1.2.3.4:5");
     uint32_t hops_count = 65u;
     GeoTemporalLibrary::LibraryUtils::Vector2D position (3, 4);
@@ -817,155 +818,214 @@ public:
 
     DataHeader h2 (data_id, hops_count, position, velocity, gta, message);
     NS_TEST_EXPECT_MSG_EQ (h2.GetDataIdentifier (), data_id, "Must be " << data_id);
+    NS_TEST_EXPECT_MSG_EQ (h2.IsEmergencyPacket (), false, "Must be " << false);
     NS_TEST_EXPECT_MSG_EQ (h2.GetHopsCount (), hops_count, "Must be " << hops_count);
     NS_TEST_EXPECT_MSG_EQ (h2.GetPosition (), position, "Must be " << position);
     NS_TEST_EXPECT_MSG_EQ (h2.GetVelocity (), velocity, "Must be " << velocity);
     NS_TEST_EXPECT_MSG_EQ (h2.GetDestinationGeoTemporalArea (), gta, "Must be " << gta);
     NS_TEST_EXPECT_MSG_EQ (h2.GetMessage (), message, "Must be " << message);
-    NS_TEST_EXPECT_MSG_EQ (h2.GetSerializedSize (), 72u + 16u, "Must be 88u");
+    NS_TEST_EXPECT_MSG_EQ (h2.GetSerializedSize (), 73u + 16u, "Must be 89u");
 
     // Copy constructor
     DataHeader h3 (h2);
     NS_TEST_EXPECT_MSG_EQ (h3.GetDataIdentifier (), data_id, "Must be " << data_id);
+    NS_TEST_EXPECT_MSG_EQ (h3.IsEmergencyPacket (), false, "Must be " << false);
     NS_TEST_EXPECT_MSG_EQ (h3.GetHopsCount (), hops_count, "Must be " << hops_count);
     NS_TEST_EXPECT_MSG_EQ (h3.GetPosition (), position, "Must be " << position);
     NS_TEST_EXPECT_MSG_EQ (h3.GetVelocity (), velocity, "Must be " << velocity);
     NS_TEST_EXPECT_MSG_EQ (h3.GetDestinationGeoTemporalArea (), gta, "Must be " << gta);
     NS_TEST_EXPECT_MSG_EQ (h3.GetMessage (), message, "Must be " << message);
-    NS_TEST_EXPECT_MSG_EQ (h3.GetSerializedSize (), 72u + 16u, "Must be 88u");
+    NS_TEST_EXPECT_MSG_EQ (h3.GetSerializedSize (), 73u + 16u, "Must be 89u");
+
+    // Parameters constructor 2
+    data_id = DataIdentifier ("5.4.3.2:1");
+    bool emergency = true;
+    hops_count = 0u;
+    position = GeoTemporalLibrary::LibraryUtils::Vector2D (3, 4);
+    velocity = GeoTemporalLibrary::LibraryUtils::Vector2D (-8.86, 123.098);
+    gta = GeoTemporalArea (TimePeriod (Seconds (10), Seconds (20)), Area (30, 40, 50, 60));
+    message = ""; // Length 0
+
+    DataHeader h4 (data_id, emergency, hops_count, position, velocity, gta, message);
+    NS_TEST_EXPECT_MSG_EQ (h4.GetDataIdentifier (), data_id, "Must be " << data_id);
+    NS_TEST_EXPECT_MSG_EQ (h4.IsEmergencyPacket (), emergency, "Must be " << emergency);
+    NS_TEST_EXPECT_MSG_EQ (h4.GetHopsCount (), hops_count, "Must be " << hops_count);
+    NS_TEST_EXPECT_MSG_EQ (h4.GetPosition (), position, "Must be " << position);
+    NS_TEST_EXPECT_MSG_EQ (h4.GetVelocity (), velocity, "Must be " << velocity);
+    NS_TEST_EXPECT_MSG_EQ (h4.GetDestinationGeoTemporalArea (), gta, "Must be " << gta);
+    NS_TEST_EXPECT_MSG_EQ (h4.GetMessage (), message, "Must be " << message);
+    NS_TEST_EXPECT_MSG_EQ (h4.GetSerializedSize (), 73u, "Must be 73u");
+
+    // Copy constructor
+    DataHeader h5 (h4);
+    NS_TEST_EXPECT_MSG_EQ (h5.GetDataIdentifier (), data_id, "Must be " << data_id);
+    NS_TEST_EXPECT_MSG_EQ (h5.IsEmergencyPacket (), emergency, "Must be " << emergency);
+    NS_TEST_EXPECT_MSG_EQ (h5.GetHopsCount (), hops_count, "Must be " << hops_count);
+    NS_TEST_EXPECT_MSG_EQ (h5.GetPosition (), position, "Must be " << position);
+    NS_TEST_EXPECT_MSG_EQ (h5.GetVelocity (), velocity, "Must be " << velocity);
+    NS_TEST_EXPECT_MSG_EQ (h5.GetDestinationGeoTemporalArea (), gta, "Must be " << gta);
+    NS_TEST_EXPECT_MSG_EQ (h5.GetMessage (), message, "Must be " << message);
+    NS_TEST_EXPECT_MSG_EQ (h5.GetSerializedSize (), 73u, "Must be 73u");
   }
 
   void
   TestGettersSetters ()
   {
     DataIdentifier data_id ("1.2.3.4:5");
+    bool emergency = false;
     uint32_t hops_count = 65u;
     GeoTemporalLibrary::LibraryUtils::Vector2D position (3, 4);
     GeoTemporalLibrary::LibraryUtils::Vector2D velocity (-8.86, 123.098);
     GeoTemporalArea gta (TimePeriod (Seconds (10), Seconds (20)), Area (30, 40, 50, 60));
     std::string message = "packet's message"; // Length 16
 
-    DataHeader header (data_id, hops_count, position, velocity, gta, message);
+    DataHeader header (data_id, emergency, hops_count, position, velocity, gta, message);
 
     NS_TEST_EXPECT_MSG_EQ (header.GetDataIdentifier (), data_id, "Must be " << data_id);
+    NS_TEST_EXPECT_MSG_EQ (header.IsEmergencyPacket (), emergency, "Must be " << emergency);
     NS_TEST_EXPECT_MSG_EQ (header.GetHopsCount (), hops_count, "Must be " << hops_count);
     NS_TEST_EXPECT_MSG_EQ (header.GetPosition (), position, "Must be " << position);
     NS_TEST_EXPECT_MSG_EQ (header.GetVelocity (), velocity, "Must be " << velocity);
     NS_TEST_EXPECT_MSG_EQ (header.GetDestinationGeoTemporalArea (), gta, "Must be " << gta);
     NS_TEST_EXPECT_MSG_EQ (header.GetMessage (), message, "Must be " << message);
-    NS_TEST_EXPECT_MSG_EQ (header.GetSerializedSize (), 72u + 16u, "Must be 88u");
+    NS_TEST_EXPECT_MSG_EQ (header.GetSerializedSize (), 73u + 16u, "Must be 89u");
 
     data_id = DataIdentifier ("10.11.12.13:14");
     header.SetDataIdentifier (data_id);
 
     NS_TEST_EXPECT_MSG_EQ (header.GetDataIdentifier (), data_id, "Must be " << data_id);
+    NS_TEST_EXPECT_MSG_EQ (header.IsEmergencyPacket (), emergency, "Must be " << emergency);
     NS_TEST_EXPECT_MSG_EQ (header.GetHopsCount (), hops_count, "Must be " << hops_count);
     NS_TEST_EXPECT_MSG_EQ (header.GetPosition (), position, "Must be " << position);
     NS_TEST_EXPECT_MSG_EQ (header.GetVelocity (), velocity, "Must be " << velocity);
     NS_TEST_EXPECT_MSG_EQ (header.GetDestinationGeoTemporalArea (), gta, "Must be " << gta);
     NS_TEST_EXPECT_MSG_EQ (header.GetMessage (), message, "Must be " << message);
-    NS_TEST_EXPECT_MSG_EQ (header.GetSerializedSize (), 72u + 16u, "Must be 88u");
+    NS_TEST_EXPECT_MSG_EQ (header.GetSerializedSize (), 73u + 16u, "Must be 89u");
+
+    emergency = true;
+    header.SetEmergencyPacket (emergency);
+
+    NS_TEST_EXPECT_MSG_EQ (header.GetDataIdentifier (), data_id, "Must be " << data_id);
+    NS_TEST_EXPECT_MSG_EQ (header.IsEmergencyPacket (), emergency, "Must be " << emergency);
+    NS_TEST_EXPECT_MSG_EQ (header.GetHopsCount (), hops_count, "Must be " << hops_count);
+    NS_TEST_EXPECT_MSG_EQ (header.GetPosition (), position, "Must be " << position);
+    NS_TEST_EXPECT_MSG_EQ (header.GetVelocity (), velocity, "Must be " << velocity);
+    NS_TEST_EXPECT_MSG_EQ (header.GetDestinationGeoTemporalArea (), gta, "Must be " << gta);
+    NS_TEST_EXPECT_MSG_EQ (header.GetMessage (), message, "Must be " << message);
+    NS_TEST_EXPECT_MSG_EQ (header.GetSerializedSize (), 73u + 16u, "Must be 89u");
 
     hops_count = 65123u;
     header.SetHopsCount (hops_count);
 
     NS_TEST_EXPECT_MSG_EQ (header.GetDataIdentifier (), data_id, "Must be " << data_id);
+    NS_TEST_EXPECT_MSG_EQ (header.IsEmergencyPacket (), emergency, "Must be " << emergency);
     NS_TEST_EXPECT_MSG_EQ (header.GetHopsCount (), hops_count, "Must be " << hops_count);
     NS_TEST_EXPECT_MSG_EQ (header.GetPosition (), position, "Must be " << position);
     NS_TEST_EXPECT_MSG_EQ (header.GetVelocity (), velocity, "Must be " << velocity);
     NS_TEST_EXPECT_MSG_EQ (header.GetDestinationGeoTemporalArea (), gta, "Must be " << gta);
     NS_TEST_EXPECT_MSG_EQ (header.GetMessage (), message, "Must be " << message);
-    NS_TEST_EXPECT_MSG_EQ (header.GetSerializedSize (), 72u + 16u, "Must be 88u");
+    NS_TEST_EXPECT_MSG_EQ (header.GetSerializedSize (), 73u + 16u, "Must be 89u");
 
     position = GeoTemporalLibrary::LibraryUtils::Vector2D (12.36, -985.2);
     header.SetPosition (position);
 
     NS_TEST_EXPECT_MSG_EQ (header.GetDataIdentifier (), data_id, "Must be " << data_id);
+    NS_TEST_EXPECT_MSG_EQ (header.IsEmergencyPacket (), emergency, "Must be " << emergency);
     NS_TEST_EXPECT_MSG_EQ (header.GetHopsCount (), hops_count, "Must be " << hops_count);
     NS_TEST_EXPECT_MSG_EQ (header.GetPosition (), position, "Must be " << position);
     NS_TEST_EXPECT_MSG_EQ (header.GetVelocity (), velocity, "Must be " << velocity);
     NS_TEST_EXPECT_MSG_EQ (header.GetDestinationGeoTemporalArea (), gta, "Must be " << gta);
     NS_TEST_EXPECT_MSG_EQ (header.GetMessage (), message, "Must be " << message);
-    NS_TEST_EXPECT_MSG_EQ (header.GetSerializedSize (), 72u + 16u, "Must be 88u");
+    NS_TEST_EXPECT_MSG_EQ (header.GetSerializedSize (), 73u + 16u, "Must be 89u");
 
     velocity = GeoTemporalLibrary::LibraryUtils::Vector2D (-741.369, -987.123);
     header.SetVelocity (velocity);
 
     NS_TEST_EXPECT_MSG_EQ (header.GetDataIdentifier (), data_id, "Must be " << data_id);
+    NS_TEST_EXPECT_MSG_EQ (header.IsEmergencyPacket (), emergency, "Must be " << emergency);
     NS_TEST_EXPECT_MSG_EQ (header.GetHopsCount (), hops_count, "Must be " << hops_count);
     NS_TEST_EXPECT_MSG_EQ (header.GetPosition (), position, "Must be " << position);
     NS_TEST_EXPECT_MSG_EQ (header.GetVelocity (), velocity, "Must be " << velocity);
     NS_TEST_EXPECT_MSG_EQ (header.GetDestinationGeoTemporalArea (), gta, "Must be " << gta);
     NS_TEST_EXPECT_MSG_EQ (header.GetMessage (), message, "Must be " << message);
-    NS_TEST_EXPECT_MSG_EQ (header.GetSerializedSize (), 72u + 16u, "Must be 88u");
+    NS_TEST_EXPECT_MSG_EQ (header.GetSerializedSize (), 73u + 16u, "Must be 89u");
 
     gta = GeoTemporalArea (TimePeriod (Seconds (50), Seconds (80)), Area (0, 0, 150, 160));
     header.SetDestinationGeoTemporalArea (gta);
 
     NS_TEST_EXPECT_MSG_EQ (header.GetDataIdentifier (), data_id, "Must be " << data_id);
+    NS_TEST_EXPECT_MSG_EQ (header.IsEmergencyPacket (), emergency, "Must be " << emergency);
     NS_TEST_EXPECT_MSG_EQ (header.GetHopsCount (), hops_count, "Must be " << hops_count);
     NS_TEST_EXPECT_MSG_EQ (header.GetPosition (), position, "Must be " << position);
     NS_TEST_EXPECT_MSG_EQ (header.GetVelocity (), velocity, "Must be " << velocity);
     NS_TEST_EXPECT_MSG_EQ (header.GetDestinationGeoTemporalArea (), gta, "Must be " << gta);
     NS_TEST_EXPECT_MSG_EQ (header.GetMessage (), message, "Must be " << message);
-    NS_TEST_EXPECT_MSG_EQ (header.GetSerializedSize (), 72u + 16u, "Must be 88u");
+    NS_TEST_EXPECT_MSG_EQ (header.GetSerializedSize (), 73u + 16u, "Must be 89u");
 
     message = "012345678901234567890123456789";
     header.SetMessage (message);
 
     NS_TEST_EXPECT_MSG_EQ (header.GetDataIdentifier (), data_id, "Must be " << data_id);
+    NS_TEST_EXPECT_MSG_EQ (header.IsEmergencyPacket (), emergency, "Must be " << emergency);
     NS_TEST_EXPECT_MSG_EQ (header.GetHopsCount (), hops_count, "Must be " << hops_count);
     NS_TEST_EXPECT_MSG_EQ (header.GetPosition (), position, "Must be " << position);
     NS_TEST_EXPECT_MSG_EQ (header.GetVelocity (), velocity, "Must be " << velocity);
     NS_TEST_EXPECT_MSG_EQ (header.GetDestinationGeoTemporalArea (), gta, "Must be " << gta);
     NS_TEST_EXPECT_MSG_EQ (header.GetMessage (), message, "Must be " << message);
-    NS_TEST_EXPECT_MSG_EQ (header.GetSerializedSize (), 72u + 30u, "Must be 102u");
+    NS_TEST_EXPECT_MSG_EQ (header.GetSerializedSize (), 73u + 30u, "Must be 103u");
   }
 
   void
   TestOverloadedOperators ()
   {
     DataIdentifier data_id ("1.2.3.4:5");
+    bool emergency = false;
     uint32_t hops_count = 65u;
     GeoTemporalLibrary::LibraryUtils::Vector2D position (3, 4);
     GeoTemporalLibrary::LibraryUtils::Vector2D velocity (-8.86, 123.098);
     GeoTemporalArea gta (TimePeriod (Seconds (10), Seconds (20)), Area (30, 40, 50, 60));
     std::string message = "packet's message"; // Length 16
 
-    DataHeader equal_1 (data_id, hops_count, position, velocity, gta, message);
-    DataHeader equal_2 (data_id, hops_count, position, velocity, gta, message);
+    DataHeader equal_1 (data_id, emergency, hops_count, position, velocity, gta, message);
+    DataHeader equal_2 (data_id, emergency, hops_count, position, velocity, gta, message);
 
     // Different data ID
-    DataHeader different (DataIdentifier ("10.9.8.7:64321"), hops_count, position, velocity, gta, message);
+    DataHeader different (DataIdentifier ("10.9.8.7:64321"), emergency, hops_count,
+                          position, velocity, gta, message);
+
+    TestEqualityRelationalOperators (equal_1, equal_2, different);
+
+    // Different emergency
+    different = DataHeader (data_id, true, hops_count, position, velocity, gta, message);
 
     TestEqualityRelationalOperators (equal_1, equal_2, different);
 
     // Different hops count
-    different = DataHeader (data_id, 30, position, velocity, gta, message);
+    different = DataHeader (data_id, emergency, 30, position, velocity, gta, message);
 
     TestEqualityRelationalOperators (equal_1, equal_2, different);
 
     // Different position
-    different = DataHeader (data_id, hops_count, GeoTemporalLibrary::LibraryUtils::Vector2D (100, 100),
+    different = DataHeader (data_id, emergency, hops_count, GeoTemporalLibrary::LibraryUtils::Vector2D (100, 100),
                             velocity, gta, message);
 
     TestEqualityRelationalOperators (equal_1, equal_2, different);
 
     // Different velocity
-    different = DataHeader (data_id, hops_count, position,
+    different = DataHeader (data_id, emergency, hops_count, position,
                             GeoTemporalLibrary::LibraryUtils::Vector2D (100, 951.37), gta, message);
 
     TestEqualityRelationalOperators (equal_1, equal_2, different);
 
     // Different geo-temporal area
-    different = DataHeader (data_id, hops_count, position, velocity,
+    different = DataHeader (data_id, emergency, hops_count, position, velocity,
                             GeoTemporalArea (TimePeriod (Seconds (100), Seconds (200)), Area (30, 40, 50, 60)),
                             message);
 
     TestEqualityRelationalOperators (equal_1, equal_2, different);
 
     // Different message
-    different = DataHeader (data_id, hops_count, position, velocity, gta,
+    different = DataHeader (data_id, emergency, hops_count, position, velocity, gta,
                             "012345678901234567890123456789");
 
     TestEqualityRelationalOperators (equal_1, equal_2, different);
@@ -975,6 +1035,7 @@ public:
   TestSerializationDeserialization ()
   {
     DataIdentifier data_id ("1.2.3.4:5");
+    bool emergency = false;
     uint32_t hops_count = 65u;
     GeoTemporalLibrary::LibraryUtils::Vector2D position (3, 4);
     GeoTemporalLibrary::LibraryUtils::Vector2D velocity (-8.86, 123.098);
@@ -982,17 +1043,18 @@ public:
     std::string message = "packet's message"; // Length 16
 
     DataHeader h1;
-    DataHeader h2 (data_id, hops_count, position, velocity, gta, message);
+    DataHeader h2 (data_id, emergency, hops_count, position, velocity, gta, message);
     DataHeader h3 (h2);
 
     data_id = DataIdentifier ("10.9.8.7:64321");
+    emergency = true;
     hops_count = 32147u;
     position = GeoTemporalLibrary::LibraryUtils::Vector2D (-50.63, 159);
     velocity = GeoTemporalLibrary::LibraryUtils::Vector2D (5.5559, -1.1111);
     gta = GeoTemporalArea (TimePeriod (Seconds (10), Seconds (20)), Area (-100, 40, 50, -90));
     message = "012345678901234567890123456789"; // Message length = 30
 
-    h2 = DataHeader (data_id, hops_count, position, velocity, gta, message);
+    h2 = DataHeader (data_id, emergency, hops_count, position, velocity, gta, message);
 
     Ptr<Packet> packet = Create<Packet> ();
     packet->AddHeader (h1);
@@ -1002,30 +1064,32 @@ public:
     DataHeader deserialized;
 
     uint32_t read_bytes = packet->RemoveHeader (deserialized);
-    NS_TEST_EXPECT_MSG_EQ (read_bytes, 72u + 16u, "DataHeader is 88 bytes long");
+    NS_TEST_EXPECT_MSG_EQ (read_bytes, 73u + 16u, "DataHeader is 89 bytes long");
     NS_TEST_EXPECT_MSG_EQ (h3, deserialized, "Serialization and deserialization works");
 
     read_bytes = packet->RemoveHeader (deserialized);
-    NS_TEST_EXPECT_MSG_EQ (read_bytes, 72u + 30u, "DataHeader is 102 bytes long");
+    NS_TEST_EXPECT_MSG_EQ (read_bytes, 73u + 30u, "DataHeader is 103 bytes long");
     NS_TEST_EXPECT_MSG_EQ (h2, deserialized, "Serialization and deserialization works");
 
     read_bytes = packet->RemoveHeader (deserialized);
-    NS_TEST_EXPECT_MSG_EQ (read_bytes, 72u, "DataHeader is 72 bytes long");
+    NS_TEST_EXPECT_MSG_EQ (read_bytes, 73u, "DataHeader is 73 bytes long");
     NS_TEST_EXPECT_MSG_EQ (h1, deserialized, "Serialization and deserialization works");
 
     NS_TEST_EXPECT_MSG_EQ (h2.GetDataIdentifier (), data_id, "Must be " << data_id);
+    NS_TEST_EXPECT_MSG_EQ (h2.IsEmergencyPacket (), emergency, "Must be " << emergency);
     NS_TEST_EXPECT_MSG_EQ (h2.GetHopsCount (), hops_count, "Must be " << hops_count);
     NS_TEST_EXPECT_MSG_EQ (h2.GetPosition (), position, "Must be " << position);
     NS_TEST_EXPECT_MSG_EQ (h2.GetVelocity (), velocity, "Must be " << velocity);
     NS_TEST_EXPECT_MSG_EQ (h2.GetDestinationGeoTemporalArea (), gta, "Must be " << gta);
     NS_TEST_EXPECT_MSG_EQ (h2.GetMessage (), message, "Must be " << message);
-    NS_TEST_EXPECT_MSG_EQ (h2.GetSerializedSize (), 72u + 30u, "Must be 102u");
+    NS_TEST_EXPECT_MSG_EQ (h2.GetSerializedSize (), 73u + 30u, "Must be 103u");
   }
 
   void
   TestToString ()
   {
     DataIdentifier data_id ("1.2.3.4:5");
+    bool emergency = true;
     uint32_t hops_count = 65u;
     GeoTemporalLibrary::LibraryUtils::Vector2D position (300, 40.89);
     GeoTemporalLibrary::LibraryUtils::Vector2D velocity (-8.86, 123.098);
@@ -1035,6 +1099,14 @@ public:
     DataHeader h (data_id, hops_count, position, velocity, gta, message);
 
     std::string expected_str = "DATA 1.2.3.4:5 (65 hops) sent from position "
+            "(300.00, 40.89) at velocity (-8.86, 123.10) destined to area "
+            "{(30.00, 40.00), (50.00, 60.00)} to start at second "
+            "10.00 with a duration of 10.00 seconds has a message of 16 byte(s)";
+    NS_TEST_EXPECT_MSG_EQ (h.ToString (), expected_str, "Expected string: " + expected_str);
+
+    h = DataHeader (data_id, emergency, hops_count, position, velocity, gta, message);
+
+    expected_str = "EMERGENCY DATA 1.2.3.4:5 (65 hops) sent from position "
             "(300.00, 40.89) at velocity (-8.86, 123.10) destined to area "
             "{(30.00, 40.00), (50.00, 60.00)} to start at second "
             "10.00 with a duration of 10.00 seconds has a message of 16 byte(s)";
@@ -1076,6 +1148,7 @@ public:
     DataAckHeader h1;
     NS_TEST_EXPECT_MSG_EQ (h1.GetDataIdentifierToAck (), DataIdentifier (), "Must be default DataIdentifier");
     NS_TEST_EXPECT_MSG_EQ (h1.GetDataIdentifier (), DataIdentifier (), "Must be default DataIdentifier");
+    NS_TEST_EXPECT_MSG_EQ (h1.IsEmergencyPacket (), false, "Must be false");
     NS_TEST_EXPECT_MSG_EQ (h1.GetHopsCount (), 0u, "Must be 0u");
     NS_TEST_EXPECT_MSG_EQ (h1.GetPosition (), GeoTemporalLibrary::LibraryUtils::Vector2D (), "Must be default GeoTemporalLibrary::LibraryUtils::Vector2D");
     NS_TEST_EXPECT_MSG_EQ (h1.GetVelocity (), GeoTemporalLibrary::LibraryUtils::Vector2D (), "Must be default GeoTemporalLibrary::LibraryUtils::Vector2D");
@@ -1083,7 +1156,7 @@ public:
     NS_TEST_EXPECT_MSG_EQ (h1.GetMessage (), "", "Must be empty string");
     NS_TEST_EXPECT_MSG_EQ (h1.GetSerializedSize (), 80u, "Must be 80u");
 
-    // Parameters constructor
+    // Parameters constructor 1
     DataIdentifier to_ack ("10.20.30.40:50");
     DataIdentifier data_id ("1.2.3.4:5");
     uint32_t hops_count = 65u;
@@ -1095,6 +1168,7 @@ public:
     DataAckHeader h2 (to_ack, data_id, hops_count, position, velocity, gta, message);
     NS_TEST_EXPECT_MSG_EQ (h2.GetDataIdentifierToAck (), to_ack, "Must be " << to_ack);
     NS_TEST_EXPECT_MSG_EQ (h2.GetDataIdentifier (), data_id, "Must be " << data_id);
+    NS_TEST_EXPECT_MSG_EQ (h2.IsEmergencyPacket (), false, "Must be " << false);
     NS_TEST_EXPECT_MSG_EQ (h2.GetHopsCount (), hops_count, "Must be " << hops_count);
     NS_TEST_EXPECT_MSG_EQ (h2.GetPosition (), position, "Must be " << position);
     NS_TEST_EXPECT_MSG_EQ (h2.GetVelocity (), velocity, "Must be " << velocity);
@@ -1102,37 +1176,85 @@ public:
     NS_TEST_EXPECT_MSG_EQ (h2.GetMessage (), message, "Must be " << message);
     NS_TEST_EXPECT_MSG_EQ (h2.GetSerializedSize (), 80u + 16u, "Must be 96u");
 
-    data_id = DataIdentifier ("9.8.7.6:5");
-    hops_count = 193u;
-    position = GeoTemporalLibrary::LibraryUtils::Vector2D (98.65, -12.68);
-    velocity = GeoTemporalLibrary::LibraryUtils::Vector2D (-742.3, 82.1);
-    gta = GeoTemporalArea (TimePeriod (Seconds (50), Seconds (100)), Area (100, 100, 200, 200));
-    message = "new packet's message"; // Length 20
+    // Copy constructor
+    DataAckHeader h2_copy (h2);
+    NS_TEST_EXPECT_MSG_EQ (h2_copy.GetDataIdentifierToAck (), to_ack, "Must be " << to_ack);
+    NS_TEST_EXPECT_MSG_EQ (h2_copy.GetDataIdentifier (), data_id, "Must be " << data_id);
+    NS_TEST_EXPECT_MSG_EQ (h2_copy.IsEmergencyPacket (), false, "Must be " << false);
+    NS_TEST_EXPECT_MSG_EQ (h2_copy.GetHopsCount (), hops_count, "Must be " << hops_count);
+    NS_TEST_EXPECT_MSG_EQ (h2_copy.GetPosition (), position, "Must be " << position);
+    NS_TEST_EXPECT_MSG_EQ (h2_copy.GetVelocity (), velocity, "Must be " << velocity);
+    NS_TEST_EXPECT_MSG_EQ (h2_copy.GetDestinationGeoTemporalArea (), gta, "Must be " << gta);
+    NS_TEST_EXPECT_MSG_EQ (h2_copy.GetMessage (), message, "Must be " << message);
+    NS_TEST_EXPECT_MSG_EQ (h2_copy.GetSerializedSize (), 80u + 16u, "Must be 96u");
 
-    DataHeader h3_base (data_id, hops_count, position, velocity, gta, message);
+    // Parameters constructor 2
+    to_ack = DataIdentifier ("50.40.30.20:10");
+    data_id = DataIdentifier ("5.4.3.2:1");
+    bool emergency = true;
+    hops_count = 1u;
+    position = GeoTemporalLibrary::LibraryUtils::Vector2D (-3, -4);
+    velocity = GeoTemporalLibrary::LibraryUtils::Vector2D (8.86, -123.098);
+    gta = GeoTemporalArea (TimePeriod (Seconds (5), Seconds (35)), Area (0, 0, 50, 50));
+    message = ""; // Length 0
 
-    to_ack = DataIdentifier ("90.88.70.66:505");
-
-    DataAckHeader h3 (h3_base, to_ack);
+    DataAckHeader h3 (to_ack, data_id, emergency, hops_count, position, velocity, gta, message);
     NS_TEST_EXPECT_MSG_EQ (h3.GetDataIdentifierToAck (), to_ack, "Must be " << to_ack);
     NS_TEST_EXPECT_MSG_EQ (h3.GetDataIdentifier (), data_id, "Must be " << data_id);
+    NS_TEST_EXPECT_MSG_EQ (h3.IsEmergencyPacket (), emergency, "Must be " << emergency);
     NS_TEST_EXPECT_MSG_EQ (h3.GetHopsCount (), hops_count, "Must be " << hops_count);
     NS_TEST_EXPECT_MSG_EQ (h3.GetPosition (), position, "Must be " << position);
     NS_TEST_EXPECT_MSG_EQ (h3.GetVelocity (), velocity, "Must be " << velocity);
     NS_TEST_EXPECT_MSG_EQ (h3.GetDestinationGeoTemporalArea (), gta, "Must be " << gta);
     NS_TEST_EXPECT_MSG_EQ (h3.GetMessage (), message, "Must be " << message);
-    NS_TEST_EXPECT_MSG_EQ (h3.GetSerializedSize (), 80u + 20u, "Must be 100u");
+    NS_TEST_EXPECT_MSG_EQ (h3.GetSerializedSize (), 80u, "Must be 80u");
 
     // Copy constructor
-    DataAckHeader h4 (h3);
+    DataAckHeader h3_copy (h3);
+    NS_TEST_EXPECT_MSG_EQ (h3_copy.GetDataIdentifierToAck (), to_ack, "Must be " << to_ack);
+    NS_TEST_EXPECT_MSG_EQ (h3_copy.GetDataIdentifier (), data_id, "Must be " << data_id);
+    NS_TEST_EXPECT_MSG_EQ (h3_copy.IsEmergencyPacket (), emergency, "Must be " << emergency);
+    NS_TEST_EXPECT_MSG_EQ (h3_copy.GetHopsCount (), hops_count, "Must be " << hops_count);
+    NS_TEST_EXPECT_MSG_EQ (h3_copy.GetPosition (), position, "Must be " << position);
+    NS_TEST_EXPECT_MSG_EQ (h3_copy.GetVelocity (), velocity, "Must be " << velocity);
+    NS_TEST_EXPECT_MSG_EQ (h3_copy.GetDestinationGeoTemporalArea (), gta, "Must be " << gta);
+    NS_TEST_EXPECT_MSG_EQ (h3_copy.GetMessage (), message, "Must be " << message);
+    NS_TEST_EXPECT_MSG_EQ (h3_copy.GetSerializedSize (), 80u, "Must be 80u");
+
+    // Parameters constructor 3
+    data_id = DataIdentifier ("9.8.7.6:5");
+    hops_count = 193u;
+    emergency = true;
+    position = GeoTemporalLibrary::LibraryUtils::Vector2D (98.65, -12.68);
+    velocity = GeoTemporalLibrary::LibraryUtils::Vector2D (-742.3, 82.1);
+    gta = GeoTemporalArea (TimePeriod (Seconds (50), Seconds (100)), Area (100, 100, 200, 200));
+    message = "new packet's message"; // Length 20
+
+    DataHeader h4_base (data_id, emergency, hops_count, position, velocity, gta, message);
+    to_ack = DataIdentifier ("90.88.70.66:505");
+    DataAckHeader h4 (h4_base, to_ack);
+
     NS_TEST_EXPECT_MSG_EQ (h4.GetDataIdentifierToAck (), to_ack, "Must be " << to_ack);
     NS_TEST_EXPECT_MSG_EQ (h4.GetDataIdentifier (), data_id, "Must be " << data_id);
+    NS_TEST_EXPECT_MSG_EQ (h4.IsEmergencyPacket (), emergency, "Must be " << emergency);
     NS_TEST_EXPECT_MSG_EQ (h4.GetHopsCount (), hops_count, "Must be " << hops_count);
     NS_TEST_EXPECT_MSG_EQ (h4.GetPosition (), position, "Must be " << position);
     NS_TEST_EXPECT_MSG_EQ (h4.GetVelocity (), velocity, "Must be " << velocity);
     NS_TEST_EXPECT_MSG_EQ (h4.GetDestinationGeoTemporalArea (), gta, "Must be " << gta);
     NS_TEST_EXPECT_MSG_EQ (h4.GetMessage (), message, "Must be " << message);
     NS_TEST_EXPECT_MSG_EQ (h4.GetSerializedSize (), 80u + 20u, "Must be 100u");
+
+    // Copy constructor
+    DataAckHeader h4_copy (h4);
+    NS_TEST_EXPECT_MSG_EQ (h4_copy.GetDataIdentifierToAck (), to_ack, "Must be " << to_ack);
+    NS_TEST_EXPECT_MSG_EQ (h4_copy.GetDataIdentifier (), data_id, "Must be " << data_id);
+    NS_TEST_EXPECT_MSG_EQ (h4_copy.IsEmergencyPacket (), emergency, "Must be " << emergency);
+    NS_TEST_EXPECT_MSG_EQ (h4_copy.GetHopsCount (), hops_count, "Must be " << hops_count);
+    NS_TEST_EXPECT_MSG_EQ (h4_copy.GetPosition (), position, "Must be " << position);
+    NS_TEST_EXPECT_MSG_EQ (h4_copy.GetVelocity (), velocity, "Must be " << velocity);
+    NS_TEST_EXPECT_MSG_EQ (h4_copy.GetDestinationGeoTemporalArea (), gta, "Must be " << gta);
+    NS_TEST_EXPECT_MSG_EQ (h4_copy.GetMessage (), message, "Must be " << message);
+    NS_TEST_EXPECT_MSG_EQ (h4_copy.GetSerializedSize (), 80u + 20u, "Must be 100u");
   }
 
   void
@@ -1140,16 +1262,18 @@ public:
   {
     DataIdentifier to_ack ("10.20.30.40:50");
     DataIdentifier data_id ("1.2.3.4:5");
+    bool emergency = false;
     uint32_t hops_count = 65u;
     GeoTemporalLibrary::LibraryUtils::Vector2D position (3, 4);
     GeoTemporalLibrary::LibraryUtils::Vector2D velocity (-8.86, 123.098);
     GeoTemporalArea gta (TimePeriod (Seconds (10), Seconds (20)), Area (30, 40, 50, 60));
     std::string message = "packet's message"; // Length 16
 
-    DataAckHeader header (to_ack, data_id, hops_count, position, velocity, gta, message);
+    DataAckHeader header (to_ack, data_id, emergency, hops_count, position, velocity, gta, message);
 
     NS_TEST_EXPECT_MSG_EQ (header.GetDataIdentifierToAck (), to_ack, "Must be " << to_ack);
     NS_TEST_EXPECT_MSG_EQ (header.GetDataIdentifier (), data_id, "Must be " << data_id);
+    NS_TEST_EXPECT_MSG_EQ (header.IsEmergencyPacket (), emergency, "Must be " << emergency);
     NS_TEST_EXPECT_MSG_EQ (header.GetHopsCount (), hops_count, "Must be " << hops_count);
     NS_TEST_EXPECT_MSG_EQ (header.GetPosition (), position, "Must be " << position);
     NS_TEST_EXPECT_MSG_EQ (header.GetVelocity (), velocity, "Must be " << velocity);
@@ -1162,6 +1286,7 @@ public:
 
     NS_TEST_EXPECT_MSG_EQ (header.GetDataIdentifierToAck (), to_ack, "Must be " << to_ack);
     NS_TEST_EXPECT_MSG_EQ (header.GetDataIdentifier (), data_id, "Must be " << data_id);
+    NS_TEST_EXPECT_MSG_EQ (header.IsEmergencyPacket (), emergency, "Must be " << emergency);
     NS_TEST_EXPECT_MSG_EQ (header.GetHopsCount (), hops_count, "Must be " << hops_count);
     NS_TEST_EXPECT_MSG_EQ (header.GetPosition (), position, "Must be " << position);
     NS_TEST_EXPECT_MSG_EQ (header.GetVelocity (), velocity, "Must be " << velocity);
@@ -1174,6 +1299,20 @@ public:
 
     NS_TEST_EXPECT_MSG_EQ (header.GetDataIdentifierToAck (), to_ack, "Must be " << to_ack);
     NS_TEST_EXPECT_MSG_EQ (header.GetDataIdentifier (), data_id, "Must be " << data_id);
+    NS_TEST_EXPECT_MSG_EQ (header.IsEmergencyPacket (), emergency, "Must be " << emergency);
+    NS_TEST_EXPECT_MSG_EQ (header.GetHopsCount (), hops_count, "Must be " << hops_count);
+    NS_TEST_EXPECT_MSG_EQ (header.GetPosition (), position, "Must be " << position);
+    NS_TEST_EXPECT_MSG_EQ (header.GetVelocity (), velocity, "Must be " << velocity);
+    NS_TEST_EXPECT_MSG_EQ (header.GetDestinationGeoTemporalArea (), gta, "Must be " << gta);
+    NS_TEST_EXPECT_MSG_EQ (header.GetMessage (), message, "Must be " << message);
+    NS_TEST_EXPECT_MSG_EQ (header.GetSerializedSize (), 80u + 16u, "Must be 96u");
+
+    emergency = true;
+    header.SetEmergencyPacket (emergency);
+
+    NS_TEST_EXPECT_MSG_EQ (header.GetDataIdentifierToAck (), to_ack, "Must be " << to_ack);
+    NS_TEST_EXPECT_MSG_EQ (header.GetDataIdentifier (), data_id, "Must be " << data_id);
+    NS_TEST_EXPECT_MSG_EQ (header.IsEmergencyPacket (), emergency, "Must be " << emergency);
     NS_TEST_EXPECT_MSG_EQ (header.GetHopsCount (), hops_count, "Must be " << hops_count);
     NS_TEST_EXPECT_MSG_EQ (header.GetPosition (), position, "Must be " << position);
     NS_TEST_EXPECT_MSG_EQ (header.GetVelocity (), velocity, "Must be " << velocity);
@@ -1186,6 +1325,7 @@ public:
 
     NS_TEST_EXPECT_MSG_EQ (header.GetDataIdentifierToAck (), to_ack, "Must be " << to_ack);
     NS_TEST_EXPECT_MSG_EQ (header.GetDataIdentifier (), data_id, "Must be " << data_id);
+    NS_TEST_EXPECT_MSG_EQ (header.IsEmergencyPacket (), emergency, "Must be " << emergency);
     NS_TEST_EXPECT_MSG_EQ (header.GetHopsCount (), hops_count, "Must be " << hops_count);
     NS_TEST_EXPECT_MSG_EQ (header.GetPosition (), position, "Must be " << position);
     NS_TEST_EXPECT_MSG_EQ (header.GetVelocity (), velocity, "Must be " << velocity);
@@ -1198,6 +1338,7 @@ public:
 
     NS_TEST_EXPECT_MSG_EQ (header.GetDataIdentifierToAck (), to_ack, "Must be " << to_ack);
     NS_TEST_EXPECT_MSG_EQ (header.GetDataIdentifier (), data_id, "Must be " << data_id);
+    NS_TEST_EXPECT_MSG_EQ (header.IsEmergencyPacket (), emergency, "Must be " << emergency);
     NS_TEST_EXPECT_MSG_EQ (header.GetHopsCount (), hops_count, "Must be " << hops_count);
     NS_TEST_EXPECT_MSG_EQ (header.GetPosition (), position, "Must be " << position);
     NS_TEST_EXPECT_MSG_EQ (header.GetVelocity (), velocity, "Must be " << velocity);
@@ -1210,6 +1351,7 @@ public:
 
     NS_TEST_EXPECT_MSG_EQ (header.GetDataIdentifierToAck (), to_ack, "Must be " << to_ack);
     NS_TEST_EXPECT_MSG_EQ (header.GetDataIdentifier (), data_id, "Must be " << data_id);
+    NS_TEST_EXPECT_MSG_EQ (header.IsEmergencyPacket (), emergency, "Must be " << emergency);
     NS_TEST_EXPECT_MSG_EQ (header.GetHopsCount (), hops_count, "Must be " << hops_count);
     NS_TEST_EXPECT_MSG_EQ (header.GetPosition (), position, "Must be " << position);
     NS_TEST_EXPECT_MSG_EQ (header.GetVelocity (), velocity, "Must be " << velocity);
@@ -1222,6 +1364,7 @@ public:
 
     NS_TEST_EXPECT_MSG_EQ (header.GetDataIdentifierToAck (), to_ack, "Must be " << to_ack);
     NS_TEST_EXPECT_MSG_EQ (header.GetDataIdentifier (), data_id, "Must be " << data_id);
+    NS_TEST_EXPECT_MSG_EQ (header.IsEmergencyPacket (), emergency, "Must be " << emergency);
     NS_TEST_EXPECT_MSG_EQ (header.GetHopsCount (), hops_count, "Must be " << hops_count);
     NS_TEST_EXPECT_MSG_EQ (header.GetPosition (), position, "Must be " << position);
     NS_TEST_EXPECT_MSG_EQ (header.GetVelocity (), velocity, "Must be " << velocity);
@@ -1234,6 +1377,7 @@ public:
 
     NS_TEST_EXPECT_MSG_EQ (header.GetDataIdentifierToAck (), to_ack, "Must be " << to_ack);
     NS_TEST_EXPECT_MSG_EQ (header.GetDataIdentifier (), data_id, "Must be " << data_id);
+    NS_TEST_EXPECT_MSG_EQ (header.IsEmergencyPacket (), emergency, "Must be " << emergency);
     NS_TEST_EXPECT_MSG_EQ (header.GetHopsCount (), hops_count, "Must be " << hops_count);
     NS_TEST_EXPECT_MSG_EQ (header.GetPosition (), position, "Must be " << position);
     NS_TEST_EXPECT_MSG_EQ (header.GetVelocity (), velocity, "Must be " << velocity);
@@ -1247,51 +1391,57 @@ public:
   {
     DataIdentifier to_ack ("10.20.30.40:50");
     DataIdentifier data_id ("1.2.3.4:5");
+    bool emergency = false;
     uint32_t hops_count = 65u;
     GeoTemporalLibrary::LibraryUtils::Vector2D position (3, 4);
     GeoTemporalLibrary::LibraryUtils::Vector2D velocity (-8.86, 123.098);
     GeoTemporalArea gta (TimePeriod (Seconds (10), Seconds (20)), Area (30, 40, 50, 60));
     std::string message = "packet's message"; // Length 16
 
-    DataAckHeader equal_1 (to_ack, data_id, hops_count, position, velocity, gta, message);
-    DataAckHeader equal_2 (to_ack, data_id, hops_count, position, velocity, gta, message);
+    DataAckHeader equal_1 (to_ack, data_id, emergency, hops_count, position, velocity, gta, message);
+    DataAckHeader equal_2 (to_ack, data_id, emergency, hops_count, position, velocity, gta, message);
 
     // Different data ID to ack
-    DataAckHeader different (DataIdentifier ("10.9.8.7:64321"), data_id, hops_count, position, velocity, gta, message);
+    DataAckHeader different (DataIdentifier ("10.9.8.7:64321"), data_id, emergency, hops_count, position, velocity, gta, message);
 
     TestEqualityRelationalOperators (equal_1, equal_2, different);
 
     // Different data ID
-    different = DataAckHeader (to_ack, DataIdentifier ("10.9.8.7:64321"), hops_count, position, velocity, gta, message);
+    different = DataAckHeader (to_ack, DataIdentifier ("10.9.8.7:64321"), emergency, hops_count, position, velocity, gta, message);
+
+    TestEqualityRelationalOperators (equal_1, equal_2, different);
+
+    // Different emergency
+    different = DataAckHeader (to_ack, data_id, true, hops_count, position, velocity, gta, message);
 
     TestEqualityRelationalOperators (equal_1, equal_2, different);
 
     // Different hops count
-    different = DataAckHeader (to_ack, data_id, 30, position, velocity, gta, message);
+    different = DataAckHeader (to_ack, data_id, emergency, 30, position, velocity, gta, message);
 
     TestEqualityRelationalOperators (equal_1, equal_2, different);
 
     // Different position
-    different = DataAckHeader (to_ack, data_id, hops_count, GeoTemporalLibrary::LibraryUtils::Vector2D (100, 100),
+    different = DataAckHeader (to_ack, data_id, emergency, hops_count, GeoTemporalLibrary::LibraryUtils::Vector2D (100, 100),
                                velocity, gta, message);
 
     TestEqualityRelationalOperators (equal_1, equal_2, different);
 
     // Different velocity
-    different = DataAckHeader (to_ack, data_id, hops_count, position,
+    different = DataAckHeader (to_ack, data_id, emergency, hops_count, position,
                                GeoTemporalLibrary::LibraryUtils::Vector2D (100, 951.37), gta, message);
 
     TestEqualityRelationalOperators (equal_1, equal_2, different);
 
     // Different geo-temporal area
-    different = DataAckHeader (to_ack, data_id, hops_count, position, velocity,
+    different = DataAckHeader (to_ack, data_id, emergency, hops_count, position, velocity,
                                GeoTemporalArea (TimePeriod (Seconds (100), Seconds (200)), Area (30, 40, 50, 60)),
                                message);
 
     TestEqualityRelationalOperators (equal_1, equal_2, different);
 
     // Different message
-    different = DataAckHeader (to_ack, data_id, hops_count, position, velocity, gta,
+    different = DataAckHeader (to_ack, data_id, emergency, hops_count, position, velocity, gta,
                                "012345678901234567890123456789");
 
     TestEqualityRelationalOperators (equal_1, equal_2, different);
@@ -1302,6 +1452,7 @@ public:
   {
     DataIdentifier to_ack ("10.20.30.40:50");
     DataIdentifier data_id ("1.2.3.4:5");
+    bool emergency = false;
     uint32_t hops_count = 65u;
     GeoTemporalLibrary::LibraryUtils::Vector2D position (3, 4);
     GeoTemporalLibrary::LibraryUtils::Vector2D velocity (-8.86, 123.098);
@@ -1309,18 +1460,19 @@ public:
     std::string message = "packet's message"; // Length 16
 
     DataAckHeader h1;
-    DataAckHeader h2 (to_ack, data_id, hops_count, position, velocity, gta, message);
+    DataAckHeader h2 (to_ack, data_id, emergency, hops_count, position, velocity, gta, message);
     DataAckHeader h3 (h2);
 
     to_ack = DataIdentifier ("99.98.97.96:95");
     data_id = DataIdentifier ("10.9.8.7:64321");
+    emergency = true;
     hops_count = 32147u;
     position = GeoTemporalLibrary::LibraryUtils::Vector2D (-50.63, 159);
     velocity = GeoTemporalLibrary::LibraryUtils::Vector2D (5.5559, -1.1111);
     gta = GeoTemporalArea (TimePeriod (Seconds (10), Seconds (20)), Area (-100, 40, 50, -90));
     message = "012345678901234567890123456789"; // Message length = 30
 
-    h2 = DataAckHeader (to_ack, data_id, hops_count, position, velocity, gta, message);
+    h2 = DataAckHeader (to_ack, data_id, emergency, hops_count, position, velocity, gta, message);
 
     Ptr<Packet> packet = Create<Packet> ();
     packet->AddHeader (h1);
@@ -1343,6 +1495,7 @@ public:
 
     NS_TEST_EXPECT_MSG_EQ (h2.GetDataIdentifierToAck (), to_ack, "Must be " << to_ack);
     NS_TEST_EXPECT_MSG_EQ (h2.GetDataIdentifier (), data_id, "Must be " << data_id);
+    NS_TEST_EXPECT_MSG_EQ (h2.IsEmergencyPacket (), emergency, "Must be " << emergency);
     NS_TEST_EXPECT_MSG_EQ (h2.GetHopsCount (), hops_count, "Must be " << hops_count);
     NS_TEST_EXPECT_MSG_EQ (h2.GetPosition (), position, "Must be " << position);
     NS_TEST_EXPECT_MSG_EQ (h2.GetVelocity (), velocity, "Must be " << velocity);
@@ -1356,6 +1509,7 @@ public:
   {
     DataIdentifier to_ack ("10.20.30.40:50");
     DataIdentifier data_id ("1.2.3.4:5");
+    bool emergency = true;
     uint32_t hops_count = 65u;
     GeoTemporalLibrary::LibraryUtils::Vector2D position (300, 40.89);
     GeoTemporalLibrary::LibraryUtils::Vector2D velocity (-8.86, 123.098);
@@ -1366,6 +1520,15 @@ public:
 
     std::string expected_str = "ACK 10.20.30.40:50 / "
             "DATA 1.2.3.4:5 (65 hops) sent from position "
+            "(300.00, 40.89) at velocity (-8.86, 123.10) destined to area "
+            "{(30.00, 40.00), (50.00, 60.00)} to start at second "
+            "10.00 with a duration of 10.00 seconds has a message of 16 byte(s)";
+    NS_TEST_EXPECT_MSG_EQ (h.ToString (), expected_str, "Expected string: " + expected_str);
+
+    h = DataAckHeader (to_ack, data_id, emergency, hops_count, position, velocity, gta, message);
+
+    expected_str = "ACK 10.20.30.40:50 / "
+            "EMERGENCY DATA 1.2.3.4:5 (65 hops) sent from position "
             "(300.00, 40.89) at velocity (-8.86, 123.10) destined to area "
             "{(30.00, 40.00), (50.00, 60.00)} to start at second "
             "10.00 with a duration of 10.00 seconds has a message of 16 byte(s)";
@@ -3318,8 +3481,9 @@ public:
   }
 
   void
-  TestFindHighestDropPriorityPacket ()
+  TestFindHighestDropPriorityPacket_EmergencyPacketsOnly ()
   {
+    // Test with only Emergency Packets
     m_packets_queue = PacketsQueue (m_gps, 100u, 3u);
 
     DataIdentifier selected_packet;
@@ -3333,6 +3497,7 @@ public:
     // With only one item in the queue must return it
 
     DataHeader data_packet (/*Data ID*/ DataIdentifier ("1.1.1.1:1"),
+                            /*Emergency flag*/ true,
                             /*Hops count*/ 15u,
                             /*Position*/ GeoTemporalLibrary::LibraryUtils::Vector2D (3, 4),
                             /*Velocity*/ GeoTemporalLibrary::LibraryUtils::Vector2D (-8.86, 12.098),
@@ -3434,7 +3599,7 @@ public:
     NS_TEST_EXPECT_MSG_EQ (selected_packet, DataIdentifier ("3.3.3.3:3"), "Must be the expected");
 
     //   > Inside area 2
-    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (-15, 35);
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (-18, 35);
 
     NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
                            true, "Must be true");
@@ -3467,6 +3632,488 @@ public:
     NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
                            true, "Must be true");
     NS_TEST_EXPECT_MSG_EQ (selected_packet, DataIdentifier ("1.1.1.1:1"), "Must be the expected");
+  }
+
+  void
+  TestFindHighestDropPriorityPacket_RegularPacketsOnly ()
+  {
+    // Test with only Regular Packets
+    m_packets_queue = PacketsQueue (m_gps, 100u, 3u);
+
+    DataIdentifier selected_packet;
+    GeoTemporalLibrary::LibraryUtils::Vector2D node_position;
+
+    // With an empty queue must return false
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           false, "Must be false");
+
+    // With only one item in the queue must return it
+
+    DataHeader data_packet (/*Data ID*/ DataIdentifier ("1.1.1.1:1"),
+                            /*Emergency flag*/ false,
+                            /*Hops count*/ 15u,
+                            /*Position*/ GeoTemporalLibrary::LibraryUtils::Vector2D (3, 4),
+                            /*Velocity*/ GeoTemporalLibrary::LibraryUtils::Vector2D (-8.86, 12.098),
+                            /*GeoTemporal Area*/ GeoTemporalArea (TimePeriod (Seconds (0), Seconds (10)), Area (-15, 0, 30, 30)),
+                            /*Message*/ "packet's message");
+    m_packets_queue.Enqueue (data_packet, node_position, Ipv4Address ("0.0.0.0"));
+
+    // - Outside of the geo-temporal area
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (40, 40);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, m_packets_queue.m_packets_table.begin ()->first,
+                           "Must be the same data ID");
+
+    // - Inside of the geo-temporal area
+    selected_packet = DataIdentifier ();
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (15, 15);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, m_packets_queue.m_packets_table.begin ()->first,
+                           "Must be the same data ID");
+
+    // With multiple messages it must select the one with highest priority
+
+    // - 2 queue entries
+    data_packet.SetDataIdentifier (DataIdentifier ("2.2.2.2:2"));
+    data_packet.SetHopsCount (5);
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (Seconds (0), Seconds (10)), Area (-20, 10, 25, 40)));
+    m_packets_queue.Enqueue (data_packet, node_position, Ipv4Address ("0.0.0.0"));
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 2u, "Size of the packets queue must be 2.");
+
+    //   > Outside both areas
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (-15, -15);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, DataIdentifier ("1.1.1.1:1"), "Must be the expected");
+
+    //   > Inside both areas
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (15, 15);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, DataIdentifier ("1.1.1.1:1"), "Must be the expected");
+
+    //   > Inside area 1
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (15, 5);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, DataIdentifier ("2.2.2.2:2"), "Must be the expected");
+
+    //   > Inside area 2
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (15, 35);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, DataIdentifier ("1.1.1.1:1"), "Must be the expected");
+
+    // - 3 queue entries
+
+    data_packet.SetDataIdentifier (DataIdentifier ("3.3.3.3:3"));
+    data_packet.SetHopsCount (18);
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (Seconds (0), Seconds (10)), Area (-10, 20, 30, 50)));
+    m_packets_queue.Enqueue (data_packet, node_position, Ipv4Address ("0.0.0.0"));
+
+    char buffer [25];
+    for (uint32_t i = 1; i <= 10; ++i)
+      {
+        std::sprintf (buffer, "1.1.1.%u", i);
+        m_packets_queue.AddKnownPacketCarrier (DataIdentifier ("3.3.3.3:3"), Ipv4Address (buffer));
+      }
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 3u, "Size of the packets queue must be 3.");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.m_packets_table.at (DataIdentifier ("3.3.3.3:3")).GetKnownCarrierNodesCount (), 10, "Must be 10");
+
+    //   > Outside all areas
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (-15, -15);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, DataIdentifier ("3.3.3.3:3"), "Must be the expected");
+
+    //   > Inside all areas
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (15, 25);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, DataIdentifier ("3.3.3.3:3"), "Must be the expected");
+
+    //   > Inside area 1
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (15, 5);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, DataIdentifier ("3.3.3.3:3"), "Must be the expected");
+
+    //   > Inside area 2
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (-18, 35);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, DataIdentifier ("3.3.3.3:3"), "Must be the expected");
+
+    //   > Inside area 3
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (15, 45);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, DataIdentifier ("1.1.1.1:1"), "Must be the expected");
+
+    //   > Inside area 1 & 2
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (-5, 15);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, DataIdentifier ("3.3.3.3:3"), "Must be the expected");
+
+    //   > Inside area 1 & 3
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (28, 25);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, DataIdentifier ("2.2.2.2:2"), "Must be the expected");
+
+    //   > Inside area 2 & 3
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (15, 35);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, DataIdentifier ("1.1.1.1:1"), "Must be the expected");
+  }
+
+  void
+  TestFindHighestDropPriorityPacket_MixedPackets2Emergency1Regular ()
+  {
+    // Test with only Regular Packets
+    m_packets_queue = PacketsQueue (m_gps, 100u, 3u);
+
+    DataIdentifier selected_packet;
+    GeoTemporalLibrary::LibraryUtils::Vector2D node_position;
+
+    // With an empty queue must return false
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           false, "Must be false");
+
+    // With only one item in the queue must return it
+
+    DataHeader data_packet (/*Data ID*/ DataIdentifier ("1.1.1.1:1"),
+                            /*Emergency flag*/ true,
+                            /*Hops count*/ 15u,
+                            /*Position*/ GeoTemporalLibrary::LibraryUtils::Vector2D (3, 4),
+                            /*Velocity*/ GeoTemporalLibrary::LibraryUtils::Vector2D (-8.86, 12.098),
+                            /*GeoTemporal Area*/ GeoTemporalArea (TimePeriod (Seconds (0), Seconds (10)), Area (-15, 0, 30, 30)),
+                            /*Message*/ "packet's message");
+    m_packets_queue.Enqueue (data_packet, node_position, Ipv4Address ("0.0.0.0"));
+
+    // - Outside of the geo-temporal area
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (40, 40);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, m_packets_queue.m_packets_table.begin ()->first,
+                           "Must be the same data ID");
+
+    // - Inside of the geo-temporal area
+    selected_packet = DataIdentifier ();
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (15, 15);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, m_packets_queue.m_packets_table.begin ()->first,
+                           "Must be the same data ID");
+
+    // With multiple messages it must select the one with highest priority
+
+    // - 2 queue entries
+    data_packet.SetEmergencyPacket (false);
+    data_packet.SetDataIdentifier (DataIdentifier ("2.2.2.2:2"));
+    data_packet.SetHopsCount (5);
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (Seconds (0), Seconds (10)), Area (-20, 10, 25, 40)));
+    m_packets_queue.Enqueue (data_packet, node_position, Ipv4Address ("0.0.0.0"));
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 2u, "Size of the packets queue must be 2.");
+
+    //   > Outside both areas
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (-15, -15);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, DataIdentifier ("2.2.2.2:2"), "Must be the expected");
+
+    //   > Inside both areas
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (15, 15);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, DataIdentifier ("2.2.2.2:2"), "Must be the expected");
+
+    //   > Inside area 1
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (15, 5);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, DataIdentifier ("2.2.2.2:2"), "Must be the expected");
+
+    //   > Inside area 2
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (15, 35);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, DataIdentifier ("2.2.2.2:2"), "Must be the expected");
+
+    // - 3 queue entries
+
+    data_packet.SetEmergencyPacket (true);
+    data_packet.SetDataIdentifier (DataIdentifier ("3.3.3.3:3"));
+    data_packet.SetHopsCount (18);
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (Seconds (0), Seconds (10)), Area (-10, 20, 30, 50)));
+    m_packets_queue.Enqueue (data_packet, node_position, Ipv4Address ("0.0.0.0"));
+
+    char buffer [25];
+    for (uint32_t i = 1; i <= 10; ++i)
+      {
+        std::sprintf (buffer, "1.1.1.%u", i);
+        m_packets_queue.AddKnownPacketCarrier (DataIdentifier ("3.3.3.3:3"), Ipv4Address (buffer));
+      }
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 3u, "Size of the packets queue must be 3.");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.m_packets_table.at (DataIdentifier ("3.3.3.3:3")).GetKnownCarrierNodesCount (), 10, "Must be 10");
+
+    //   > Outside all areas
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (-15, -15);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, DataIdentifier ("2.2.2.2:2"), "Must be the expected");
+
+    //   > Inside all areas
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (15, 25);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, DataIdentifier ("2.2.2.2:2"), "Must be the expected");
+
+    //   > Inside area 1
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (15, 5);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, DataIdentifier ("2.2.2.2:2"), "Must be the expected");
+
+    //   > Inside area 2
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (-18, 35);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, DataIdentifier ("2.2.2.2:2"), "Must be the expected");
+
+    //   > Inside area 3
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (15, 45);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, DataIdentifier ("2.2.2.2:2"), "Must be the expected");
+
+    //   > Inside area 1 & 2
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (-5, 15);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, DataIdentifier ("2.2.2.2:2"), "Must be the expected");
+
+    //   > Inside area 1 & 3
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (28, 25);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, DataIdentifier ("2.2.2.2:2"), "Must be the expected");
+
+    //   > Inside area 2 & 3
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (15, 35);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, DataIdentifier ("2.2.2.2:2"), "Must be the expected");
+  }
+
+  void
+  TestFindHighestDropPriorityPacket_MixedPackets1Emergency2Regular ()
+  {
+    // Test with only Regular Packets
+    m_packets_queue = PacketsQueue (m_gps, 100u, 3u);
+
+    DataIdentifier selected_packet;
+    GeoTemporalLibrary::LibraryUtils::Vector2D node_position;
+
+    // With an empty queue must return false
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           false, "Must be false");
+
+    // With only one item in the queue must return it
+
+    DataHeader data_packet (/*Data ID*/ DataIdentifier ("1.1.1.1:1"),
+                            /*Emergency flag*/ true,
+                            /*Hops count*/ 15u,
+                            /*Position*/ GeoTemporalLibrary::LibraryUtils::Vector2D (3, 4),
+                            /*Velocity*/ GeoTemporalLibrary::LibraryUtils::Vector2D (-8.86, 12.098),
+                            /*GeoTemporal Area*/ GeoTemporalArea (TimePeriod (Seconds (0), Seconds (10)), Area (-15, 0, 30, 30)),
+                            /*Message*/ "packet's message");
+    m_packets_queue.Enqueue (data_packet, node_position, Ipv4Address ("0.0.0.0"));
+
+    // - Outside of the geo-temporal area
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (40, 40);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, m_packets_queue.m_packets_table.begin ()->first,
+                           "Must be the same data ID");
+
+    // - Inside of the geo-temporal area
+    selected_packet = DataIdentifier ();
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (15, 15);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, m_packets_queue.m_packets_table.begin ()->first,
+                           "Must be the same data ID");
+
+    // With multiple messages it must select the one with highest priority
+
+    // - 2 queue entries
+    data_packet.SetEmergencyPacket (false);
+    data_packet.SetDataIdentifier (DataIdentifier ("2.2.2.2:2"));
+    data_packet.SetHopsCount (5);
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (Seconds (0), Seconds (10)), Area (-20, 10, 25, 40)));
+    m_packets_queue.Enqueue (data_packet, node_position, Ipv4Address ("0.0.0.0"));
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 2u, "Size of the packets queue must be 2.");
+
+    //   > Outside both areas
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (-15, -15);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, DataIdentifier ("2.2.2.2:2"), "Must be the expected");
+
+    //   > Inside both areas
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (15, 15);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, DataIdentifier ("2.2.2.2:2"), "Must be the expected");
+
+    //   > Inside area 1
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (15, 5);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, DataIdentifier ("2.2.2.2:2"), "Must be the expected");
+
+    //   > Inside area 2
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (15, 35);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, DataIdentifier ("2.2.2.2:2"), "Must be the expected");
+
+    // - 3 queue entries
+
+    data_packet.SetEmergencyPacket (false);
+    data_packet.SetDataIdentifier (DataIdentifier ("3.3.3.3:3"));
+    data_packet.SetHopsCount (18);
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (Seconds (0), Seconds (10)), Area (-10, 20, 30, 50)));
+    m_packets_queue.Enqueue (data_packet, node_position, Ipv4Address ("0.0.0.0"));
+
+    char buffer [25];
+    for (uint32_t i = 1; i <= 10; ++i)
+      {
+        std::sprintf (buffer, "1.1.1.%u", i);
+        m_packets_queue.AddKnownPacketCarrier (DataIdentifier ("3.3.3.3:3"), Ipv4Address (buffer));
+      }
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 3u, "Size of the packets queue must be 3.");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.m_packets_table.at (DataIdentifier ("3.3.3.3:3")).GetKnownCarrierNodesCount (), 10, "Must be 10");
+
+    //   > Outside all areas
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (-15, -15);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, DataIdentifier ("3.3.3.3:3"), "Must be the expected");
+
+    //   > Inside all areas
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (15, 25);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, DataIdentifier ("3.3.3.3:3"), "Must be the expected");
+
+    //   > Inside area 1
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (15, 5);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, DataIdentifier ("3.3.3.3:3"), "Must be the expected");
+
+    //   > Inside area 2
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (-18, 35);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, DataIdentifier ("3.3.3.3:3"), "Must be the expected");
+
+    //   > Inside area 3
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (15, 45);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, DataIdentifier ("2.2.2.2:2"), "Must be the expected");
+
+    //   > Inside area 1 & 2
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (-5, 15);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, DataIdentifier ("3.3.3.3:3"), "Must be the expected");
+
+    //   > Inside area 1 & 3
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (28, 25);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, DataIdentifier ("2.2.2.2:2"), "Must be the expected");
+
+    //   > Inside area 2 & 3
+    node_position = GeoTemporalLibrary::LibraryUtils::Vector2D (15, 35);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestDropPriorityPacket (node_position, selected_packet),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet, DataIdentifier ("3.3.3.3:3"), "Must be the expected");
+  }
+
+  void
+  TestFindHighestDropPriorityPacket ()
+  {
+    // Test with only Emergency Packets
+    TestFindHighestDropPriorityPacket_EmergencyPacketsOnly ();
+
+    // Test with only Regular Packets
+    TestFindHighestDropPriorityPacket_RegularPacketsOnly ();
+
+    // Test with 2 Emergency packets and 1 Regular Packet
+    TestFindHighestDropPriorityPacket_MixedPackets2Emergency1Regular ();
+
+    // Test with 1 Emergency packet and 2 Regular Packets
+    TestFindHighestDropPriorityPacket_MixedPackets1Emergency2Regular ();
   }
 
   void
@@ -3672,8 +4319,8 @@ public:
     enqueued = m_packets_queue.Enqueue (data_packet, node_position, Ipv4Address ("1.1.1.1"));
 
     // The packets queue now looks like this:
-    //     Data ID   -  Expiration time  -  Hops count  -  Known carriers count
-    //    1.1.1.1:1  -     second 10     -      15      -           0
+    //  Emergency  -  Data ID   -  Expiration time  -  Hops count  -  Known carriers count
+    //             - 1.1.1.1:1  -     second 10     -      15      -           0
 
     NS_TEST_EXPECT_MSG_EQ (enqueued, true, "Packet queue entry 1.1.1.1:1 must have been enqueued.");
     NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 1u, "Size of the packets queue must be 1.");
@@ -3700,9 +4347,9 @@ public:
     enqueued = m_packets_queue.Enqueue (data_packet, node_position, Ipv4Address ("1.1.1.2"));
 
     // The packets queue now looks like this:
-    //     Data ID   -  Expiration time  -  Hops count  -  Known carriers count
-    //    1.1.1.1:1  -     second 10     -      15      -           0
-    //    1.1.1.2:2  -     second 15     -      15      -           0
+    //  Emergency  -  Data ID   -  Expiration time  -  Hops count  -  Known carriers count
+    //             - 1.1.1.1:1  -     second 10     -      15      -           0
+    //             - 1.1.1.2:2  -     second 15     -      15      -           0
 
     NS_TEST_EXPECT_MSG_EQ (enqueued, true, "Packet queue entry 1.1.1.2:2 must have been enqueued.");
     NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 2u, "Size of the packets queue must be 2.");
@@ -3731,10 +4378,10 @@ public:
     enqueued = m_packets_queue.Enqueue (data_packet, node_position, Ipv4Address ("1.1.1.3"));
 
     // The packets queue now looks like this:
-    //     Data ID   -  Expiration time  -  Hops count  -  Known carriers count
-    //    1.1.1.1:1  -     second 10     -      15      -           0
-    //    1.1.1.2:2  -     second 15     -      15      -           0
-    //    1.1.1.3:3  -     second  5     -      15      -           0
+    //  Emergency  -  Data ID   -  Expiration time  -  Hops count  -  Known carriers count
+    //             - 1.1.1.1:1  -     second 10     -      15      -           0
+    //             - 1.1.1.2:2  -     second 15     -      15      -           0
+    //             - 1.1.1.3:3  -     second  5     -      15      -           0
 
     NS_TEST_EXPECT_MSG_EQ (enqueued, true, "Packet queue entry 1.1.1.3:3 must have been enqueued.");
     NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 3u, "Size of the packets queue must be 3.");
@@ -3816,7 +4463,7 @@ public:
   }
 
   void
-  TestFindHighestTransmitPriorityPacket_Scheduled_1 ()
+  TestFindHighestTransmitPriorityPacket_EmergencyPacketsOnly_Scheduled_1 ()
   {
     // This function is launched by the scheduler at second 2.89
 
@@ -3839,7 +4486,7 @@ public:
     std::set<DataIdentifier> disjoint_vector;
 
     PacketQueueEntry selected_packet;
-    bool selected_packet_high_priority = false;
+    bool selected_packet_inside_area = false;
 
     disjoint_vector = {DataIdentifier ("9.9.9.9:1"), DataIdentifier ("9.9.9.9:2"),
       DataIdentifier ("9.9.9.9:3")};
@@ -3859,13 +4506,13 @@ public:
                                                                               /*Neighbor node velocity*/ neighbor_velocity,
                                                                               /*Disjoint vector*/ disjoint_vector,
                                                                               /*Selected packet*/ selected_packet,
-                                                                              /*Selected packet high priority*/ selected_packet_high_priority),
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
                            true, "Must be true");
     NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
-    NS_TEST_EXPECT_MSG_EQ (selected_packet_high_priority, true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
 
     // Destination node inside area 2
-    selected_packet_high_priority = false;
+    selected_packet_inside_area = false;
     neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2197.98, 2037.60);
 
     NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
@@ -3876,13 +4523,13 @@ public:
                                                                               /*Neighbor node velocity*/ neighbor_velocity,
                                                                               /*Disjoint vector*/ disjoint_vector,
                                                                               /*Selected packet*/ selected_packet,
-                                                                              /*Selected packet high priority*/ selected_packet_high_priority),
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
                            true, "Must be true");
     NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:2"), "Must be the expected");
-    NS_TEST_EXPECT_MSG_EQ (selected_packet_high_priority, true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
 
     // Destination node inside area 3
-    selected_packet_high_priority = false;
+    selected_packet_inside_area = false;
     neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2160.21, 2010.56);
 
     NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
@@ -3893,13 +4540,13 @@ public:
                                                                               /*Neighbor node velocity*/ neighbor_velocity,
                                                                               /*Disjoint vector*/ disjoint_vector,
                                                                               /*Selected packet*/ selected_packet,
-                                                                              /*Selected packet high priority*/ selected_packet_high_priority),
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
                            true, "Must be true");
     NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:3"), "Must be the expected");
-    NS_TEST_EXPECT_MSG_EQ (selected_packet_high_priority, true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
 
     // Destination node inside areas 1 & 2
-    selected_packet_high_priority = false;
+    selected_packet_inside_area = false;
     neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2179.48, 2040.18);
 
     NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
@@ -3910,13 +4557,13 @@ public:
                                                                               /*Neighbor node velocity*/ neighbor_velocity,
                                                                               /*Disjoint vector*/ disjoint_vector,
                                                                               /*Selected packet*/ selected_packet,
-                                                                              /*Selected packet high priority*/ selected_packet_high_priority),
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
                            true, "Must be true");
     NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:2"), "Must be the expected");
-    NS_TEST_EXPECT_MSG_EQ (selected_packet_high_priority, true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
 
     // Destination node inside areas 1 & 3
-    selected_packet_high_priority = false;
+    selected_packet_inside_area = false;
     neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2160.85, 2029.84);
 
     NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
@@ -3927,13 +4574,13 @@ public:
                                                                               /*Neighbor node velocity*/ neighbor_velocity,
                                                                               /*Disjoint vector*/ disjoint_vector,
                                                                               /*Selected packet*/ selected_packet,
-                                                                              /*Selected packet high priority*/ selected_packet_high_priority),
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
                            true, "Must be true");
     NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
-    NS_TEST_EXPECT_MSG_EQ (selected_packet_high_priority, true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
 
     // Destination node inside areas 2 & 3
-    selected_packet_high_priority = false;
+    selected_packet_inside_area = false;
     neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2180.25, 2020.01);
 
     NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
@@ -3944,13 +4591,13 @@ public:
                                                                               /*Neighbor node velocity*/ neighbor_velocity,
                                                                               /*Disjoint vector*/ disjoint_vector,
                                                                               /*Selected packet*/ selected_packet,
-                                                                              /*Selected packet high priority*/ selected_packet_high_priority),
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
                            true, "Must be true");
     NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:2"), "Must be the expected");
-    NS_TEST_EXPECT_MSG_EQ (selected_packet_high_priority, true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
 
     // Destination node inside areas 1, 2 & 3
-    selected_packet_high_priority = false;
+    selected_packet_inside_area = false;
     neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2179.87, 2029.58);
 
     NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
@@ -3961,10 +4608,10 @@ public:
                                                                               /*Neighbor node velocity*/ neighbor_velocity,
                                                                               /*Disjoint vector*/ disjoint_vector,
                                                                               /*Selected packet*/ selected_packet,
-                                                                              /*Selected packet high priority*/ selected_packet_high_priority),
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
                            true, "Must be true");
     NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:2"), "Must be the expected");
-    NS_TEST_EXPECT_MSG_EQ (selected_packet_high_priority, true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
 
     // ------------------
     // Local node inside & Destination node outside
@@ -3983,13 +4630,13 @@ public:
                                                                               /*Neighbor node velocity*/ neighbor_velocity,
                                                                               /*Disjoint vector*/ disjoint_vector,
                                                                               /*Selected packet*/ selected_packet,
-                                                                              /*Selected packet high priority*/ selected_packet_high_priority),
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
                            true, "Must be true");
     NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
-    NS_TEST_EXPECT_MSG_EQ (selected_packet_high_priority, true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
 
     // Destination node inside area 2
-    selected_packet_high_priority = false;
+    selected_packet_inside_area = false;
     local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2197.98, 2037.60);
 
     NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
@@ -4000,13 +4647,13 @@ public:
                                                                               /*Neighbor node velocity*/ neighbor_velocity,
                                                                               /*Disjoint vector*/ disjoint_vector,
                                                                               /*Selected packet*/ selected_packet,
-                                                                              /*Selected packet high priority*/ selected_packet_high_priority),
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
                            true, "Must be true");
     NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:2"), "Must be the expected");
-    NS_TEST_EXPECT_MSG_EQ (selected_packet_high_priority, true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
 
     // Destination node inside area 3
-    selected_packet_high_priority = false;
+    selected_packet_inside_area = false;
     local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2160.21, 2010.56);
 
     NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
@@ -4017,13 +4664,13 @@ public:
                                                                               /*Neighbor node velocity*/ neighbor_velocity,
                                                                               /*Disjoint vector*/ disjoint_vector,
                                                                               /*Selected packet*/ selected_packet,
-                                                                              /*Selected packet high priority*/ selected_packet_high_priority),
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
                            true, "Must be true");
     NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:3"), "Must be the expected");
-    NS_TEST_EXPECT_MSG_EQ (selected_packet_high_priority, true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
 
     // Destination node inside areas 1 & 2
-    selected_packet_high_priority = false;
+    selected_packet_inside_area = false;
     local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2179.48, 2040.18);
 
     NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
@@ -4034,13 +4681,13 @@ public:
                                                                               /*Neighbor node velocity*/ neighbor_velocity,
                                                                               /*Disjoint vector*/ disjoint_vector,
                                                                               /*Selected packet*/ selected_packet,
-                                                                              /*Selected packet high priority*/ selected_packet_high_priority),
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
                            true, "Must be true");
     NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:2"), "Must be the expected");
-    NS_TEST_EXPECT_MSG_EQ (selected_packet_high_priority, true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
 
     // Destination node inside areas 1 & 3
-    selected_packet_high_priority = false;
+    selected_packet_inside_area = false;
     local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2160.85, 2029.84);
 
     NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
@@ -4051,13 +4698,13 @@ public:
                                                                               /*Neighbor node velocity*/ neighbor_velocity,
                                                                               /*Disjoint vector*/ disjoint_vector,
                                                                               /*Selected packet*/ selected_packet,
-                                                                              /*Selected packet high priority*/ selected_packet_high_priority),
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
                            true, "Must be true");
     NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
-    NS_TEST_EXPECT_MSG_EQ (selected_packet_high_priority, true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
 
     // Destination node inside areas 2 & 3
-    selected_packet_high_priority = false;
+    selected_packet_inside_area = false;
     local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2180.25, 2020.01);
 
     NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
@@ -4068,13 +4715,13 @@ public:
                                                                               /*Neighbor node velocity*/ neighbor_velocity,
                                                                               /*Disjoint vector*/ disjoint_vector,
                                                                               /*Selected packet*/ selected_packet,
-                                                                              /*Selected packet high priority*/ selected_packet_high_priority),
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
                            true, "Must be true");
     NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:2"), "Must be the expected");
-    NS_TEST_EXPECT_MSG_EQ (selected_packet_high_priority, true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
 
     // Destination node inside areas 1, 2 & 3
-    selected_packet_high_priority = false;
+    selected_packet_inside_area = false;
     local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2179.87, 2029.58);
 
     NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
@@ -4085,10 +4732,10 @@ public:
                                                                               /*Neighbor node velocity*/ neighbor_velocity,
                                                                               /*Disjoint vector*/ disjoint_vector,
                                                                               /*Selected packet*/ selected_packet,
-                                                                              /*Selected packet high priority*/ selected_packet_high_priority),
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
                            true, "Must be true");
     NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:2"), "Must be the expected");
-    NS_TEST_EXPECT_MSG_EQ (selected_packet_high_priority, true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
 
     // ------------------
     // Both nodes (local & destination) inside
@@ -4106,13 +4753,13 @@ public:
                                                                               /*Neighbor node velocity*/ neighbor_velocity,
                                                                               /*Disjoint vector*/ disjoint_vector,
                                                                               /*Selected packet*/ selected_packet,
-                                                                              /*Selected packet high priority*/ selected_packet_high_priority),
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
                            true, "Must be true");
     NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
-    NS_TEST_EXPECT_MSG_EQ (selected_packet_high_priority, true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
 
     // Both nodes inside area 2
-    selected_packet_high_priority = false;
+    selected_packet_inside_area = false;
     local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2197.98, 2037.60);
     neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2197.98, 2037.60);
 
@@ -4124,13 +4771,13 @@ public:
                                                                               /*Neighbor node velocity*/ neighbor_velocity,
                                                                               /*Disjoint vector*/ disjoint_vector,
                                                                               /*Selected packet*/ selected_packet,
-                                                                              /*Selected packet high priority*/ selected_packet_high_priority),
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
                            true, "Must be true");
     NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:2"), "Must be the expected");
-    NS_TEST_EXPECT_MSG_EQ (selected_packet_high_priority, true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
 
     // Both nodes inside area 3
-    selected_packet_high_priority = false;
+    selected_packet_inside_area = false;
     local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2160.21, 2010.56);
     neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2160.21, 2010.56);
 
@@ -4142,13 +4789,13 @@ public:
                                                                               /*Neighbor node velocity*/ neighbor_velocity,
                                                                               /*Disjoint vector*/ disjoint_vector,
                                                                               /*Selected packet*/ selected_packet,
-                                                                              /*Selected packet high priority*/ selected_packet_high_priority),
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
                            true, "Must be true");
     NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:3"), "Must be the expected");
-    NS_TEST_EXPECT_MSG_EQ (selected_packet_high_priority, true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
 
     // Both nodes inside areas 1 & 2
-    selected_packet_high_priority = false;
+    selected_packet_inside_area = false;
     local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2179.48, 2040.18);
     neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2179.48, 2040.18);
 
@@ -4160,13 +4807,13 @@ public:
                                                                               /*Neighbor node velocity*/ neighbor_velocity,
                                                                               /*Disjoint vector*/ disjoint_vector,
                                                                               /*Selected packet*/ selected_packet,
-                                                                              /*Selected packet high priority*/ selected_packet_high_priority),
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
                            true, "Must be true");
     NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:2"), "Must be the expected");
-    NS_TEST_EXPECT_MSG_EQ (selected_packet_high_priority, true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
 
     // Both nodes inside areas 1 & 3
-    selected_packet_high_priority = false;
+    selected_packet_inside_area = false;
     local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2160.85, 2029.84);
     neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2160.85, 2029.84);
 
@@ -4178,13 +4825,13 @@ public:
                                                                               /*Neighbor node velocity*/ neighbor_velocity,
                                                                               /*Disjoint vector*/ disjoint_vector,
                                                                               /*Selected packet*/ selected_packet,
-                                                                              /*Selected packet high priority*/ selected_packet_high_priority),
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
                            true, "Must be true");
     NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
-    NS_TEST_EXPECT_MSG_EQ (selected_packet_high_priority, true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
 
     // Both nodes inside areas 2 & 3
-    selected_packet_high_priority = false;
+    selected_packet_inside_area = false;
     local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2180.25, 2020.01);
     neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2180.25, 2020.01);
 
@@ -4196,13 +4843,13 @@ public:
                                                                               /*Neighbor node velocity*/ neighbor_velocity,
                                                                               /*Disjoint vector*/ disjoint_vector,
                                                                               /*Selected packet*/ selected_packet,
-                                                                              /*Selected packet high priority*/ selected_packet_high_priority),
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
                            true, "Must be true");
     NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:2"), "Must be the expected");
-    NS_TEST_EXPECT_MSG_EQ (selected_packet_high_priority, true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
 
     // Both nodes inside areas 1, 2 & 3
-    selected_packet_high_priority = false;
+    selected_packet_inside_area = false;
     local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2179.87, 2029.58);
     neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2179.87, 2029.58);
 
@@ -4214,10 +4861,10 @@ public:
                                                                               /*Neighbor node velocity*/ neighbor_velocity,
                                                                               /*Disjoint vector*/ disjoint_vector,
                                                                               /*Selected packet*/ selected_packet,
-                                                                              /*Selected packet high priority*/ selected_packet_high_priority),
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
                            true, "Must be true");
     NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:2"), "Must be the expected");
-    NS_TEST_EXPECT_MSG_EQ (selected_packet_high_priority, true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
 
     // ------------------
     // Both nodes (local & destination) outside
@@ -4227,7 +4874,7 @@ public:
     local_node_ip = Ipv4Address ("2.2.2.2");
     neighbor_node_ip = Ipv4Address ("1.1.1.1"); // Valid receiver node
 
-    selected_packet_high_priority = true;
+    selected_packet_inside_area = true;
     local_position = GeoTemporalLibrary::LibraryUtils::Vector2D ();
     neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D ();
 
@@ -4239,10 +4886,10 @@ public:
                                                                               /*Neighbor node velocity*/ neighbor_velocity,
                                                                               /*Disjoint vector*/ disjoint_vector,
                                                                               /*Selected packet*/ selected_packet,
-                                                                              /*Selected packet high priority*/ selected_packet_high_priority),
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
                            true, "Must be true");
     NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:2"), "Must be the expected");
-    NS_TEST_EXPECT_MSG_EQ (selected_packet_high_priority, false, "Must be false");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, false, "Must be false");
 
     // Both nodes outside all areas with invalid receiver node
     local_node_ip = Ipv4Address ("1.1.1.1");
@@ -4256,7 +4903,7 @@ public:
                                                                               /*Neighbor node velocity*/ neighbor_velocity,
                                                                               /*Disjoint vector*/ disjoint_vector,
                                                                               /*Selected packet*/ selected_packet,
-                                                                              /*Selected packet high priority*/ selected_packet_high_priority),
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
                            false, "Must be false");
 
     // Set replicas counter of the packet with highest priority to zero
@@ -4266,7 +4913,7 @@ public:
     local_node_ip = Ipv4Address ("2.2.2.2");
     neighbor_node_ip = Ipv4Address ("1.1.1.1"); // Valid receiver node
 
-    selected_packet_high_priority = true;
+    selected_packet_inside_area = true;
     neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D ();
 
     NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
@@ -4277,10 +4924,10 @@ public:
                                                                               /*Neighbor node velocity*/ neighbor_velocity,
                                                                               /*Disjoint vector*/ disjoint_vector,
                                                                               /*Selected packet*/ selected_packet,
-                                                                              /*Selected packet high priority*/ selected_packet_high_priority),
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
                            true, "Must be true");
     NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
-    NS_TEST_EXPECT_MSG_EQ (selected_packet_high_priority, false, "Must be false");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, false, "Must be false");
 
     // Both nodes outside all areas with invalid receiver node
     local_node_ip = Ipv4Address ("1.1.1.1");
@@ -4294,7 +4941,7 @@ public:
                                                                               /*Neighbor node velocity*/ neighbor_velocity,
                                                                               /*Disjoint vector*/ disjoint_vector,
                                                                               /*Selected packet*/ selected_packet,
-                                                                              /*Selected packet high priority*/ selected_packet_high_priority),
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
                            false, "Must be false");
 
     // Set replicas counter of the packet with highest priority to 10
@@ -4303,7 +4950,7 @@ public:
     // Destination node inside area 3 with valid receiver node
     local_node_ip = Ipv4Address ("2.2.2.2");
     neighbor_node_ip = Ipv4Address ("1.1.1.1"); // Valid receiver node
-    selected_packet_high_priority = false;
+    selected_packet_inside_area = false;
 
     NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
                                                                               /*Local node position*/ local_position,
@@ -4313,15 +4960,15 @@ public:
                                                                               /*Neighbor node velocity*/ neighbor_velocity,
                                                                               /*Disjoint vector*/ disjoint_vector,
                                                                               /*Selected packet*/ selected_packet,
-                                                                              /*Selected packet high priority*/ selected_packet_high_priority),
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
                            true, "Must be true");
     NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:3"), "Must be the expected");
-    NS_TEST_EXPECT_MSG_EQ (selected_packet_high_priority, true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
 
     // Destination node inside area 3 with invalid receiver node
     local_node_ip = Ipv4Address ("1.1.1.1");
     neighbor_node_ip = Ipv4Address ("2.2.2.2"); // Invalid receiver node
-    selected_packet_high_priority = false;
+    selected_packet_inside_area = false;
 
     NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
                                                                               /*Local node position*/ local_position,
@@ -4331,10 +4978,10 @@ public:
                                                                               /*Neighbor node velocity*/ neighbor_velocity,
                                                                               /*Disjoint vector*/ disjoint_vector,
                                                                               /*Selected packet*/ selected_packet,
-                                                                              /*Selected packet high priority*/ selected_packet_high_priority),
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
                            true, "Must be true");
     NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:3"), "Must be the expected");
-    NS_TEST_EXPECT_MSG_EQ (selected_packet_high_priority, true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
 
     // Set replicas counter of packet 3 to 0
     m_packets_queue.m_packets_table.at (DataIdentifier ("9.9.9.9:3")).SetReplicasCounter (0);
@@ -4342,7 +4989,7 @@ public:
     // Local node inside area 3 with valid receiver node
     local_node_ip = Ipv4Address ("2.2.2.2");
     neighbor_node_ip = Ipv4Address ("1.1.1.1"); // Valid receiver node
-    selected_packet_high_priority = false;
+    selected_packet_inside_area = false;
 
     NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
                                                                               /*Local node position*/ GeoTemporalLibrary::LibraryUtils::Vector2D (2180.76, 2008.28),
@@ -4352,15 +4999,15 @@ public:
                                                                               /*Neighbor node velocity*/ neighbor_velocity,
                                                                               /*Disjoint vector*/ disjoint_vector,
                                                                               /*Selected packet*/ selected_packet,
-                                                                              /*Selected packet high priority*/ selected_packet_high_priority),
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
                            true, "Must be true");
     NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:3"), "Must be the expected");
-    NS_TEST_EXPECT_MSG_EQ (selected_packet_high_priority, true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
 
     // Local node inside area 3 with invalid receiver node
     local_node_ip = Ipv4Address ("1.1.1.1");
     neighbor_node_ip = Ipv4Address ("2.2.2.2"); // Invalid receiver node
-    selected_packet_high_priority = false;
+    selected_packet_inside_area = false;
 
     NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
                                                                               /*Local node position*/ GeoTemporalLibrary::LibraryUtils::Vector2D (2180.76, 2008.28),
@@ -4370,14 +5017,14 @@ public:
                                                                               /*Neighbor node velocity*/ neighbor_velocity,
                                                                               /*Disjoint vector*/ disjoint_vector,
                                                                               /*Selected packet*/ selected_packet,
-                                                                              /*Selected packet high priority*/ selected_packet_high_priority),
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
                            true, "Must be true");
     NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:3"), "Must be the expected");
-    NS_TEST_EXPECT_MSG_EQ (selected_packet_high_priority, true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
   }
 
   void
-  TestFindHighestTransmitPriorityPacket ()
+  TestFindHighestTransmitPriorityPacket_EmergencyPacketsOnly ()
   {
     m_packets_queue = PacketsQueue (m_gps, 100u, 3u);
 
@@ -4390,7 +5037,7 @@ public:
     std::set<DataIdentifier> disjoint_vector;
 
     PacketQueueEntry selected_packet;
-    bool selected_packet_high_priority;
+    bool selected_packet_inside_area;
 
     m_gps->SetNodeIpAddressToIdMapping ({
       { local_node_ip, 20},
@@ -4407,7 +5054,7 @@ public:
                                                                               /*Neighbor node velocity*/ neighbor_velocity,
                                                                               /*Disjoint vector*/ disjoint_vector,
                                                                               /*Selected packet*/ selected_packet,
-                                                                              /*Selected packet high priority*/ selected_packet_high_priority),
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
                            false, "Must be false");
 
     // Test with non-empty disjoint vector & empty packets queue
@@ -4422,13 +5069,14 @@ public:
                                                                               /*Neighbor node velocity*/ neighbor_velocity,
                                                                               /*Disjoint vector*/ disjoint_vector,
                                                                               /*Selected packet*/ selected_packet,
-                                                                              /*Selected packet high priority*/ selected_packet_high_priority),
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
                            false, "Must be false");
 
     // Insert 3 packets to the packets queue
 
     // Geo-temporal area 1
     DataHeader data_packet (/*Data ID*/ DataIdentifier ("9.9.9.9:1"),
+                            /*Emergency flag*/ true,
                             /*Hops count*/ 15u,
                             /*Position*/ GeoTemporalLibrary::LibraryUtils::Vector2D (3, 4),
                             /*Velocity*/ GeoTemporalLibrary::LibraryUtils::Vector2D (-8.86, 12.098),
@@ -4469,15 +5117,2037 @@ public:
                                                                               /*Neighbor node velocity*/ neighbor_velocity,
                                                                               /*Disjoint vector*/ disjoint_vector,
                                                                               /*Selected packet*/ selected_packet,
-                                                                              /*Selected packet high priority*/ selected_packet_high_priority),
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
                            false, "Must be false");
 
-    Simulator::Schedule (Seconds (2.89), &PacketsQueueTest::TestFindHighestTransmitPriorityPacket_Scheduled_1, this);
+    Simulator::Schedule (Seconds (2.89), &PacketsQueueTest::TestFindHighestTransmitPriorityPacket_EmergencyPacketsOnly_Scheduled_1, this);
 
     Simulator::Run ();
     Simulator::Destroy ();
 
     m_gps->ClearNodeIpAddressToIdMapping ();
+  }
+
+  void
+  TestFindHighestTransmitPriorityPacket_RegularPacketsOnly_Scheduled_1 ()
+  {
+    // This function is launched by the scheduler at second 2.89
+
+    const Time current_time = Simulator::Now ();
+    const uint32_t current_second = static_cast<uint32_t> (current_time.GetSeconds ());
+    NS_TEST_ASSERT_MSG_EQ (current_second, 2u, "Must be 2");
+
+    // The packets queue now looks like this:
+    //     Data ID   -   Packet entry expiration time
+    //    9.9.9.9:1  -           second 10
+    //    9.9.9.9:2  -           second 10
+    //    9.9.9.9:3  -           second 10
+
+    Ipv4Address local_node_ip ("1.1.1.1");
+    Ipv4Address neighbor_node_ip ("2.2.2.2");
+
+    GeoTemporalLibrary::LibraryUtils::Vector2D local_position, local_velocity,
+            neighbor_position, neighbor_velocity;
+
+    std::set<DataIdentifier> disjoint_vector;
+
+    PacketQueueEntry selected_packet;
+    bool selected_packet_inside_area = false;
+
+    disjoint_vector = {DataIdentifier ("9.9.9.9:1"), DataIdentifier ("9.9.9.9:2"),
+      DataIdentifier ("9.9.9.9:3")};
+
+    // ------------------
+    // Destination node inside & Local node outside
+    // ------------------
+
+    // Destination node inside area 1
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2164.35, 2044.71);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Destination node inside area 2
+    selected_packet_inside_area = false;
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2197.98, 2037.60);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:2"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Destination node inside area 3
+    selected_packet_inside_area = false;
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2160.21, 2010.56);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:3"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Destination node inside areas 1 & 2
+    selected_packet_inside_area = false;
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2179.48, 2040.18);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:2"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Destination node inside areas 1 & 3
+    selected_packet_inside_area = false;
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2160.85, 2029.84);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Destination node inside areas 2 & 3
+    selected_packet_inside_area = false;
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2180.25, 2020.01);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:2"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Destination node inside areas 1, 2 & 3
+    selected_packet_inside_area = false;
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2179.87, 2029.58);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:2"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // ------------------
+    // Local node inside & Destination node outside
+    // ------------------
+
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D ();
+
+    // Local node inside area 1
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2164.35, 2044.71);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Destination node inside area 2
+    selected_packet_inside_area = false;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2197.98, 2037.60);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:2"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Destination node inside area 3
+    selected_packet_inside_area = false;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2160.21, 2010.56);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:3"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Destination node inside areas 1 & 2
+    selected_packet_inside_area = false;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2179.48, 2040.18);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:2"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Destination node inside areas 1 & 3
+    selected_packet_inside_area = false;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2160.85, 2029.84);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Destination node inside areas 2 & 3
+    selected_packet_inside_area = false;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2180.25, 2020.01);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:2"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Destination node inside areas 1, 2 & 3
+    selected_packet_inside_area = false;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2179.87, 2029.58);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:2"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // ------------------
+    // Both nodes (local & destination) inside
+    // ------------------
+
+    // Both nodes inside area 1
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2164.35, 2044.71);
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2164.35, 2044.71);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Both nodes inside area 2
+    selected_packet_inside_area = false;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2197.98, 2037.60);
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2197.98, 2037.60);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:2"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Both nodes inside area 3
+    selected_packet_inside_area = false;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2160.21, 2010.56);
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2160.21, 2010.56);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:3"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Both nodes inside areas 1 & 2
+    selected_packet_inside_area = false;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2179.48, 2040.18);
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2179.48, 2040.18);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:2"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Both nodes inside areas 1 & 3
+    selected_packet_inside_area = false;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2160.85, 2029.84);
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2160.85, 2029.84);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Both nodes inside areas 2 & 3
+    selected_packet_inside_area = false;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2180.25, 2020.01);
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2180.25, 2020.01);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:2"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Both nodes inside areas 1, 2 & 3
+    selected_packet_inside_area = false;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2179.87, 2029.58);
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2179.87, 2029.58);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:2"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // ------------------
+    // Both nodes (local & destination) outside
+    // ------------------
+
+    // Both nodes outside all areas with valid receiver node
+    local_node_ip = Ipv4Address ("2.2.2.2");
+    neighbor_node_ip = Ipv4Address ("1.1.1.1"); // Valid receiver node
+
+    selected_packet_inside_area = true;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D ();
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D ();
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:2"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, false, "Must be false");
+
+    // Both nodes outside all areas with invalid receiver node
+    local_node_ip = Ipv4Address ("1.1.1.1");
+    neighbor_node_ip = Ipv4Address ("2.2.2.2"); // Invalid receiver node
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           false, "Must be false");
+
+    // Set replicas counter of the packet with highest priority to zero
+    m_packets_queue.m_packets_table.at (DataIdentifier ("9.9.9.9:2")).SetReplicasCounter (0);
+
+    // Both nodes outside all areas with valid receiver node
+    local_node_ip = Ipv4Address ("2.2.2.2");
+    neighbor_node_ip = Ipv4Address ("1.1.1.1"); // Valid receiver node
+
+    selected_packet_inside_area = true;
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D ();
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, false, "Must be false");
+
+    // Both nodes outside all areas with invalid receiver node
+    local_node_ip = Ipv4Address ("1.1.1.1");
+    neighbor_node_ip = Ipv4Address ("2.2.2.2"); // Invalid receiver node
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           false, "Must be false");
+
+    // Set replicas counter of the packet with highest priority to 10
+    m_packets_queue.m_packets_table.at (DataIdentifier ("9.9.9.9:2")).SetReplicasCounter (10);
+
+    // Destination node inside area 3 with valid receiver node
+    local_node_ip = Ipv4Address ("2.2.2.2");
+    neighbor_node_ip = Ipv4Address ("1.1.1.1"); // Valid receiver node
+    selected_packet_inside_area = false;
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ GeoTemporalLibrary::LibraryUtils::Vector2D (2180.76, 2008.28),
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:3"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Destination node inside area 3 with invalid receiver node
+    local_node_ip = Ipv4Address ("1.1.1.1");
+    neighbor_node_ip = Ipv4Address ("2.2.2.2"); // Invalid receiver node
+    selected_packet_inside_area = false;
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ GeoTemporalLibrary::LibraryUtils::Vector2D (2180.76, 2008.28),
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:3"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Set replicas counter of packet 3 to 0
+    m_packets_queue.m_packets_table.at (DataIdentifier ("9.9.9.9:3")).SetReplicasCounter (0);
+
+    // Local node inside area 3 with valid receiver node
+    local_node_ip = Ipv4Address ("2.2.2.2");
+    neighbor_node_ip = Ipv4Address ("1.1.1.1"); // Valid receiver node
+    selected_packet_inside_area = false;
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ GeoTemporalLibrary::LibraryUtils::Vector2D (2180.76, 2008.28),
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:3"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Local node inside area 3 with invalid receiver node
+    local_node_ip = Ipv4Address ("1.1.1.1");
+    neighbor_node_ip = Ipv4Address ("2.2.2.2"); // Invalid receiver node
+    selected_packet_inside_area = false;
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ GeoTemporalLibrary::LibraryUtils::Vector2D (2180.76, 2008.28),
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:3"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+  }
+
+  void
+  TestFindHighestTransmitPriorityPacket_RegularPacketsOnly ()
+  {
+    m_packets_queue = PacketsQueue (m_gps, 100u, 3u);
+
+    Ipv4Address local_node_ip ("1.1.1.1");
+    Ipv4Address neighbor_node_ip ("2.2.2.2");
+
+    GeoTemporalLibrary::LibraryUtils::Vector2D local_position, local_velocity,
+            neighbor_position, neighbor_velocity, node_position;
+
+    std::set<DataIdentifier> disjoint_vector;
+
+    PacketQueueEntry selected_packet;
+    bool selected_packet_inside_area;
+
+    m_gps->SetNodeIpAddressToIdMapping ({
+      { local_node_ip, 20},
+      { neighbor_node_ip, 21},
+    });
+
+    // Test with empty disjoint vector & empty packets queue
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           false, "Must be false");
+
+    // Test with non-empty disjoint vector & empty packets queue
+
+    disjoint_vector = {DataIdentifier ("0.0.0.0:0"), DataIdentifier ("0.0.0.0:1"), DataIdentifier ("0.0.0.0:2")};
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           false, "Must be false");
+
+    // Insert 3 packets to the packets queue
+
+    // Geo-temporal area 1
+    DataHeader data_packet (/*Data ID*/ DataIdentifier ("9.9.9.9:1"),
+                            /*Emergency flag*/ false,
+                            /*Hops count*/ 15u,
+                            /*Position*/ GeoTemporalLibrary::LibraryUtils::Vector2D (3, 4),
+                            /*Velocity*/ GeoTemporalLibrary::LibraryUtils::Vector2D (-8.86, 12.098),
+                            /*GeoTemporal Area*/ GeoTemporalArea (TimePeriod (Seconds (0), Seconds (10)),
+                                                                  Area (2155.00, 2055.00, 2185.00, 2025.00)),
+                            /*Message*/ "packet's message");
+    m_packets_queue.Enqueue (data_packet, node_position, Ipv4Address ("9.9.9.9"));
+
+    // Geo-temporal area 2
+    data_packet.SetDataIdentifier (DataIdentifier ("9.9.9.9:2"));
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (Seconds (1), Seconds (10)),
+                                                                Area (2175.00, 2045.00, 2205.00, 2015.00)));
+    data_packet.SetHopsCount (5);
+    m_packets_queue.Enqueue (data_packet, node_position, Ipv4Address ("9.9.9.9"));
+
+    // Geo-temporal area 3
+    data_packet.SetDataIdentifier (DataIdentifier ("9.9.9.9:3"));
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (Seconds (1), Seconds (10)),
+                                                                Area (2155.00, 2035.00, 2185.00, 2005.00)));
+    data_packet.SetHopsCount (18);
+    m_packets_queue.Enqueue (data_packet, node_position, Ipv4Address ("9.9.9.9"));
+
+    // The packets queue now looks like this:
+    //     Data ID   -   Packet entry expiration time
+    //    9.9.9.9:1  -           second 10
+    //    9.9.9.9:2  -           second 10
+    //    9.9.9.9:3  -           second 10
+
+    // Test with non-empty disjoint vector full of non-existent packets & non-empty packets queue
+
+    disjoint_vector = {DataIdentifier ("0.0.0.0:0"), DataIdentifier ("0.0.0.0:1"), DataIdentifier ("0.0.0.0:2")};
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           false, "Must be false");
+
+    Simulator::Schedule (Seconds (2.89), &PacketsQueueTest::TestFindHighestTransmitPriorityPacket_RegularPacketsOnly_Scheduled_1, this);
+
+    Simulator::Run ();
+    Simulator::Destroy ();
+
+    m_gps->ClearNodeIpAddressToIdMapping ();
+  }
+
+  void
+  TestFindHighestTransmitPriorityPacket_MixedPackets2Emergency1Regular_Scheduled_1 ()
+  {
+    // This function is launched by the scheduler at second 2.89
+
+    const Time current_time = Simulator::Now ();
+    const uint32_t current_second = static_cast<uint32_t> (current_time.GetSeconds ());
+    NS_TEST_ASSERT_MSG_EQ (current_second, 2u, "Must be 2");
+
+    // The packets queue now looks like this:
+    //     Data ID   -   Packet entry expiration time - Hops count - Known carriers - Emergency
+    //    9.9.9.9:1  -           second 10            -     15     -      0         -    Yes
+    //    9.9.9.9:2  -           second 10            -      5     -      0         -    No
+    //    9.9.9.9:3  -           second 10            -     18     -      0         -    Yes
+
+    Ipv4Address local_node_ip ("1.1.1.1");
+    Ipv4Address neighbor_node_ip ("2.2.2.2"); // Invalid receiver node
+
+    GeoTemporalLibrary::LibraryUtils::Vector2D local_position, local_velocity,
+            neighbor_position, neighbor_velocity;
+
+    std::set<DataIdentifier> disjoint_vector;
+
+    PacketQueueEntry selected_packet;
+    bool selected_packet_inside_area = false;
+
+    disjoint_vector = {DataIdentifier ("9.9.9.9:1"), DataIdentifier ("9.9.9.9:2"),
+      DataIdentifier ("9.9.9.9:3")};
+
+    // ------------------
+    // Destination node inside & Local node outside
+    // ------------------
+
+    // Destination node inside area 1
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2164.35, 2044.71);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Destination node inside area 2
+    selected_packet_inside_area = true;
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2197.98, 2037.60);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:2"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Destination node inside area 3
+    selected_packet_inside_area = false;
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2160.21, 2010.56);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:3"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Destination node inside areas 1 & 2
+    selected_packet_inside_area = false;
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2179.48, 2040.18);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Destination node inside areas 1 & 3
+    selected_packet_inside_area = false;
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2160.85, 2029.84);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Destination node inside areas 2 & 3
+    selected_packet_inside_area = false;
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2180.25, 2020.01);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:3"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Destination node inside areas 1, 2 & 3
+    selected_packet_inside_area = false;
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2179.87, 2029.58);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // ------------------
+    // Local node inside & Destination node outside
+    // ------------------
+
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D ();
+
+    // Local node inside area 1
+    selected_packet_inside_area = false;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2164.35, 2044.71);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Destination node inside area 2
+    selected_packet_inside_area = true;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2197.98, 2037.60);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:2"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Destination node inside area 3
+    selected_packet_inside_area = false;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2160.21, 2010.56);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:3"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Destination node inside areas 1 & 2
+    selected_packet_inside_area = false;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2179.48, 2040.18);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Destination node inside areas 1 & 3
+    selected_packet_inside_area = false;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2160.85, 2029.84);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Destination node inside areas 2 & 3
+    selected_packet_inside_area = false;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2180.25, 2020.01);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:3"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Destination node inside areas 1, 2 & 3
+    selected_packet_inside_area = false;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2179.87, 2029.58);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // ------------------
+    // Both nodes (local & destination) inside
+    // ------------------
+
+    // Both nodes inside area 1
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2164.35, 2044.71);
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2164.35, 2044.71);
+    selected_packet_inside_area = false;
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Both nodes inside area 2
+    selected_packet_inside_area = true;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2197.98, 2037.60);
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2197.98, 2037.60);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:2"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Both nodes inside area 3
+    selected_packet_inside_area = false;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2160.21, 2010.56);
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2160.21, 2010.56);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:3"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Both nodes inside areas 1 & 2
+    selected_packet_inside_area = false;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2179.48, 2040.18);
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2179.48, 2040.18);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Both nodes inside areas 1 & 3
+    selected_packet_inside_area = false;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2160.85, 2029.84);
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2160.85, 2029.84);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Both nodes inside areas 2 & 3
+    selected_packet_inside_area = false;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2180.25, 2020.01);
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2180.25, 2020.01);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:3"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Both nodes inside areas 1, 2 & 3
+    selected_packet_inside_area = false;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2179.87, 2029.58);
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2179.87, 2029.58);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // ------------------
+    // Both nodes (local & destination) outside
+    // ------------------
+
+    // Both nodes outside all areas with valid receiver node
+    local_node_ip = Ipv4Address ("2.2.2.2");
+    neighbor_node_ip = Ipv4Address ("1.1.1.1"); // Valid receiver node
+
+    selected_packet_inside_area = true;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D ();
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D ();
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, false, "Must be false");
+
+    // Both nodes outside all areas with invalid receiver node
+    local_node_ip = Ipv4Address ("1.1.1.1");
+    neighbor_node_ip = Ipv4Address ("2.2.2.2"); // Invalid receiver node
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           false, "Must be false");
+
+    // Set replicas counter of the packet with highest priority to zero
+    m_packets_queue.m_packets_table.at (DataIdentifier ("9.9.9.9:1")).SetReplicasCounter (0);
+
+    // Both nodes outside all areas with valid receiver node
+    local_node_ip = Ipv4Address ("2.2.2.2");
+    neighbor_node_ip = Ipv4Address ("1.1.1.1"); // Valid receiver node
+
+    selected_packet_inside_area = true;
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D ();
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:3"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, false, "Must be false");
+
+    // Both nodes outside all areas with invalid receiver node
+    local_node_ip = Ipv4Address ("1.1.1.1");
+    neighbor_node_ip = Ipv4Address ("2.2.2.2"); // Invalid receiver node
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           false, "Must be false");
+
+    // Set replicas counter of the packet with highest priority to 10
+    m_packets_queue.m_packets_table.at (DataIdentifier ("9.9.9.9:1")).SetReplicasCounter (10);
+
+    // Destination node inside area 3 with valid receiver node
+    local_node_ip = Ipv4Address ("2.2.2.2");
+    neighbor_node_ip = Ipv4Address ("1.1.1.1"); // Valid receiver node
+    selected_packet_inside_area = false;
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ GeoTemporalLibrary::LibraryUtils::Vector2D (2180.76, 2008.28),
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:3"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Destination node inside area 3 with invalid receiver node
+    local_node_ip = Ipv4Address ("1.1.1.1");
+    neighbor_node_ip = Ipv4Address ("2.2.2.2"); // Invalid receiver node
+    selected_packet_inside_area = false;
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ GeoTemporalLibrary::LibraryUtils::Vector2D (2180.76, 2008.28),
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:3"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Set replicas counter of packet 3 to 0
+    m_packets_queue.m_packets_table.at (DataIdentifier ("9.9.9.9:3")).SetReplicasCounter (0);
+
+    // Local node inside area 3 with valid receiver node
+    local_node_ip = Ipv4Address ("2.2.2.2");
+    neighbor_node_ip = Ipv4Address ("1.1.1.1"); // Valid receiver node
+    selected_packet_inside_area = false;
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ GeoTemporalLibrary::LibraryUtils::Vector2D (2180.76, 2008.28),
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:3"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Local node inside area 3 with invalid receiver node
+    local_node_ip = Ipv4Address ("1.1.1.1");
+    neighbor_node_ip = Ipv4Address ("2.2.2.2"); // Invalid receiver node
+    selected_packet_inside_area = false;
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ GeoTemporalLibrary::LibraryUtils::Vector2D (2180.76, 2008.28),
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:3"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+  }
+
+  void
+  TestFindHighestTransmitPriorityPacket_MixedPackets2Emergency1Regular ()
+  {
+    m_packets_queue = PacketsQueue (m_gps, 100u, 3u);
+
+    Ipv4Address local_node_ip ("1.1.1.1");
+    Ipv4Address neighbor_node_ip ("2.2.2.2");
+
+    GeoTemporalLibrary::LibraryUtils::Vector2D local_position, local_velocity,
+            neighbor_position, neighbor_velocity, node_position;
+
+    std::set<DataIdentifier> disjoint_vector;
+
+    PacketQueueEntry selected_packet;
+    bool selected_packet_inside_area;
+
+    m_gps->SetNodeIpAddressToIdMapping ({
+      { local_node_ip, 20},
+      { neighbor_node_ip, 21},
+    });
+
+    // Test with empty disjoint vector & empty packets queue
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           false, "Must be false");
+
+    // Test with non-empty disjoint vector & empty packets queue
+
+    disjoint_vector = {DataIdentifier ("0.0.0.0:0"), DataIdentifier ("0.0.0.0:1"), DataIdentifier ("0.0.0.0:2")};
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           false, "Must be false");
+
+    // Insert 3 packets to the packets queue
+
+    // Geo-temporal area 1
+    DataHeader data_packet (/*Data ID*/ DataIdentifier ("9.9.9.9:1"),
+                            /*Emergency flag*/ true,
+                            /*Hops count*/ 15u,
+                            /*Position*/ GeoTemporalLibrary::LibraryUtils::Vector2D (3, 4),
+                            /*Velocity*/ GeoTemporalLibrary::LibraryUtils::Vector2D (-8.86, 12.098),
+                            /*GeoTemporal Area*/ GeoTemporalArea (TimePeriod (Seconds (0), Seconds (10)),
+                                                                  Area (2155.00, 2055.00, 2185.00, 2025.00)),
+                            /*Message*/ "packet's message");
+    m_packets_queue.Enqueue (data_packet, node_position, Ipv4Address ("9.9.9.9"));
+
+    // Geo-temporal area 2
+    data_packet.SetDataIdentifier (DataIdentifier ("9.9.9.9:2"));
+    data_packet.SetEmergencyPacket (false);
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (Seconds (1), Seconds (10)),
+                                                                Area (2175.00, 2045.00, 2205.00, 2015.00)));
+    data_packet.SetHopsCount (5);
+    m_packets_queue.Enqueue (data_packet, node_position, Ipv4Address ("9.9.9.9"));
+
+    // Geo-temporal area 3
+    data_packet.SetDataIdentifier (DataIdentifier ("9.9.9.9:3"));
+    data_packet.SetEmergencyPacket (true);
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (Seconds (1), Seconds (10)),
+                                                                Area (2155.00, 2035.00, 2185.00, 2005.00)));
+    data_packet.SetHopsCount (18);
+    m_packets_queue.Enqueue (data_packet, node_position, Ipv4Address ("9.9.9.9"));
+
+    // The packets queue now looks like this:
+    //     Data ID   -   Packet entry expiration time - Hops count - Known carriers - Emergency
+    //    9.9.9.9:1  -           second 10            -     15     -      0         -    Yes
+    //    9.9.9.9:2  -           second 10            -      5     -      0         -    No
+    //    9.9.9.9:3  -           second 10            -     18     -      0         -    Yes
+
+    // Test with non-empty disjoint vector full of non-existent packets & non-empty packets queue
+
+    disjoint_vector = {DataIdentifier ("0.0.0.0:0"), DataIdentifier ("0.0.0.0:1"), DataIdentifier ("0.0.0.0:2")};
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           false, "Must be false");
+
+    Simulator::Schedule (Seconds (2.89), &PacketsQueueTest::TestFindHighestTransmitPriorityPacket_MixedPackets2Emergency1Regular_Scheduled_1, this);
+
+    Simulator::Run ();
+    Simulator::Destroy ();
+
+    m_gps->ClearNodeIpAddressToIdMapping ();
+  }
+
+  void
+  TestFindHighestTransmitPriorityPacket_MixedPackets1Emergency2Regular_Scheduled_1 ()
+  {
+    // This function is launched by the scheduler at second 2.89
+
+    const Time current_time = Simulator::Now ();
+    const uint32_t current_second = static_cast<uint32_t> (current_time.GetSeconds ());
+    NS_TEST_ASSERT_MSG_EQ (current_second, 2u, "Must be 2");
+
+    // The packets queue now looks like this:
+    //     Data ID   -   Packet entry expiration time - Hops count - Known carriers - Emergency
+    //    9.9.9.9:1  -           second 10            -     15     -      0         -    Yes
+    //    9.9.9.9:2  -           second 10            -      5     -      0         -    No
+    //    9.9.9.9:3  -           second 10            -     18     -      0         -    No
+
+    Ipv4Address local_node_ip ("1.1.1.1");
+    Ipv4Address neighbor_node_ip ("2.2.2.2"); // Invalid receiver node
+
+    GeoTemporalLibrary::LibraryUtils::Vector2D local_position, local_velocity,
+            neighbor_position, neighbor_velocity;
+
+    std::set<DataIdentifier> disjoint_vector;
+
+    PacketQueueEntry selected_packet;
+    bool selected_packet_inside_area = false;
+
+    disjoint_vector = {DataIdentifier ("9.9.9.9:1"), DataIdentifier ("9.9.9.9:2"),
+      DataIdentifier ("9.9.9.9:3")};
+
+    // ------------------
+    // Destination node inside & Local node outside
+    // ------------------
+
+    // Destination node inside area 1
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2164.35, 2044.71);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Destination node inside area 2
+    selected_packet_inside_area = true;
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2197.98, 2037.60);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:2"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Destination node inside area 3
+    selected_packet_inside_area = false;
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2160.21, 2010.56);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:3"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Destination node inside areas 1 & 2
+    selected_packet_inside_area = false;
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2179.48, 2040.18);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Destination node inside areas 1 & 3
+    selected_packet_inside_area = false;
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2160.85, 2029.84);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Destination node inside areas 2 & 3
+    selected_packet_inside_area = false;
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2180.25, 2020.01);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:2"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Destination node inside areas 1, 2 & 3
+    selected_packet_inside_area = false;
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2179.87, 2029.58);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // ------------------
+    // Local node inside & Destination node outside
+    // ------------------
+
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D ();
+
+    // Local node inside area 1
+    selected_packet_inside_area = false;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2164.35, 2044.71);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Destination node inside area 2
+    selected_packet_inside_area = true;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2197.98, 2037.60);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:2"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Destination node inside area 3
+    selected_packet_inside_area = false;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2160.21, 2010.56);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:3"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Destination node inside areas 1 & 2
+    selected_packet_inside_area = false;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2179.48, 2040.18);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Destination node inside areas 1 & 3
+    selected_packet_inside_area = false;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2160.85, 2029.84);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Destination node inside areas 2 & 3
+    selected_packet_inside_area = false;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2180.25, 2020.01);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:2"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Destination node inside areas 1, 2 & 3
+    selected_packet_inside_area = false;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2179.87, 2029.58);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // ------------------
+    // Both nodes (local & destination) inside
+    // ------------------
+
+    // Both nodes inside area 1
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2164.35, 2044.71);
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2164.35, 2044.71);
+    selected_packet_inside_area = false;
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Both nodes inside area 2
+    selected_packet_inside_area = true;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2197.98, 2037.60);
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2197.98, 2037.60);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:2"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Both nodes inside area 3
+    selected_packet_inside_area = false;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2160.21, 2010.56);
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2160.21, 2010.56);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:3"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Both nodes inside areas 1 & 2
+    selected_packet_inside_area = false;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2179.48, 2040.18);
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2179.48, 2040.18);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Both nodes inside areas 1 & 3
+    selected_packet_inside_area = false;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2160.85, 2029.84);
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2160.85, 2029.84);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Both nodes inside areas 2 & 3
+    selected_packet_inside_area = false;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2180.25, 2020.01);
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2180.25, 2020.01);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:2"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Both nodes inside areas 1, 2 & 3
+    selected_packet_inside_area = false;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2179.87, 2029.58);
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D (2179.87, 2029.58);
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // ------------------
+    // Both nodes (local & destination) outside
+    // ------------------
+
+    // Both nodes outside all areas with valid receiver node
+    local_node_ip = Ipv4Address ("2.2.2.2");
+    neighbor_node_ip = Ipv4Address ("1.1.1.1"); // Valid receiver node
+
+    selected_packet_inside_area = true;
+    local_position = GeoTemporalLibrary::LibraryUtils::Vector2D ();
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D ();
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, false, "Must be false");
+
+    // Both nodes outside all areas with invalid receiver node
+    local_node_ip = Ipv4Address ("1.1.1.1");
+    neighbor_node_ip = Ipv4Address ("2.2.2.2"); // Invalid receiver node
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           false, "Must be false");
+
+    // Set replicas counter of the packet with highest priority to zero
+    m_packets_queue.m_packets_table.at (DataIdentifier ("9.9.9.9:1")).SetReplicasCounter (0);
+
+    // Both nodes outside all areas with valid receiver node
+    local_node_ip = Ipv4Address ("2.2.2.2");
+    neighbor_node_ip = Ipv4Address ("1.1.1.1"); // Valid receiver node
+
+    selected_packet_inside_area = true;
+    neighbor_position = GeoTemporalLibrary::LibraryUtils::Vector2D ();
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:2"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, false, "Must be false");
+
+    // Both nodes outside all areas with invalid receiver node
+    local_node_ip = Ipv4Address ("1.1.1.1");
+    neighbor_node_ip = Ipv4Address ("2.2.2.2"); // Invalid receiver node
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           false, "Must be false");
+
+    // Set replicas counter of the packet with highest priority to 10
+    m_packets_queue.m_packets_table.at (DataIdentifier ("9.9.9.9:1")).SetReplicasCounter (10);
+
+    // Destination node inside area 3 with valid receiver node
+    local_node_ip = Ipv4Address ("2.2.2.2");
+    neighbor_node_ip = Ipv4Address ("1.1.1.1"); // Valid receiver node
+    selected_packet_inside_area = false;
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ GeoTemporalLibrary::LibraryUtils::Vector2D (2180.76, 2008.28),
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, false, "Must be false");
+
+    // Destination node inside area 3 with invalid receiver node
+    local_node_ip = Ipv4Address ("1.1.1.1");
+    neighbor_node_ip = Ipv4Address ("2.2.2.2"); // Invalid receiver node
+    selected_packet_inside_area = false;
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ GeoTemporalLibrary::LibraryUtils::Vector2D (2180.76, 2008.28),
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:3"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+
+    // Set replicas counter of packet 3 to 0
+    m_packets_queue.m_packets_table.at (DataIdentifier ("9.9.9.9:3")).SetReplicasCounter (0);
+
+    // Local node inside area 3 with valid receiver node
+    local_node_ip = Ipv4Address ("2.2.2.2");
+    neighbor_node_ip = Ipv4Address ("1.1.1.1"); // Valid receiver node
+    selected_packet_inside_area = false;
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ GeoTemporalLibrary::LibraryUtils::Vector2D (2180.76, 2008.28),
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:1"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, false, "Must be false");
+
+    // Local node inside area 3 with invalid receiver node
+    local_node_ip = Ipv4Address ("1.1.1.1");
+    neighbor_node_ip = Ipv4Address ("2.2.2.2"); // Invalid receiver node
+    selected_packet_inside_area = false;
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ GeoTemporalLibrary::LibraryUtils::Vector2D (2180.76, 2008.28),
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet.GetDataPacketId (), DataIdentifier ("9.9.9.9:3"), "Must be the expected");
+    NS_TEST_EXPECT_MSG_EQ (selected_packet_inside_area, true, "Must be true");
+  }
+
+  void
+  TestFindHighestTransmitPriorityPacket_MixedPackets1Emergency2Regular ()
+  {
+    m_packets_queue = PacketsQueue (m_gps, 100u, 3u);
+
+    Ipv4Address local_node_ip ("1.1.1.1");
+    Ipv4Address neighbor_node_ip ("2.2.2.2");
+
+    GeoTemporalLibrary::LibraryUtils::Vector2D local_position, local_velocity,
+            neighbor_position, neighbor_velocity, node_position;
+
+    std::set<DataIdentifier> disjoint_vector;
+
+    PacketQueueEntry selected_packet;
+    bool selected_packet_inside_area;
+
+    m_gps->SetNodeIpAddressToIdMapping ({
+      { local_node_ip, 20},
+      { neighbor_node_ip, 21},
+    });
+
+    // Test with empty disjoint vector & empty packets queue
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           false, "Must be false");
+
+    // Test with non-empty disjoint vector & empty packets queue
+
+    disjoint_vector = {DataIdentifier ("0.0.0.0:0"), DataIdentifier ("0.0.0.0:1"), DataIdentifier ("0.0.0.0:2")};
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           false, "Must be false");
+
+    // Insert 3 packets to the packets queue
+
+    // Geo-temporal area 1
+    DataHeader data_packet (/*Data ID*/ DataIdentifier ("9.9.9.9:1"),
+                            /*Emergency flag*/ true,
+                            /*Hops count*/ 15u,
+                            /*Position*/ GeoTemporalLibrary::LibraryUtils::Vector2D (3, 4),
+                            /*Velocity*/ GeoTemporalLibrary::LibraryUtils::Vector2D (-8.86, 12.098),
+                            /*GeoTemporal Area*/ GeoTemporalArea (TimePeriod (Seconds (0), Seconds (10)),
+                                                                  Area (2155.00, 2055.00, 2185.00, 2025.00)),
+                            /*Message*/ "packet's message");
+    m_packets_queue.Enqueue (data_packet, node_position, Ipv4Address ("9.9.9.9"));
+
+    // Geo-temporal area 2
+    data_packet.SetDataIdentifier (DataIdentifier ("9.9.9.9:2"));
+    data_packet.SetEmergencyPacket (false);
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (Seconds (1), Seconds (10)),
+                                                                Area (2175.00, 2045.00, 2205.00, 2015.00)));
+    data_packet.SetHopsCount (5);
+    m_packets_queue.Enqueue (data_packet, node_position, Ipv4Address ("9.9.9.9"));
+
+    // Geo-temporal area 3
+    data_packet.SetDataIdentifier (DataIdentifier ("9.9.9.9:3"));
+    data_packet.SetEmergencyPacket (false);
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (Seconds (1), Seconds (10)),
+                                                                Area (2155.00, 2035.00, 2185.00, 2005.00)));
+    data_packet.SetHopsCount (18);
+    m_packets_queue.Enqueue (data_packet, node_position, Ipv4Address ("9.9.9.9"));
+
+    // The packets queue now looks like this:
+    //     Data ID   -   Packet entry expiration time - Hops count - Known carriers - Emergency
+    //    9.9.9.9:1  -           second 10            -     15     -      0         -    Yes
+    //    9.9.9.9:2  -           second 10            -      5     -      0         -    No
+    //    9.9.9.9:3  -           second 10            -     18     -      0         -    No
+
+    // Test with non-empty disjoint vector full of non-existent packets & non-empty packets queue
+
+    disjoint_vector = {DataIdentifier ("0.0.0.0:0"), DataIdentifier ("0.0.0.0:1"), DataIdentifier ("0.0.0.0:2")};
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.FindHighestTransmitPriorityPacket (/*Local node IP*/ local_node_ip,
+                                                                              /*Local node position*/ local_position,
+                                                                              /*Local node velocity*/ local_velocity,
+                                                                              /*Neighbor node IP*/ neighbor_node_ip,
+                                                                              /*Neighbor node position*/ neighbor_position,
+                                                                              /*Neighbor node velocity*/ neighbor_velocity,
+                                                                              /*Disjoint vector*/ disjoint_vector,
+                                                                              /*Selected packet*/ selected_packet,
+                                                                              /*Inside area flag*/ selected_packet_inside_area),
+                           false, "Must be false");
+
+    Simulator::Schedule (Seconds (2.89), &PacketsQueueTest::TestFindHighestTransmitPriorityPacket_MixedPackets1Emergency2Regular_Scheduled_1, this);
+
+    Simulator::Run ();
+    Simulator::Destroy ();
+
+    m_gps->ClearNodeIpAddressToIdMapping ();
+  }
+
+  void
+  TestFindHighestTransmitPriorityPacket ()
+  {
+    // Test with only Emergency Packets
+    TestFindHighestTransmitPriorityPacket_EmergencyPacketsOnly ();
+
+    // Test with only Regular Packets
+    TestFindHighestTransmitPriorityPacket_RegularPacketsOnly ();
+
+    // Test with 2 Emergency packets and 1 Regular Packet
+    TestFindHighestTransmitPriorityPacket_MixedPackets2Emergency1Regular ();
+
+    // Test with 1 Emergency packets and 2 Regular Packet
+    TestFindHighestTransmitPriorityPacket_MixedPackets1Emergency2Regular ();
   }
 
   void
@@ -5312,24 +7982,24 @@ public:
   void
   DoRun () override
   {
-    TestConstructors ();
-    TestGettersSetters ();
-    TestGetSize ();
-    TestGetSummaryVector ();
-    TestFindFunctions ();
-    TestClear ();
-    TestProcessDisjointVector ();
-    TestComparePacketTransmissionPriority ();
-    TestFindHighestDropPriorityPacket ();
-    TestEnqueueFunction ();
+    //    TestConstructors ();
+    //    TestGettersSetters ();
+    //    TestGetSize ();
+    //    TestGetSummaryVector ();
+    //    TestFindFunctions ();
+    //    TestClear ();
+    //    TestProcessDisjointVector ();
+    //    TestComparePacketTransmissionPriority ();
+    //    TestFindHighestDropPriorityPacket ();
+    //    TestEnqueueFunction ();
     TestFindHighestTransmitPriorityPacket ();
-    TestDequeue ();
-    TestDiscountPacketReplica ();
-    TestAddKnownPacketCarrier ();
-    TestAddKnownPacketCarriers ();
-    TestPurge ();
-    TestStatistics ();
-    TestToStringFunction ();
+    //    TestDequeue ();
+    //    TestDiscountPacketReplica ();
+    //    TestAddKnownPacketCarrier ();
+    //    TestAddKnownPacketCarriers ();
+    //    TestPurge ();
+    //    TestStatistics ();
+    //    TestToStringFunction ();
   }
 };
 

@@ -68,8 +68,9 @@ m_ipv4_interfaces_container (), m_net_devices_container (), m_nodes_container ()
 m_gps_system (0), m_random_destination_gtas (0), m_node_id_to_ip (),
 m_simulation_number (1u), m_simulation_duration (600u),
 m_data_packet_source_vehicles_count (8u), m_data_packets_per_source (2u),
-m_data_packet_message_size (128u), m_data_packets_data_rate (5u),
-m_mobility_scenario_id ("60"),
+m_emergency_data_packets_ratio (0.0), m_emergency_data_packets_per_source (0u),
+m_normal_data_packets_per_source (0u), m_data_packet_message_size (128u),
+m_data_packets_data_rate (5u), m_mobility_scenario_id ("60"),
 m_vehicles_count (2u), m_fixed_nodes_distance (200u),
 m_use_80211p_mac_protocol (false), m_progress_report_time_interval (25u),
 m_hello_packets_interval (1000u), m_packets_queue_capacity (128u),
@@ -94,6 +95,9 @@ m_simulation_number (copy.m_simulation_number),
 m_simulation_duration (copy.m_simulation_duration),
 m_data_packet_source_vehicles_count (copy.m_data_packet_source_vehicles_count),
 m_data_packets_per_source (copy.m_data_packets_per_source),
+m_emergency_data_packets_ratio (copy.m_emergency_data_packets_ratio),
+m_emergency_data_packets_per_source (copy.m_emergency_data_packets_per_source),
+m_normal_data_packets_per_source (copy.m_normal_data_packets_per_source),
 m_data_packet_message_size (copy.m_data_packet_message_size),
 m_data_packets_data_rate (copy.m_data_packets_data_rate),
 m_mobility_scenario_id (copy.m_mobility_scenario_id),
@@ -145,6 +149,11 @@ GeoTemporalInstaller::Configure (int argc, char** argv)
                 "The number of DATA packets generated at each source node. "
                 "[Default value: 2]",
                 m_data_packets_per_source);
+
+  cmd.AddValue ("emergencyDataPacketsRatio",
+                "The ratio of emergency DATA packets generated at each source "
+                "node. [Default value: 0.0]",
+                m_emergency_data_packets_ratio);
 
   cmd.AddValue ("dataPacketMessageSize",
                 "The size (in bytes) of the message to disseminate. "
@@ -233,8 +242,13 @@ GeoTemporalInstaller::Configure (int argc, char** argv)
 
   cmd.Parse (argc, argv);
 
+  // Validations
   if (m_simulation_number == 0u)
     NS_ABORT_MSG ("Invalid simulation number. The minimum valid value is 1.");
+
+  if (m_emergency_data_packets_ratio < 0.0 || m_emergency_data_packets_ratio > 1.0)
+    NS_ABORT_MSG ("The ratio of emergency DATA packets must be between 0.0 and "
+                  "1.0, including both limits.");
 
   // Configure the name of the mobility related files.
   if (m_mobility_scenario_id == "20")
@@ -491,6 +505,22 @@ GeoTemporalInstaller::Configure (int argc, char** argv)
               Create<RandomDestinationGeoTemporalAreasLists> (m_random_destination_gta_input_filename);
     }
 
+  // Compute the number of emergency packets
+  if (m_emergency_data_packets_ratio > 0.0)
+    {
+      m_emergency_data_packets_per_source =
+              (uint32_t) std::round ((double) m_data_packets_per_source * m_emergency_data_packets_ratio);
+      m_normal_data_packets_per_source = m_data_packets_per_source - m_emergency_data_packets_per_source;
+    }
+  else
+    {
+      m_emergency_data_packets_per_source = 0u;
+      m_normal_data_packets_per_source = m_data_packets_per_source;
+    }
+
+  NS_ASSERT (m_normal_data_packets_per_source + m_emergency_data_packets_per_source
+             == m_data_packets_per_source);
+
   return true;
 }
 
@@ -503,10 +533,16 @@ GeoTemporalInstaller::Run ()
 
   std::cout << "Parameters:\n";
 
+  const double emergency_packets_ptg = m_emergency_data_packets_ratio * 100.0;
+  const double real_emergency_packets_ptg
+          = (double) m_emergency_data_packets_per_source / (double) m_data_packets_per_source * 100.0;
+
   std::cout << " - Simulation Number               :  " << m_simulation_number << "\n";
   std::cout << " - Simulation duration             :  " << m_simulation_duration << " seconds\n";
   std::cout << " - Number of source vehicle nodes  :  " << m_data_packet_source_vehicles_count << " vehicles\n";
-  std::cout << " - Data packets per source node    :  " << m_data_packets_per_source << " packets\n";
+  std::cout << " - Data packets per source node    :  " << m_data_packets_per_source
+          << " packets (" << m_normal_data_packets_per_source << " normal, " << m_emergency_data_packets_per_source << " emergency)\n";
+  std::cout << " - Emergency packets percentage    :  " << emergency_packets_ptg << " % (" << real_emergency_packets_ptg << " % real)\n";
   std::cout << " - Data packet message size        :  " << m_data_packet_message_size << " bytes\n";
   std::cout << " - Data packets data rate          :  " << m_data_packets_data_rate << " milliseconds\n";
   std::cout << " - Mobility scenario ID            :  " << m_mobility_scenario_id << "\n";
@@ -699,7 +735,8 @@ GeoTemporalInstaller::InstallInternetStack ()
                                             node_id));
     }
 
-  m_gps_system->SetNodeIpAddressToIdMapping (node_ip_to_id);
+  if (m_mobility_scenario_id != "fixed")
+    m_gps_system->SetNodeIpAddressToIdMapping (node_ip_to_id);
 
   std::cout << "Done.\n";
 }
@@ -855,7 +892,7 @@ GeoTemporalInstaller::InstallAplications ()
                   << node_ip << "... ";
 
           dest_gta = DestinationGeoTemporalArea (source_node_index,
-                                                 TimePeriod (Seconds (11), Seconds (31)),
+                                                 TimePeriod (Seconds (11), Seconds (21)),
                                                  Area (0, 0, 150, 150));
 
           app = CreateObject<GeoTemporalApplication> ();
@@ -866,7 +903,8 @@ GeoTemporalInstaller::InstallAplications ()
                                           /*Destination geo-temporal area*/ dest_gta,
                                           /*Data rate*/ m_data_packets_data_rate,
                                           /*Packets size*/ m_data_packet_message_size,
-                                          /*Packets number*/ m_data_packets_per_source);
+                                          /*Normal packets number*/ m_normal_data_packets_per_source,
+                                          /*Emergency packets number*/ m_emergency_data_packets_per_source);
 
           node->AddApplication (app);
 
@@ -918,7 +956,8 @@ GeoTemporalInstaller::InstallAplications ()
                                           /*Destination geo-temporal area*/ (GeoTemporalArea) dest_gta,
                                           /*Data rate*/ m_data_packets_data_rate,
                                           /*Packets size*/ m_data_packet_message_size,
-                                          /*Packets number*/ m_data_packets_per_source);
+                                          /*Normal packets number*/ m_normal_data_packets_per_source,
+                                          /*Emergency packets number*/ m_emergency_data_packets_per_source);
 
           node->AddApplication (app);
 

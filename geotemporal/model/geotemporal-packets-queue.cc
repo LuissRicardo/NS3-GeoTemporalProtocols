@@ -285,76 +285,91 @@ PacketsQueue::FindHighestDropPriorityPacket (const Vector2D& current_node_positi
    * lower transmission priority than B. Because another way to look at it is
    * that A has higher drop priority than B.
    * 
-   * The packet with the lowest transmission priority is the one that has
-   * traveled the most hops.
-   * 
-   * If possible, try to find a packet that is not inside its destination area
-   * during its active time and has the lowest possible transmission priority.
+   * If possible, try to find a regular packet that is outside its destination
+   * GTA and has the lowest possible transmission priority.
    */
 
   const Time current_time = Simulator::Now ();
 
-  // The first packet in the queue has the lowest transmission priority seen so far.
-  ConstIterator_t lowest_priority_it = m_packets_table.begin ();
+  ConstIterator_t lowest_priority_emergency_pkt_it = m_packets_table.end ();
+  ConstIterator_t lowest_priority_emergency_pkt_not_in_gta_it = m_packets_table.end ();
 
-  // If the first packet in the queue is not inside its destination geo-temporal area
-  // then it has the lowest transmission priority from the packets that are not
-  // inside its destination GTA seen so far.
-  ConstIterator_t lowest_priority_not_in_gta_it;
+  ConstIterator_t lowest_priority_regular_pkt_it = m_packets_table.end ();
+  ConstIterator_t lowest_priority_regular_pkt_not_in_gta_it = m_packets_table.end ();
 
-  if (!m_packets_table.begin ()->second.GetDataPacket ().GetDestinationGeoTemporalArea ()
-      .IsInsideGeoTemporalArea (current_node_position, current_time))
+  for (ConstIterator_t packet_entry_it = m_packets_table.begin ();
+          packet_entry_it != m_packets_table.end (); ++packet_entry_it)
     {
-      lowest_priority_not_in_gta_it = m_packets_table.begin ();
+      const DataHeader & current_data_packet = packet_entry_it->second.GetDataPacket ();
+      const bool outside_gta = !current_data_packet.GetDestinationGeoTemporalArea ()
+              .IsInsideGeoTemporalArea (current_node_position, current_time);
+
+      if (current_data_packet.IsEmergencyPacket ())
+        {
+          // If the current emergency data packet is the one with the lowest 
+          // transmission priority then select it.
+          if (lowest_priority_emergency_pkt_it == m_packets_table.end ()
+              || ComparePacketTransmissionPriority (*packet_entry_it, *lowest_priority_emergency_pkt_it))
+            {
+              lowest_priority_emergency_pkt_it = packet_entry_it;
+            }
+
+          // If the current emergency data packet is outside its destination GTA
+          // and has lower transmission priority than the currently selected
+          // packet then select it.
+          if (outside_gta
+              && (lowest_priority_emergency_pkt_not_in_gta_it == m_packets_table.end ()
+                  || ComparePacketTransmissionPriority (*packet_entry_it, *lowest_priority_emergency_pkt_not_in_gta_it)))
+            {
+              lowest_priority_emergency_pkt_not_in_gta_it = packet_entry_it;
+            }
+        }
+      else
+        {
+          // If the current regular data packet is the one with the lowest 
+          // transmission priority then select it.
+          if (lowest_priority_regular_pkt_it == m_packets_table.end ()
+              || ComparePacketTransmissionPriority (*packet_entry_it, *lowest_priority_regular_pkt_it))
+            {
+              lowest_priority_regular_pkt_it = packet_entry_it;
+            }
+
+          // If the current regular data packet is outside its destination GTA
+          // and has lower transmission priority than the currently selected
+          // packet then select it.
+          if (outside_gta
+              && (lowest_priority_regular_pkt_not_in_gta_it == m_packets_table.end ()
+                  || ComparePacketTransmissionPriority (*packet_entry_it, *lowest_priority_regular_pkt_not_in_gta_it)))
+            {
+              lowest_priority_regular_pkt_not_in_gta_it = packet_entry_it;
+            }
+        }
+    }
+
+  // Select the packet with the lowest priority.
+  if (lowest_priority_regular_pkt_not_in_gta_it != m_packets_table.end ())
+    {
+      selected_packet = lowest_priority_regular_pkt_not_in_gta_it->first;
+      NS_LOG_DEBUG ("Regular packet outside its destination geo-temporal area selected: " << selected_packet);
+    }
+  else if (lowest_priority_regular_pkt_it != m_packets_table.end ())
+    {
+      selected_packet = lowest_priority_regular_pkt_it->first;
+      NS_LOG_DEBUG ("Regular packet inside its destination geo-temporal area selected: " << selected_packet);
+    }
+  else if (lowest_priority_emergency_pkt_not_in_gta_it != m_packets_table.end ())
+    {
+      selected_packet = lowest_priority_emergency_pkt_not_in_gta_it->first;
+      NS_LOG_DEBUG ("Emergency packet outside its destination geo-temporal area selected: " << selected_packet);
+    }
+  else if (lowest_priority_emergency_pkt_it != m_packets_table.end ())
+    {
+      selected_packet = lowest_priority_emergency_pkt_it->first;
+      NS_LOG_DEBUG ("Emergency packet inside its destination geo-temporal area selected: " << selected_packet);
     }
   else
     {
-      lowest_priority_not_in_gta_it = m_packets_table.end ();
-    }
-
-  // Iterate through the rest of the packets (starts from the second one).
-  for (ConstIterator_t entry_it = std::next (m_packets_table.begin ());
-          entry_it != m_packets_table.end (); ++entry_it)
-    {
-      // First, from all the packets find the one with the lowest transmission 
-      // priority.
-      if (ComparePacketTransmissionPriority (*entry_it, *lowest_priority_it))
-        {
-          // Entry_it has LOWER transmission priority than lowest_priority_it,
-          // so entry_it becomes the packet with the lowest transmission
-          // priority so far.
-          lowest_priority_it = entry_it;
-        }
-
-      // Second, only from the packets that are NOT inside its destination GTA,
-      // if any exists, find the one with the lowest transmission priority.
-      if (entry_it->second.GetDataPacket ().GetDestinationGeoTemporalArea ()
-          .IsInsideGeoTemporalArea (current_node_position, current_time))
-        continue; // Packet is inside its destination GTA, continue to the next.
-
-      // The packet is not inside its destination geo-temporal area, it may be 
-      // safely dropped
-      if (lowest_priority_not_in_gta_it == m_packets_table.end ()
-          || ComparePacketTransmissionPriority (*entry_it, *lowest_priority_not_in_gta_it))
-        {
-          // Entry_it has LOWER transmission priority than not_in_gta_lowest_priority_it,
-          // so entry_it becomes the packet with the lowest transmission priority
-          // so far that is not inside its destination geo-temporal area.
-          lowest_priority_not_in_gta_it = entry_it;
-        }
-    }
-
-  // If a packet not inside its destination GTA was found then it is the selected.
-  // Otherwise return the one with lowest tranmission priority.
-  if (lowest_priority_not_in_gta_it != m_packets_table.end ())
-    {
-      selected_packet = lowest_priority_not_in_gta_it->first;
-      NS_LOG_DEBUG ("Packet not inside its destination geo-temporal area selected: " << selected_packet);
-    }
-  else
-    {
-      selected_packet = lowest_priority_it->first;
-      NS_LOG_DEBUG ("Packet inside its destination geo-temporal area selected: " << selected_packet);
+      NS_ABORT_MSG ("A packet should have been selected.");
     }
 
   return true;
@@ -428,7 +443,7 @@ PacketsQueue::FindHighestTransmitPriorityPacket (const Ipv4Address & local_node_
                                                  const Vector2D& neighbor_velocity,
                                                  const std::set<DataIdentifier>& disjoint_vector,
                                                  PacketQueueEntry& selected_packet,
-                                                 bool & high_priority) const
+                                                 bool & inside_area_flag) const
 {
   NS_LOG_FUNCTION (this << " disjoint vector size " << disjoint_vector.size ()
                    << " local node IP " << local_node_ip
@@ -438,6 +453,12 @@ PacketsQueue::FindHighestTransmitPriorityPacket (const Ipv4Address & local_node_
   NS_ABORT_MSG_IF (m_gps == 0,
                    "A pointer to a valid GPS System object must be set in this "
                    "PacketsQueue object.");
+
+  if (Size () == 0u)
+    {
+      NS_LOG_DEBUG ("Packets queue is empty, nothing to send.");
+      return false;
+    }
 
   if (disjoint_vector.empty ())
     {
@@ -452,13 +473,17 @@ PacketsQueue::FindHighestTransmitPriorityPacket (const Ipv4Address & local_node_
   // being processed.
   ConstIterator_t requested_packet_it;
 
-  // High priority packet: Is inside its destination geo-temporal area. Must be 
-  // transmitted before other packets that aren't inside its destination 
-  // geo-temporal area.
-  ConstIterator_t high_priority_packet_it = m_packets_table.end ();
+  // Emergency packet that is inside its destination geo-temporal area.
+  ConstIterator_t emergency_high_priority_it = m_packets_table.end ();
 
-  // Normal priority packet: Is not inside its destination geo-temporal area.
-  ConstIterator_t normal_priority_packet_it = m_packets_table.end ();
+  // Emergency packet that is outside its destination geo-temporal area.
+  ConstIterator_t emergency_low_priority_it = m_packets_table.end ();
+
+  // Normal packet that is inside its destination geo-temporal area.
+  ConstIterator_t normal_high_priority_it = m_packets_table.end ();
+
+  // Normal packet that is outside its destination geo-temporal area.
+  ConstIterator_t normal_low_priority_it = m_packets_table.end ();
 
   try
     {
@@ -477,6 +502,7 @@ PacketsQueue::FindHighestTransmitPriorityPacket (const Ipv4Address & local_node_
 
           const DataHeader & data_packet = requested_packet_it->second.GetDataPacket ();
           const GeoTemporalArea & destination_gta = data_packet.GetDestinationGeoTemporalArea ();
+          const bool emergency_packet = data_packet.IsEmergencyPacket ();
 
           /* Determine if there's is a packet inside its destination geo-temporal area,
            * if so, it has higher priority to be dequeued because it needs to be 
@@ -487,41 +513,89 @@ PacketsQueue::FindHighestTransmitPriorityPacket (const Ipv4Address & local_node_
                   = destination_gta.IsInsideGeoTemporalArea (local_position, current_time);
           const bool neighbor_node_inside_gta
                   = destination_gta.IsInsideGeoTemporalArea (neighbor_position, current_time);
+          const bool inside_gta = local_node_inside_gta || neighbor_node_inside_gta;
 
-          // If the current packet has higher priority than the currently selected high priority packet
-          // either the current node or the neighbor node is inside the destination geo-temporal area,
-          // then select it as the high priority packet.
-          if ((high_priority_packet_it == m_packets_table.end ()
-               || ComparePacketTransmissionPriority (*high_priority_packet_it, *requested_packet_it))
-              && (local_node_inside_gta || neighbor_node_inside_gta))
+          // If the current packet:
+          // - Is an emergency packet, and
+          // - Is inside its destination geo-temporal area, and
+          // - Has better priority than the currently selected emergency high-priority packet.
+          // Then the current packet is emergency high-priority packet.
+          if (emergency_packet
+              && inside_gta
+              && (emergency_high_priority_it == m_packets_table.end ()
+                  || ComparePacketTransmissionPriority (*emergency_high_priority_it, *requested_packet_it)))
             {
-              NS_LOG_DEBUG ("High priority packet " << *data_id_it << " selected.");
-              high_priority_packet_it = requested_packet_it;
+              NS_LOG_DEBUG ("Emergency high priority packet " << *data_id_it << " selected.");
+              emergency_high_priority_it = requested_packet_it;
               continue;
             }
 
-          // If a high priority packet is selected stop testing normal priority.
-          if (high_priority_packet_it != m_packets_table.end ())
+          // Emergency high-priority packet already found, stop looking for lower priorities.
+          if (emergency_high_priority_it != m_packets_table.end ())
             continue;
 
-          /* The packet has normal priority, compare it against the currently selected
-           * normal priority packet. */
+          const bool replicas_remaining = requested_packet_it->second.GetReplicasCounter () > 0u;
+          const bool valid_carrier = m_gps->IsVehicleValidPacketCarrier (/*Neighbor node IP*/ neighbor_node_ip,
+                                                                         /*Carrier node IP*/ local_node_ip,
+                                                                         /*Destination area*/ destination_gta.GetArea (),
+                                                                         /*Current time (second)*/ current_second,
+                                                                         /*Min. dist. diff.*/ m_min_vehicles_distance_diff);
 
-          // If the current packet has higher priority than the currently selected normal priority packet
-          // AND has packet replicas remaining
-          // AND the destination node is a valid carrier,
-          // then select it as the normal priority packet.
-          if ((normal_priority_packet_it == m_packets_table.end ()
-               || ComparePacketTransmissionPriority (*normal_priority_packet_it, *requested_packet_it))
-              && requested_packet_it->second.GetReplicasCounter () > 0
-              && m_gps->IsVehicleValidPacketCarrier (/*Neighbor node IP*/ neighbor_node_ip,
-                                                     /*Carrier node IP*/ local_node_ip,
-                                                     /*Destination area*/ destination_gta.GetArea (),
-                                                     /*Current time (sec)*/ current_second,
-                                                     /*Min dist. diff.*/ m_min_vehicles_distance_diff))
+          // If the current packet:
+          // - Is an emergency packet, and
+          // - Has remaining replicas to forward, and
+          // - The neighbor node is a valid data-carrier, and
+          // - Has better priority than the currently selected emergency low-priority packet.
+          // Then the current packet is emergency low-priority packet.
+          if (emergency_packet
+              && replicas_remaining
+              && valid_carrier
+              && (emergency_low_priority_it == m_packets_table.end ()
+                  || ComparePacketTransmissionPriority (*emergency_low_priority_it, *requested_packet_it)))
             {
-              NS_LOG_DEBUG ("Normal priority packet " << *data_id_it << " selected.");
-              normal_priority_packet_it = requested_packet_it;
+              NS_LOG_DEBUG ("Emergency low priority packet " << *data_id_it << " selected.");
+              emergency_low_priority_it = requested_packet_it;
+              continue;
+            }
+
+          // Emergency low-priority packet already found, stop looking for lower priorities.
+          if (emergency_low_priority_it != m_packets_table.end ())
+            continue;
+
+          // If the current packet:
+          // - Is a normal packet (not an emergency), and
+          // - Is inside its destination geo-temporal area, and
+          // - Has better priority than the currently selected normal high-priority packet.
+          // Then the current packet is normal high-priority packet.
+          if (!emergency_packet
+              && inside_gta
+              && (normal_high_priority_it == m_packets_table.end ()
+                  || ComparePacketTransmissionPriority (*normal_high_priority_it, *requested_packet_it)))
+            {
+              NS_LOG_DEBUG ("Normal high priority packet " << *data_id_it << " selected.");
+              normal_high_priority_it = requested_packet_it;
+              continue;
+            }
+
+          // Normal high-priority packet already found, stop looking for lower priorities.
+          if (normal_high_priority_it != m_packets_table.end ())
+            continue;
+
+          // If the current packet:
+          // - Is a normal packet (not an emergency), and
+          // - Has remaining replicas to forward, and
+          // - The neighbor node is a valid data-carrier, and
+          // - Has better priority than the currently selected normal low-priority packet.
+          // Then the current packet is normal low-priority packet.
+          if (!emergency_packet
+              && replicas_remaining
+              && valid_carrier
+              && (normal_low_priority_it == m_packets_table.end ()
+                  || ComparePacketTransmissionPriority (*normal_low_priority_it, *requested_packet_it)))
+            {
+              NS_LOG_DEBUG ("Normal low priority packet " << *data_id_it << " selected.");
+              normal_low_priority_it = requested_packet_it;
+              continue;
             }
         }
     }
@@ -532,25 +606,43 @@ PacketsQueue::FindHighestTransmitPriorityPacket (const Ipv4Address & local_node_
     }
 
   // If no packet was selected return false
-  if (high_priority_packet_it == m_packets_table.end ()
-      && normal_priority_packet_it == m_packets_table.end ())
+  if (emergency_high_priority_it == m_packets_table.end ()
+      && emergency_low_priority_it == m_packets_table.end ()
+      && normal_high_priority_it == m_packets_table.end ()
+      && normal_low_priority_it == m_packets_table.end ())
     {
       NS_LOG_DEBUG ("No requested packet was selected.");
       return false;
     }
 
-  // If a high priority packet was selected
-  if (high_priority_packet_it != m_packets_table.end ())
+  // Return the selected packet with the highest priority
+  if (emergency_high_priority_it != m_packets_table.end ())
     {
-      selected_packet = high_priority_packet_it->second;
-      high_priority = true;
-      NS_LOG_DEBUG ("High priority packet selected: " << selected_packet.GetDataPacketId ());
+      selected_packet = emergency_high_priority_it->second;
+      inside_area_flag = true;
+      NS_LOG_DEBUG ("Emergency high priority packet " << selected_packet.GetDataPacketId () << " selected.");
     }
-  else // If a normal priority packet was selected
+  else if (emergency_low_priority_it != m_packets_table.end ())
     {
-      selected_packet = normal_priority_packet_it->second;
-      high_priority = false;
-      NS_LOG_DEBUG ("Normal priority packet selected: " << selected_packet.GetDataPacketId ());
+      selected_packet = emergency_low_priority_it->second;
+      inside_area_flag = false;
+      NS_LOG_DEBUG ("Emergency low priority packet " << selected_packet.GetDataPacketId () << " selected.");
+    }
+  else if (normal_high_priority_it != m_packets_table.end ())
+    {
+      selected_packet = normal_high_priority_it->second;
+      inside_area_flag = true;
+      NS_LOG_DEBUG ("Normal high priority packet " << selected_packet.GetDataPacketId () << " selected.");
+    }
+  else if (normal_low_priority_it != m_packets_table.end ())
+    {
+      selected_packet = normal_low_priority_it->second;
+      inside_area_flag = false;
+      NS_LOG_DEBUG ("Normal low priority packet " << selected_packet.GetDataPacketId () << " selected.");
+    }
+  else
+    {
+      NS_ABORT_MSG ("A packet should have been selected.");
     }
 
   return true;
@@ -571,13 +663,14 @@ PacketsQueue::Dequeue (const Ipv4Address& local_node_ip,
                    << " neighbor node IP " << neighbor_node_ip
                    << " gps " << m_gps);
 
-  if (Size () == 0 || disjoint_vector.empty ())
+  if (Size () == 0u || disjoint_vector.empty ())
     {
       NS_LOG_DEBUG ("No packets to send.");
       return false;
     }
 
-  bool selected_high_priority_packet = false;
+  // Flag that indicates if the selected packet is inside its destination area.
+  bool inside_area_flag = false;
 
   // Find the packet with highest priority to transmit it
   if (!FindHighestTransmitPriorityPacket (local_node_ip,
@@ -588,7 +681,7 @@ PacketsQueue::Dequeue (const Ipv4Address& local_node_ip,
                                           neighbor_velocity,
                                           disjoint_vector,
                                           selected_packet,
-                                          selected_high_priority_packet))
+                                          inside_area_flag))
     {
       // No packet was selected to be transmitted.
       NS_LOG_DEBUG ("No packet selected to be transmitted.");
@@ -597,8 +690,8 @@ PacketsQueue::Dequeue (const Ipv4Address& local_node_ip,
 
   // A packet was selected to be transmitted.
 
-  // If the packet has normal priority then decrement a replica
-  if (!selected_high_priority_packet)
+  // If the selected packet is OUTSIDE the geo-temporal area then decrement a replica
+  if (!inside_area_flag)
     {
       NS_LOG_DEBUG ("Selected packet with normal priority, discount 1 packet replica.");
       DiscountPacketReplica (selected_packet.GetDataPacketId ());

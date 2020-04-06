@@ -855,7 +855,7 @@ RoutingProtocol::RecvDataPacket (Ptr<Packet> received_packet, const Ipv4Address&
       // Received a DATA packet
       received_packet->RemoveHeader (data_header);
       NS_LOG_DEBUG ("Received DATA packet " << data_header.GetDataIdentifier ()
-                    << " from " << sender_node_ip);
+                    << " from node " << sender_node_ip);
     }
   else
     {
@@ -876,6 +876,7 @@ RoutingProtocol::RecvDataPacket (Ptr<Packet> received_packet, const Ipv4Address&
 
   // Increment hops count
   data_header.SetHopsCount (data_header.GetHopsCount () + 1u);
+  NS_LOG_DEBUG ("Received DATA packet with incremented hops count: " << data_header);
 
   Vector2D my_position, my_velocity;
   GetNodeMobility (my_position, my_velocity);
@@ -941,6 +942,17 @@ RoutingProtocol::NewMessage (const std::string& message,
 {
   NS_LOG_FUNCTION (this << destination_gta << " message size " << message.size ());
 
+  NewMessage (message, destination_gta, false);
+}
+
+void
+RoutingProtocol::NewMessage (const std::string& message,
+                             const GeoTemporalArea& destination_gta,
+                             const bool emergency_flag)
+{
+  NS_LOG_FUNCTION (this << destination_gta << " message size " << message.size ()
+                   << (emergency_flag ? " EMERGENCY PACKET " : " NORMAL PACKET "));
+
   const Ipv4Address local_ip = m_selected_interface_address.GetLocal ();
 
   const DataIdentifier data_id (local_ip, m_data_sequential_id++);
@@ -949,6 +961,7 @@ RoutingProtocol::NewMessage (const std::string& message,
   GetNodeMobility (my_position, my_velocity);
 
   const DataHeader data_packet (/*Data ID*/ data_id,
+                                /*Emergency flag*/ emergency_flag,
                                 /*Hops count*/ 0u,
                                 /*Node position*/ my_position,
                                 /*Node velocity*/ my_velocity,
@@ -1255,12 +1268,12 @@ RoutingProtocol::SendAckPacket (const Ipv4Address& destination_node,
       uint32_t packet_size = RoutingProtocol::CalculateCompletePacketSize (packet_to_send);
       m_tx_packets_counter.CountPacket (PacketClass::Control, packet_size);
 
-      NS_LOG_DEBUG ("REPLY_BACK packet sent from " << m_selected_interface_address.GetLocal ()
+      NS_LOG_DEBUG ("ACK packet sent from " << m_selected_interface_address.GetLocal ()
                     << " to " << destination_node);
     }
   else
     {
-      NS_LOG_DEBUG ("REPLY_BACK packet could not be sent to " << destination_node
+      NS_LOG_DEBUG ("ACK packet could not be sent to " << destination_node
                     << " (maybe node is disabled).");
     }
 }

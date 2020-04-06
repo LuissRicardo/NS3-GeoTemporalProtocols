@@ -708,10 +708,10 @@ operator<< (std::ostream & os, const AckHeader & obj)
  * DATA packet header
  * 
   \verbatim
-  0                   1                   2                   3
-  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   0                   1                   2                   3
+   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-  |   TypeHeader  |     Flags     |      DATA ID SEQ number       |
+  |   TypeHeader  |   Sign Flags  |      DATA ID SEQ number       |
   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
   |                   DATA ID Source IP Address                   |
   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -747,8 +747,10 @@ operator<< (std::ostream & os, const AckHeader & obj)
   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
   |     Initial time (seconds)    |      Duration (seconds)       |
   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-  |                  Message (maximum 1024 bytes)                 |
-  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  |E|   Unused    |   Message...  |   Terminator  |  E = Emergency flag
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   0                   1                   2                   3
   \endverbatim
  */
 class DataHeader : public Header
@@ -757,6 +759,13 @@ protected:
 
   /** The identifier of the DATA packet. */
   DataIdentifier m_data_id;
+
+  /**
+   * If enabled, it indicates that the packet has high priority, is an emergency
+   * packet. Otherwise, when disabled, it indicates that the packet doesn't have
+   * high priority.
+   */
+  bool m_emergency_flag;
 
   /**
    * Indicates how far the packet has traveled away from the source node, the 
@@ -791,6 +800,14 @@ public:
               const GeoTemporalArea & destination_geo_temporal_area,
               const std::string message);
 
+  DataHeader (const DataIdentifier & data_id,
+              const bool emergency_flag,
+              const uint32_t hops_count,
+              const GeoTemporalLibrary::LibraryUtils::Vector2D & position,
+              const GeoTemporalLibrary::LibraryUtils::Vector2D & velocity,
+              const GeoTemporalArea & destination_geo_temporal_area,
+              const std::string message);
+
   DataHeader (const DataHeader & copy);
 
 
@@ -808,6 +825,18 @@ public:
   SetDataIdentifier (const DataIdentifier & data_id)
   {
     m_data_id = data_id;
+  }
+
+  inline const bool
+  IsEmergencyPacket () const
+  {
+    return m_emergency_flag;
+  }
+
+  inline void
+  SetEmergencyPacket (const bool emergency_flag)
+  {
+    m_emergency_flag = emergency_flag;
   }
 
   uint32_t
@@ -914,6 +943,7 @@ inline bool
 operator== (const DataHeader & lhs, const DataHeader & rhs)
 {
   return lhs.m_data_id == rhs.m_data_id
+          && lhs.m_emergency_flag == rhs.m_emergency_flag
           && lhs.m_hops_count == rhs.m_hops_count
           && lhs.m_position == rhs.m_position
           && lhs.m_velocity == rhs.m_velocity
@@ -947,14 +977,14 @@ operator<< (std::ostream & os, const DataHeader & obj)
  * DATA packet header
  * 
   \verbatim
-  0                   1                   2                   3
-  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   0                   1                   2                   3
+   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-  |   TypeHeader  |     Flags     |Source SEQ # of the pkt to ACK |
+  |   TypeHeader  |   Sign Flags  |Source SEQ # of the pkt to ACK |
   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
   |    Source IP address of the received packet to acknowledge    |
   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-  |      Not used / reserved      |      DATA ID SEQ number       |
+  |E|           Unused            |      DATA ID SEQ number       |  E = Emergency flag
   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
   |                   DATA ID Source IP Address                   |
   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -990,8 +1020,10 @@ operator<< (std::ostream & os, const DataHeader & obj)
   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
   |     Initial time (seconds)    |      Duration (seconds)       |
   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-  |                  Message (maximum 1024 bytes)                 |
-  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  |   Message...  |   Terminator  |
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   0                   1                   2                   3
   \endverbatim
  */
 class DataAckHeader : public DataHeader
@@ -1001,7 +1033,7 @@ private:
   /** Data identifier of the DATA packet to acknowledge. */
   DataIdentifier m_data_id_to_ack;
 
-  uint16_t m_reserved; // Not used
+  uint8_t m_reserved; // Not used
 
 
 public:
@@ -1010,6 +1042,15 @@ public:
 
   DataAckHeader (const DataIdentifier & data_id_to_ack,
                  const DataIdentifier & data_id,
+                 const uint32_t hops_count,
+                 const GeoTemporalLibrary::LibraryUtils::Vector2D & position,
+                 const GeoTemporalLibrary::LibraryUtils::Vector2D & velocity,
+                 const GeoTemporalArea & destination_geo_temporal_area,
+                 const std::string message);
+
+  DataAckHeader (const DataIdentifier & data_id_to_ack,
+                 const DataIdentifier & data_id,
+                 const bool emergency_flag,
                  const uint32_t hops_count,
                  const GeoTemporalLibrary::LibraryUtils::Vector2D & position,
                  const GeoTemporalLibrary::LibraryUtils::Vector2D & velocity,

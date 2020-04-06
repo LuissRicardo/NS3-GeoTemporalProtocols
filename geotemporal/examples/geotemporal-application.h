@@ -66,7 +66,9 @@ private:
 
   uint32_t m_data_rate;
   uint32_t m_packet_size;
-  uint32_t m_packets_number;
+  uint32_t m_normal_packets_number;
+  uint32_t m_emergency_packets_number;
+  uint32_t m_total_packets_number;
   bool m_multiple_messages;
 
   std::vector<char> m_characters_list;
@@ -83,11 +85,27 @@ public:
                          const GeoTemporalArea & destination_geo_temporal_area,
                          const std::string & message);
 
+  /**
+   * This function configures the node to generate <code>packets_number</code>
+   * packets with normal priority.
+   */
   void ConfigureMultipleMessages (Ptr<Node> source_node,
                                   const GeoTemporalArea & destination_geo_temporal_area,
                                   const uint32_t data_rate,
                                   const uint32_t packets_size,
                                   const uint32_t packets_number);
+
+  /**
+   * This function configures the node to generate <code>normal_packets_number
+   * </code> packets with normal priority and <code>normal_packets_number</code>
+   * packets with emergency priority.
+   */
+  void ConfigureMultipleMessages (Ptr<Node> source_node,
+                                  const GeoTemporalArea & destination_geo_temporal_area,
+                                  const uint32_t data_rate,
+                                  const uint32_t packets_size,
+                                  const uint32_t normal_packets_number,
+                                  const uint32_t emergency_packets_number);
 
 private:
 

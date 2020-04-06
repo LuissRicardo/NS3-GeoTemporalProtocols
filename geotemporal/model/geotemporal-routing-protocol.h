@@ -403,7 +403,8 @@ private:
 public:
 
   /**
-   * Receives a message from upper layers and starts its dissemination.
+   * Receives a normal priority message from upper layers and starts its
+   * dissemination.
    * 
    * @param message [IN] Message to transmit.
    * @param destination_gta [IN] Destination geo-temporal area of the message.
@@ -411,6 +412,20 @@ public:
   void
   NewMessage (const std::string & message,
               const GeoTemporalArea & destination_gta);
+
+  /**
+   * Receives a message from upper layers and starts its dissemination. Use
+   * <code>emergency_flag</code> to specify if it is an emergency packet or not.
+   * 
+   * @param message [IN] Message to transmit.
+   * @param destination_gta [IN] Destination geo-temporal area of the message.
+   * @param emergency_flag [IN] If enabled, it indicates that the packet is an 
+   * emergency packet. Otherwise, disabled indicates that is a normal packet.
+   */
+  void
+  NewMessage (const std::string & message,
+              const GeoTemporalArea & destination_gta,
+              const bool emergency_flag);
 
 private:
 

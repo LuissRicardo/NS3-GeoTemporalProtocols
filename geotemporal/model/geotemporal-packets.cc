@@ -40,6 +40,8 @@
 #define AREA_X2 1
 #define AREA_Y2 0
 
+#define EMERGENCY 7
+
 
 namespace ns3
 {
@@ -575,8 +577,8 @@ AckHeader::ToString () const
 NS_OBJECT_ENSURE_REGISTERED (DataHeader);
 
 DataHeader::DataHeader ()
-: m_data_id (), m_hops_count (0u), m_position (), m_velocity (),
-m_dest_geo_temporal_area (), m_message () { }
+: m_data_id (), m_emergency_flag (false), m_hops_count (0u), m_position (),
+m_velocity (), m_dest_geo_temporal_area (), m_message () { }
 
 DataHeader::DataHeader (const DataIdentifier& data_id,
                         const uint32_t hops_count,
@@ -584,11 +586,24 @@ DataHeader::DataHeader (const DataIdentifier& data_id,
                         const GeoTemporalLibrary::LibraryUtils::Vector2D& velocity,
                         const GeoTemporalArea& destination_geo_temporal_area,
                         const std::string message)
-: m_data_id (data_id), m_hops_count (hops_count), m_position (position), m_velocity (velocity),
+: m_data_id (data_id), m_emergency_flag (false), m_hops_count (hops_count),
+m_position (position), m_velocity (velocity),
+m_dest_geo_temporal_area (destination_geo_temporal_area), m_message (message) { }
+
+DataHeader::DataHeader (const DataIdentifier& data_id,
+                        const bool emergency_flag,
+                        const uint32_t hops_count,
+                        const GeoTemporalLibrary::LibraryUtils::Vector2D& position,
+                        const GeoTemporalLibrary::LibraryUtils::Vector2D& velocity,
+                        const GeoTemporalArea& destination_geo_temporal_area,
+                        const std::string message)
+: m_data_id (data_id), m_emergency_flag (emergency_flag), m_hops_count (hops_count),
+m_position (position), m_velocity (velocity),
 m_dest_geo_temporal_area (destination_geo_temporal_area), m_message (message) { }
 
 DataHeader::DataHeader (const DataHeader& copy)
 : m_data_id (copy.m_data_id),
+m_emergency_flag (copy.m_emergency_flag),
 m_hops_count (copy.m_hops_count),
 m_position (copy.m_position),
 m_velocity (copy.m_velocity),
@@ -624,7 +639,7 @@ DataHeader::GetInstanceTypeId () const
 uint32_t
 DataHeader::GetSerializedSize () const
 {
-  return 71u + m_message.size () + 1u; // The +1 is because of the null terminator of the message.
+  return 73u + m_message.size (); // 1 byte is because of the null terminator of the message.
 }
 
 void
@@ -662,6 +677,9 @@ DataHeader::Serialize (Buffer::Iterator start) const
   EncodeDoubleToIntegers (m_dest_geo_temporal_area.GetArea ().GetY2 (),
                           y2_int, y2_float, sign_flags, AREA_Y2);
 
+  uint8_t other_flags = 0u;
+  if (m_emergency_flag) SetBitFlag (other_flags, EMERGENCY);
+
   start.WriteU8 (sign_flags);
   start.WriteHtonU16 (m_data_id.GetSourceId ());
 
@@ -692,9 +710,12 @@ DataHeader::Serialize (Buffer::Iterator start) const
   start.WriteHtonU16 ((uint32_t) m_dest_geo_temporal_area.GetTimePeriod ().GetStartTime ().GetSeconds ());
   start.WriteHtonU16 ((uint32_t) m_dest_geo_temporal_area.GetDuration ().GetSeconds ());
 
-  char chars_buffer [m_message.length () + 1u];
+  start.WriteU8 (other_flags);
+
+  const uint32_t message_length = m_message.length () + 1u;
+  char chars_buffer [message_length];
   std::strcpy (chars_buffer, m_message.c_str ());
-  start.Write ((uint8_t *) chars_buffer, std::strlen (chars_buffer) + 1u);
+  start.Write ((uint8_t *) chars_buffer, message_length);
 }
 
 uint32_t
@@ -756,6 +777,10 @@ DataHeader::Deserialize (Buffer::Iterator start)
   m_dest_geo_temporal_area = GeoTemporalArea (TimePeriod (start_time, end_time),
                                               Area (area_x1, area_y1, area_x2, area_y2));
 
+  // Read emergency flag
+  const uint8_t other_flags = it.ReadU8 ();
+  m_emergency_flag = CheckBitFlag (other_flags, EMERGENCY);
+
   // Read the string message.
   uint8_t character_read = 0u;
   uint32_t message_size = 0u;
@@ -795,7 +820,11 @@ DataHeader::ToString () const
   char buffer[10];
   std::sprintf (buffer, "%u", m_hops_count);
 
-  std::string str = "DATA " + m_data_id.ToString () + " (" + std::string (buffer)
+  std::string str = "";
+
+  if (m_emergency_flag) str += "EMERGENCY ";
+
+  str += "DATA " + m_data_id.ToString () + " (" + std::string (buffer)
           + " hops) sent from position " + m_position.ToString () + " at velocity "
           + m_velocity.ToString () + " destined to area "
           + m_dest_geo_temporal_area.GetArea ().ToString ();
@@ -829,6 +858,18 @@ DataAckHeader::DataAckHeader (const DataIdentifier& data_id_to_ack,
                               const GeoTemporalArea& destination_geo_temporal_area,
                               const std::string message)
 : DataHeader (data_id, hops_count, position, velocity,
+              destination_geo_temporal_area, message),
+m_data_id_to_ack (data_id_to_ack), m_reserved (0u) { }
+
+DataAckHeader::DataAckHeader (const DataIdentifier& data_id_to_ack,
+                              const DataIdentifier& data_id,
+                              const bool emergency_flag,
+                              const uint32_t hops_count,
+                              const GeoTemporalLibrary::LibraryUtils::Vector2D& position,
+                              const GeoTemporalLibrary::LibraryUtils::Vector2D& velocity,
+                              const GeoTemporalArea& destination_geo_temporal_area,
+                              const std::string message)
+: DataHeader (data_id, emergency_flag, hops_count, position, velocity,
               destination_geo_temporal_area, message),
 m_data_id_to_ack (data_id_to_ack), m_reserved (0u) { }
 
@@ -869,7 +910,7 @@ DataAckHeader::GetInstanceTypeId () const
 uint32_t
 DataAckHeader::GetSerializedSize () const
 {
-  return 79u + m_message.size () + 1u; // The +1 is because of the null terminator of the message.
+  return 80u + m_message.size (); // 1 byte is because of the null terminator of the message.
 }
 
 void
@@ -907,12 +948,16 @@ DataAckHeader::Serialize (Buffer::Iterator start) const
   EncodeDoubleToIntegers (m_dest_geo_temporal_area.GetArea ().GetY2 (),
                           y2_int, y2_float, sign_flags, AREA_Y2);
 
+  uint8_t other_flags = 0u;
+  if (m_emergency_flag) SetBitFlag (other_flags, EMERGENCY);
+
   start.WriteU8 (sign_flags);
   start.WriteHtonU16 (m_data_id_to_ack.GetSourceId ());
 
   WriteTo (start, m_data_id_to_ack.GetSourceIp ());
 
-  start.WriteHtonU16 (m_reserved);
+  start.WriteU8 (other_flags);
+  start.WriteU8 (m_reserved);
   start.WriteHtonU16 (m_data_id.GetSourceId ());
 
   WriteTo (start, m_data_id.GetSourceIp ());
@@ -942,9 +987,10 @@ DataAckHeader::Serialize (Buffer::Iterator start) const
   start.WriteHtonU16 ((uint32_t) m_dest_geo_temporal_area.GetTimePeriod ().GetStartTime ().GetSeconds ());
   start.WriteHtonU16 ((uint32_t) m_dest_geo_temporal_area.GetDuration ().GetSeconds ());
 
-  char chars_buffer [m_message.length () + 1u];
+  const uint32_t message_length = m_message.length () + 1u;
+  char chars_buffer [message_length];
   std::strcpy (chars_buffer, m_message.c_str ());
-  start.Write ((uint8_t *) chars_buffer, std::strlen (chars_buffer) + 1u);
+  start.Write ((uint8_t *) chars_buffer, message_length);
 }
 
 uint32_t
@@ -961,8 +1007,11 @@ DataAckHeader::Deserialize (Buffer::Iterator start)
 
   m_data_id_to_ack = DataIdentifier (data_source_ip, data_source_id);
 
+  const uint8_t other_flags = it.ReadU8 ();
+  m_emergency_flag = CheckBitFlag (other_flags, EMERGENCY);
+  m_reserved = it.ReadU8 ();
+
   // Read DATA packet ID
-  m_reserved = it.ReadNtohU16 ();
   data_source_id = it.ReadNtohU16 ();
   ReadFrom (it, data_source_ip);
 
@@ -1052,8 +1101,11 @@ DataAckHeader::ToString () const
   char buffer[10];
   std::sprintf (buffer, "%u", m_hops_count);
 
-  std::string str = "ACK " + m_data_id_to_ack.ToString () +
-          " / DATA " + m_data_id.ToString () + " (" + std::string (buffer)
+  std::string str = "ACK " + m_data_id_to_ack.ToString () + " / ";
+
+  if (m_emergency_flag) str += "EMERGENCY ";
+
+  str += "DATA " + m_data_id.ToString () + " (" + std::string (buffer)
           + " hops) sent from position " + m_position.ToString () + " at velocity "
           + m_velocity.ToString () + " destined to area "
           + m_dest_geo_temporal_area.GetArea ().ToString ();

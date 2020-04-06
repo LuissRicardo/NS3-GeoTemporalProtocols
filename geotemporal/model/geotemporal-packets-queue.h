@@ -540,10 +540,10 @@ private:
   /**
    * Finds the packet with highest priority to be dropped from the queue.
    * 
-   * A packet's priority to be dropped is determined by the hops count; the 
-   * packet with the highest hops count has the highest priority. When a tie 
-   * occurs, the tie is broken with the number of nodes that know the packets, 
-   * the packet that is known by more nodes has higher priority.
+   * The drop priority of a packet is the inverse of the transmission priority. 
+   * The highest transmission priority is the lowest drop priority, and 
+   * consequently, the lowest transmission priority is the highest drop 
+   * priority.
    * 
    * When a packet entry is found it returns <code>true</code> and the identifier
    * of the packet with the highest priority is stored in the output parameter 
@@ -566,26 +566,30 @@ private:
   /**
    * Finds the packet with highest priority to be transmitted.
    * 
-   * When a packet is inside its destination geo-temporal area it has higher
-   * priority than packets that aren't inside its destination geo-temporal
-   * area. So, packets that are inside its destination geo-temporal area have
-   * high priority and packets that are not inside its destination geo-temporal
-   * area have normal priority.
+   * There are two priority levels based on the Emergency Flag (EF) bit in the 
+   * packets: emergency-packet level and regular-packet level. The 
+   * emergency-packet level includes packets that have the EF bit enabled, and 
+   * it has a higher priority than the other level. And, the regular-packet 
+   * level includes packets that have the EF bit disabled.
    * 
-   * Furthermore, when there are multiple packets with the same level of 
-   * priority, normal or high, the one to transmit is determined by its hops 
-   * count; the packet with the lowest hops count has the highest priority. And
-   * if a tie occurs, the tie is broken with the number of nodes that know the 
-   * packets, the packet that is known by less nodes has higher priority.
+   * When there is more than one packet at the same priority level, there are 
+   * other factors to determine the packet with the highest priority. Packets 
+   * that are inside its destination geo-temporal area have a higher priority 
+   * than packets that are outside its destination geo-temporal area.
+   * 
+   * Furthermore, when more than one packet still has the same priority, we 
+   * break the tie using other numeric values. The packet with the lowest hops 
+   * count has the highest priority. If the tie persists, the packet with the 
+   * lowest number of known carrier nodes has the highest priority.
    * 
    * When a packet entry is found it returns <code>true</code>, the packet
    * queue entry object is stored in the output parameter <code>selected_packet
-   * </code>, and the output parameter <code>high_priority</code> is set 
-   * accordingly to the priority of the selected packet; <code>true</code> if it
-   * has high priority and <code>false</code> if it has normal priority. On the 
-   * contrary, if it can not find a packet queue entry to be transmitted it 
-   * returns <code>false</code> and both output parameters, <code>selected_packet
-   * </code> and <code>high_priority</code>, are not modified at all.
+   * </code>, and the output parameter <code>inside_area_flag</code> indicates
+   * if the selected packet currently is inside its destination area 
+   * (<code>true</code>) or not (<code>false</code>). On the contrary, if it can
+   * not find a packet queue entry to be transmitted it returns 
+   * <code>false</code> and both output parameters, <code>selected_packet</code>
+   * and <code>inside_area_flag</code>, are not modified at all.
    * 
    * @Note
    * One important note is that even though the packets queue may not be empty
@@ -621,8 +625,9 @@ private:
    * @param disjoint_vector [IN] Disjoint vector with the identifiers of the
    * requested packets.
    * @param selected_packet [OUT] The packet selected to be transmitted.
-   * @param high_priority [OUT] With <code>true</code> indicates that the 
-   * selected packet has high priority, otherwise it has normal priority.
+   * @param inside_area_flag [OUT] With <code>true</code> indicates that the 
+   * selected packet is inside its destination geo-temporal area, otherwise the
+   * selected packet is outside its destination geo-temporal area.
    * 
    * @return <code>true</code> if a packet is found, otherwise <code>false</code>.
    */
@@ -635,7 +640,7 @@ private:
                                      const Vector2D & neighbor_velocity,
                                      const std::set<DataIdentifier> & disjoint_vector,
                                      PacketQueueEntry & selected_packet,
-                                     bool & high_priority) const;
+                                     bool & inside_area_flag) const;
 
 
 public:
