@@ -273,14 +273,9 @@ public:
 
   /**
    * Returns the size of the packets queue.
-   * 
-   * This function purges expired packet entries before counting the packet
-   * entries, so if there exist expired packet entries first they will be
-   * purged and then the number of remaining (non expired) entries will be 
-   * returned.
    */
   uint32_t
-  Size ();
+  Size () const;
 
   /**
    * Returns (in the reference parameter) the summary vector of the packets queue.
@@ -289,14 +284,10 @@ public:
    * data is stored into it. The <code>summary_vector</code> may remain empty if
    * there's no data to insert into it.
    * 
-   * This function purges expired packet entries before storing the summary 
-   * vector in the <code>summary_vector</code> parameter, so the summary vector
-   * will be composed by valid (non expired) entries only.
-   * 
    * @param summary_vector [OUT] The summary vector is stored in this parameter.
    */
   void
-  GetSummaryVector (std::set<DataIdentifier> & summary_vector);
+  GetSummaryVector (std::set<DataIdentifier> & summary_vector) const;
 
   /** Returns the statistics of all received data packets. */
   inline const std::map<DataIdentifier, DataPacketReceptionStats> &
@@ -313,10 +304,6 @@ public:
   /**
    * Finds a packet queue entry with the specified data packet identifier.
    * 
-   * This function purges expired packet entries before searching the desired
-   * packet entry, so if the packet entry exists but it has expired then it will
-   * be purged and it won't be found.
-   * 
    * @param data_packet_id [IN] Data packet identifier of the packet to search for.
    * @param entry [OUT] The packet entry with the specified data packet 
    * identifier, if it exists. If an entry with the given data packet identifier
@@ -327,14 +314,10 @@ public:
    * <code>false</code>.
    */
   bool
-  Find (const DataIdentifier & data_packet_id, PacketQueueEntry & entry);
+  Find (const DataIdentifier & data_packet_id, PacketQueueEntry & entry) const;
 
   /**
    * Finds a packet queue entry with the specified data packet identifier.
-   * 
-   * This function purges expired packet entries before searching the desired
-   * packet entry, so if the packet entry exists but it has expired then it will
-   * be purged and it won't be found.
    * 
    * @param data_packet_id [IN] Data packet identifier of the packet to search for.
    * 
@@ -343,15 +326,11 @@ public:
    * <code>false</code>.
    */
   bool
-  Find (const DataIdentifier & data_packet_id);
+  Find (const DataIdentifier & data_packet_id) const;
 
   /**
    * Finds a packet queue entry with the same data packet identifier of the 
    * given packet queue entry.
-   * 
-   * This function purges expired packet entries before searching the desired
-   * packet entry, so if the packet entry exists but it has expired then it will
-   * be purged and it won't be found.
    * 
    * @param packet_entry [IN] Packet queue entry of the packet to search for.
    * 
@@ -360,7 +339,7 @@ public:
    * <code>false</code>.
    */
   bool
-  Find (const PacketQueueEntry & packet_entry);
+  Find (const PacketQueueEntry & packet_entry) const;
 
 
   // --------------------------
@@ -385,8 +364,6 @@ public:
    * The <code>disjoint_vector</code> parameter is always emptied. And then the
    * processed data is stored into it. The <code>disjoint_vector</code> may 
    * remain empty if there's no data to insert into it.
-   * 
-   * This function doesn't purge expired packet entries.
    * 
    * @param summary_vector_header [IN] Summary vector header received from other
    * node.
@@ -427,10 +404,6 @@ public:
    * configured. The expiration time is obtained from the end of the time scope 
    * of the destination geo-temporal area.
    * 
-   * This function purges expired packet entries before enqueueing the new 
-   * packet queue entry, so if the packet entry to be inserted does exists but 
-   * it has expired then it will be purged and inserted again.
-   * 
    * @param data_header [IN] Data header of the data packet to insert.
    * @param transmitter_ip [IN] IP address of the node that transmitted the 
    * packet.
@@ -441,17 +414,12 @@ public:
   bool
   Enqueue (const DataHeader & data_header, const Ipv4Address & transmitter_ip);
 
-
-private:
-
   /**
    * Removes all expired data packet entries from the data packets queue.
    */
   void
   Purge ();
 
-
-public:
 
   // --------------------------
   // Packet statistics

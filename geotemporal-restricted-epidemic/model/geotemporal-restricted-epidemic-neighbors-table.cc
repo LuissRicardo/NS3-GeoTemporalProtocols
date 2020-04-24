@@ -105,11 +105,10 @@ m_entries_expiration_time (copy.m_entries_expiration_time)
 // --------------------------
 
 uint32_t
-NeighborsTable::Size ()
+NeighborsTable::Size () const
 {
   NS_LOG_FUNCTION (this);
 
-  Purge ();
   return m_table.size ();
 }
 
@@ -119,11 +118,9 @@ NeighborsTable::Size ()
 // --------------------------
 
 bool
-NeighborsTable::Find (const Ipv4Address& neighbor_ip, NeighborEntry& entry)
+NeighborsTable::Find (const Ipv4Address& neighbor_ip, NeighborEntry& entry) const
 {
   NS_LOG_FUNCTION (this);
-
-  Purge ();
 
   ConstIterator_t entry_it = m_table.find (neighbor_ip);
 
@@ -137,7 +134,7 @@ NeighborsTable::Find (const Ipv4Address& neighbor_ip, NeighborEntry& entry)
 }
 
 bool
-NeighborsTable::Find (const Ipv4Address& neighbor_ip)
+NeighborsTable::Find (const Ipv4Address& neighbor_ip) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -146,7 +143,7 @@ NeighborsTable::Find (const Ipv4Address& neighbor_ip)
 }
 
 bool
-NeighborsTable::Find (const NeighborEntry& neighbor_entry)
+NeighborsTable::Find (const NeighborEntry& neighbor_entry) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -164,7 +161,6 @@ NeighborsTable::Insert (const Ipv4Address& new_neighbor_ip)
 {
   NS_LOG_FUNCTION (this << new_neighbor_ip);
 
-  Purge ();
   NS_LOG_DEBUG (m_table.size () << " neighbors before insertion of new neighbor "
                 << new_neighbor_ip);
 
@@ -188,8 +184,6 @@ bool
 NeighborsTable::Remove (const Ipv4Address& neighbor_ip_to_delete)
 {
   NS_LOG_FUNCTION (this << neighbor_ip_to_delete);
-
-  Purge ();
 
   NS_LOG_DEBUG ("Removing neighbor " << neighbor_ip_to_delete);
   return m_table.erase (neighbor_ip_to_delete) > 0u;

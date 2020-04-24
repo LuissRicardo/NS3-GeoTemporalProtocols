@@ -656,6 +656,9 @@ RoutingProtocol::RecvRestrictedEpidemicPacket (Ptr<Socket> socket)
   NS_LOG_DEBUG ("Restricted Epidemic " << type_header << " packet received from node "
                 << sender_node_ip);
 
+  m_packets_queue.Purge ();
+  m_neighbors_table.Purge ();
+
   switch (type_header.GetPacketType ())
     {
     case PacketType::Hello:

@@ -1000,29 +1000,43 @@ public:
   }
 
   void
-  TestFindFunctions_Scheduled_1 ()
+  TestGetSize ()
   {
-    // This function is launched by the scheduler at second 6.00
-    bool found = false;
+    m_neighbors_table = NeighborsTable (Seconds (5));
 
-    // Some packet entries already expired at second 5.0.
-    // The neighbors table now looks like this:
-    //      Neighbor IP   -   Expiration time
-    //      1.1.1.1       -      second 10
-    //      1.1.1.2       -      second 10
+    NS_TEST_EXPECT_MSG_EQ (m_neighbors_table.Size (), m_neighbors_table.m_table.size (),
+                           "Must have the same size.");
+    NS_TEST_EXPECT_MSG_EQ (m_neighbors_table.Size (), 0, "Must have size 0");
 
-    // The entry to be found expired at second 5, so it must not be found.
-    found = m_neighbors_table.Find (Ipv4Address ("1.1.1.3"));
-    NS_TEST_EXPECT_MSG_EQ (found, false, "Neighbor entry 1.1.1.3 must not be found.");
+    char buffer [25];
 
-    // There should be 2 entries in the table
-    NS_TEST_EXPECT_MSG_EQ (m_neighbors_table.Size (), 2u, "Size of the neighbors table must be 2.");
+    for (uint32_t i = 1u; i <= 75u; ++i)
+      {
+        std::sprintf (buffer, "1.1.1.%d", i);
 
-    found = m_neighbors_table.Find (Ipv4Address ("1.1.1.1"));
-    NS_TEST_EXPECT_MSG_EQ (found, true, "Neighbor entry 1.1.1.1 must be found.");
+        m_neighbors_table.Insert (Ipv4Address (buffer));
 
-    found = m_neighbors_table.Find (Ipv4Address ("1.1.1.2"));
-    NS_TEST_EXPECT_MSG_EQ (found, true, "Neighbor entry 1.1.1.2 must be found.");
+        NS_TEST_EXPECT_MSG_EQ (m_neighbors_table.Size (), m_neighbors_table.m_table.size (),
+                               "Must have the same size.");
+      }
+
+    m_neighbors_table.Insert (Ipv4Address ("1.1.1.1"));
+
+    for (uint32_t i = 30u; i <= 45u; ++i)
+      {
+        std::sprintf (buffer, "1.1.1.%d", i);
+
+        m_neighbors_table.Remove (Ipv4Address (buffer));
+
+        NS_TEST_EXPECT_MSG_EQ (m_neighbors_table.Size (), m_neighbors_table.m_table.size (),
+                               "Must have the same size.");
+      }
+
+    m_neighbors_table.Clear ();
+
+    NS_TEST_EXPECT_MSG_EQ (m_neighbors_table.Size (), m_neighbors_table.m_table.size (),
+                           "Must have the same size.");
+    NS_TEST_EXPECT_MSG_EQ (m_neighbors_table.Size (), 0, "Must have size 0");
   }
 
   void
@@ -1079,13 +1093,34 @@ public:
     // - Expected not found
     found = m_neighbors_table.Find (NeighborEntry (Ipv4Address ("2.2.2.2"), Days (2)));
     NS_TEST_EXPECT_MSG_EQ (found, false, "Neighbor entry 2.2.2.2 must not be found.");
+  }
 
-    // The following scheduled calls test:
-    //  - That Find calls Purge()
-    Simulator::Schedule (Seconds (6), &NeighborsTableTest::TestFindFunctions_Scheduled_1, this);
+  void
+  TestClearFunction ()
+  {
+    m_neighbors_table = NeighborsTable (Seconds (5));
 
-    Simulator::Run ();
-    Simulator::Destroy ();
+    NS_TEST_EXPECT_MSG_EQ (m_neighbors_table.Size (), 0, "Must have size 0");
+
+    m_neighbors_table.Clear ();
+
+    NS_TEST_EXPECT_MSG_EQ (m_neighbors_table.Size (), 0, "Must have size 0");
+
+    char buffer [25];
+
+    for (uint32_t i = 1u; i <= 75u; ++i)
+      {
+        std::sprintf (buffer, "1.1.1.%d", i);
+
+        m_neighbors_table.Insert (Ipv4Address (buffer));
+
+        NS_TEST_EXPECT_MSG_EQ (m_neighbors_table.Size (), m_neighbors_table.m_table.size (),
+                               "Must have the same size.");
+      }
+
+    m_neighbors_table.Clear ();
+
+    NS_TEST_EXPECT_MSG_EQ (m_neighbors_table.Size (), 0, "Must have size 0");
   }
 
   void
@@ -1094,6 +1129,8 @@ public:
     // This function is launched by the scheduler at second 7.00
     bool inserted;
     NeighborEntry entry;
+
+    m_neighbors_table.Purge ();
 
     // The following entry to be inserted used to exist but was purged by the call
     // to Insert before it was detected as already existing and failing, so it 
@@ -1114,6 +1151,8 @@ public:
   {
     // This function is launched by the scheduler at second 13.00
     bool inserted;
+
+    m_neighbors_table.Purge ();
 
     // The following entry to be inserted still exits and expires at second 15,
     // so the insertion will fail. Other 2 entries expired at 10 and 12 seconds
@@ -1180,8 +1219,6 @@ public:
     NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetExpirationTime (), Seconds (5), MicroSeconds (1),
                                "Entry 1.1.1.3 expiration time must be 5 seconds.");
 
-    // The following scheduled calls test:
-    //  - That Insert calls Purge()
     Simulator::Schedule (Seconds (7), &NeighborsTableTest::TestInsertFunction_Scheduled_1, this);
     Simulator::Schedule (Seconds (13), &NeighborsTableTest::TestInsertFunction_Scheduled_2, this);
 
@@ -1238,8 +1275,10 @@ public:
     // This function is launched by the scheduler at second 15.00
     bool removed;
 
+    m_neighbors_table.Purge ();
+
     // The following entry to be removed used to exist but was purged by the call
-    // to Remove before it was removed explicitly, so it must return a false.
+    // to Purge before it was removed explicitly, so it must return a false.
     removed = m_neighbors_table.Remove (NeighborEntry (Ipv4Address ("1.1.1.1"), Days (2)));
 
     NS_TEST_EXPECT_MSG_EQ (removed, false, "Neighbor entry 1.1.1.1 must have not been removed.");
@@ -1272,7 +1311,7 @@ public:
     Simulator::Schedule (Seconds (7.5), &NeighborsTableTest::TestRemoveFunction_Scheduled_1, this);
 
     // The following scheduled call tests:
-    //  - That Remove calls Purge()
+    //  - Try to remove purged entries.
     Simulator::Schedule (Seconds (15), &NeighborsTableTest::TestRemoveFunction_Scheduled_2, this);
 
     Simulator::Run ();
@@ -1321,10 +1360,6 @@ public:
     bool restarted, found;
     NeighborEntry entry;
 
-    // Before calling RestartNeighborEntryExpirationTime (const Ipv4Address&)
-    // we don't use other functions that call Purge () to avoid purging the 
-    // expired entry.
-
     restarted = m_neighbors_table.RestartNeighborEntryExpirationTime (Ipv4Address ("1.1.1.1"));
     NS_TEST_EXPECT_MSG_EQ (restarted, true, "The expiration time of entry 1.1.1.1 must have been restarted.");
 
@@ -1367,6 +1402,115 @@ public:
   }
 
   void
+  TestPurgeFunction_Scheduled_1 ()
+  {
+    // This function is launched by the scheduler at second 3.55
+
+    // The neighbors table now looks like this:
+    //     Neighbor IP   -   Expiration time
+    //       1.1.1.1     -      second 10
+    //       1.1.1.2     -      second 5
+    //       1.1.1.3     -      second 7.5
+
+    m_neighbors_table.Purge ();
+
+    NS_TEST_EXPECT_MSG_EQ (m_neighbors_table.Size (), 3, "Must be 3");
+  }
+
+  void
+  TestPurgeFunction_Scheduled_2 ()
+  {
+    // This function is launched by the scheduler at second 6.2
+
+    // The neighbors table now looks like this:
+    //     Neighbor IP   -   Expiration time
+    //       1.1.1.1     -      second 10
+    //       1.1.1.2     -      second 5    <EXPIRED>
+    //       1.1.1.3     -      second 7.5
+
+    m_neighbors_table.Purge ();
+
+    NS_TEST_EXPECT_MSG_EQ (m_neighbors_table.Size (), 2, "Must be 2");
+    NS_TEST_EXPECT_MSG_EQ (m_neighbors_table.Find (Ipv4Address ("1.1.1.1")),
+                           true, "Neighbor 1.1.1.1 must be found");
+    NS_TEST_EXPECT_MSG_EQ (m_neighbors_table.Find (Ipv4Address ("1.1.1.2")),
+                           false, "Neighbor 1.1.1.2 must NOT be found");
+    NS_TEST_EXPECT_MSG_EQ (m_neighbors_table.Find (Ipv4Address ("1.1.1.3")),
+                           true, "Neighbor 1.1.1.3 must be found");
+  }
+
+  void
+  TestPurgeFunction_Scheduled_3 ()
+  {
+    // This function is launched by the scheduler at second 8.1
+
+    // The neighbors table now looks like this:
+    //     Neighbor IP   -   Expiration time
+    //       1.1.1.1     -      second 10
+    //       1.1.1.3     -      second 7.5   <EXPIRED>
+
+    m_neighbors_table.Purge ();
+
+    NS_TEST_EXPECT_MSG_EQ (m_neighbors_table.Size (), 1, "Must be 1");
+    NS_TEST_EXPECT_MSG_EQ (m_neighbors_table.Find (Ipv4Address ("1.1.1.1")),
+                           true, "Neighbor 1.1.1.1 must be found");
+    NS_TEST_EXPECT_MSG_EQ (m_neighbors_table.Find (Ipv4Address ("1.1.1.3")),
+                           false, "Neighbor 1.1.1.3 must NOT be found");
+  }
+
+  void
+  TestPurgeFunction_Scheduled_4 ()
+  {
+    // This function is launched by the scheduler at second 12
+
+    // The neighbors table now looks like this:
+    //     Neighbor IP   -   Expiration time
+    //       1.1.1.1     -      second 10   <EXPIRED>
+
+    m_neighbors_table.Purge ();
+
+    NS_TEST_EXPECT_MSG_EQ (m_neighbors_table.Size (), 0, "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (m_neighbors_table.Find (Ipv4Address ("1.1.1.1")),
+                           false, "Neighbor 1.1.1.1 must NOT be found");
+  }
+
+  void
+  TestPurgeFunction ()
+  {
+    m_neighbors_table = NeighborsTable (Seconds (10));
+
+    m_neighbors_table.Insert (Ipv4Address ("1.1.1.1"));
+
+    m_neighbors_table.SetEntriesExpirationTime (Seconds (5));
+
+    m_neighbors_table.Insert (Ipv4Address ("1.1.1.2"));
+
+    m_neighbors_table.SetEntriesExpirationTime (Seconds (7.5));
+
+    m_neighbors_table.Insert (Ipv4Address ("1.1.1.3"));
+
+    // The neighbors table now looks like this:
+    //     Neighbor IP   -   Expiration time
+    //       1.1.1.1     -      second 10
+    //       1.1.1.2     -      second 5
+    //       1.1.1.3     -      second 7.5
+
+    NS_TEST_EXPECT_MSG_EQ (m_neighbors_table.Size (), 3, "Must be 3");
+
+    m_neighbors_table.Purge ();
+
+    NS_TEST_EXPECT_MSG_EQ (m_neighbors_table.Size (), 3, "Must be 3");
+
+    Simulator::Schedule (Seconds (3.55), &NeighborsTableTest::TestPurgeFunction_Scheduled_1, this);
+    Simulator::Schedule (Seconds (6.2), &NeighborsTableTest::TestPurgeFunction_Scheduled_2, this);
+    Simulator::Schedule (Seconds (8.1), &NeighborsTableTest::TestPurgeFunction_Scheduled_3, this);
+    Simulator::Schedule (Seconds (12), &NeighborsTableTest::TestPurgeFunction_Scheduled_4, this);
+
+    Simulator::Run ();
+    Simulator::Destroy ();
+  }
+
+  void
   TestToStringFunction ()
   {
     m_neighbors_table = NeighborsTable (Seconds (10));
@@ -1395,10 +1539,13 @@ public:
   {
     TestConstructors ();
     TestGetSetEntriesExpirationTime ();
+    TestGetSize ();
     TestFindFunctions ();
+    TestClearFunction ();
     TestInsertFunction ();
     TestRemoveFunction ();
     TestRestartNeighborEntryExpirationTimeFunction ();
+    TestPurgeFunction ();
     TestToStringFunction ();
   }
 };
@@ -1698,14 +1845,6 @@ public:
   }
 
   void
-  TestGetSize_Scheduled_1 ()
-  {
-    // This function is launched by the scheduler at second 15.00
-    // Al entries must be purged by Size.
-    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 0u, "Size of the packets queue must be 0.");
-  }
-
-  void
   TestGetSize ()
   {
     m_packets_queue = PacketsQueue (5u);
@@ -1738,31 +1877,6 @@ public:
 
         NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 5u, "Size of the packets queue must be 5.");
       }
-
-    // The following scheduled calls test:
-    //  - That Size () calls Purge()
-    Simulator::Schedule (Seconds (15), &PacketsQueueTest::TestGetSize_Scheduled_1, this);
-
-    Simulator::Run ();
-    Simulator::Destroy ();
-  }
-
-  void
-  TestGetSummaryVector_Scheduled_1 ()
-  {
-    // This function is launched by the scheduler at second 6.00
-
-    // Some packet entries already expired at second 5.0.
-    // The packets queue now looks like this:
-    //     Data ID   -   Packet entry expiration time
-    //    1.1.1.1:1  -           second 10
-    //    1.1.1.2:2  -           second 10
-
-    std::set<DataIdentifier> summary_vector, expected_summary_vector;
-
-    m_packets_queue.GetSummaryVector (summary_vector);
-    expected_summary_vector = {DataIdentifier ("1.1.1.1:1"), DataIdentifier ("1.1.1.2:2")};
-    NS_TEST_EXPECT_MSG_EQ (summary_vector, expected_summary_vector, "Summary vector size must be the expected.");
   }
 
   void
@@ -1830,6 +1944,24 @@ public:
   }
 
   void
+  TestGetSummaryVector_Scheduled_1 ()
+  {
+    // This function is launched by the scheduler at second 6.00
+
+    // Some packet entries already expired at second 5.0.
+    // The packets queue now looks like this:
+    //     Data ID   -   Packet entry expiration time
+    //    1.1.1.1:1  -           second 10
+    //    1.1.1.2:2  -           second 10
+
+    std::set<DataIdentifier> summary_vector, expected_summary_vector;
+
+    m_packets_queue.GetSummaryVector (summary_vector);
+    expected_summary_vector = {DataIdentifier ("1.1.1.1:1"), DataIdentifier ("1.1.1.2:2")};
+    NS_TEST_EXPECT_MSG_EQ (summary_vector, expected_summary_vector, "Summary vector size must be the expected.");
+  }
+
+  void
   TestGetSummaryVector ()
   {
     std::set<DataIdentifier> summary_vector, expected_summary_vector;
@@ -1890,13 +2022,6 @@ public:
     //    1.1.1.2:2  -           second 10
     //    1.1.1.3:3  -           second 5
     //    1.1.1.4:4  -           second 5
-
-    // The following scheduled calls test:
-    //  - That GetSummaryVector () calls Purge()
-    Simulator::Schedule (Seconds (6), &PacketsQueueTest::TestGetSummaryVector_Scheduled_1, this);
-
-    Simulator::Run ();
-    Simulator::Destroy ();
   }
 
   void
@@ -2387,39 +2512,12 @@ public:
     // The following scheduled calls test:
     //  - That ProcessDisjointVector evaluates current time to decide if deliver or not
     //    packets with 1 hop left.
-    //  - That ProcessDisjointVector does not call Purge()
     Simulator::Schedule (Seconds (8), &PacketsQueueTest::TestProcessDisjointVector_Scheduled_1, this);
     Simulator::Schedule (Seconds (12), &PacketsQueueTest::TestProcessDisjointVector_Scheduled_2, this);
     Simulator::Schedule (Seconds (20), &PacketsQueueTest::TestProcessDisjointVector_Scheduled_3, this);
 
     Simulator::Run ();
     Simulator::Destroy ();
-  }
-
-  void
-  TestFindFunctions_Scheduled_1 ()
-  {
-    // This function is launched by the scheduler at second 6.00
-    bool found = false;
-
-    // Some packet entries already expired at second 5.0.
-    // The packets queue now looks like this:
-    //     Data ID   -   Packet entry expiration time
-    //    1.1.1.1:1  -           second 10
-    //    1.1.1.2:2  -           second 10
-
-    // The entry to be found expired at second 5, so it must not be found.
-    found = m_packets_queue.Find (DataIdentifier ("1.1.1.3:3"));
-    NS_TEST_EXPECT_MSG_EQ (found, false, "Packet queue entry 1.1.1.3:3 must not be found.");
-
-    // There should be 2 entries in the queue
-    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 2u, "Size of the packets queue must be 2.");
-
-    found = m_packets_queue.Find (DataIdentifier ("1.1.1.1:1"));
-    NS_TEST_EXPECT_MSG_EQ (found, true, "Packet queue entry 1.1.1.1:1 must be found.");
-
-    found = m_packets_queue.Find (DataIdentifier ("1.1.1.2:2"));
-    NS_TEST_EXPECT_MSG_EQ (found, true, "Packet queue entry 1.1.1.2:2 must be found.");
   }
 
   void
@@ -2507,13 +2605,6 @@ public:
     found = m_packets_queue.Find (PacketQueueEntry (data_packet));
 
     NS_TEST_EXPECT_MSG_EQ (found, false, "Packet queue entry 1.1.1.4:1 must not be found.");
-
-    // The following scheduled calls test:
-    //  - That Find calls Purge()
-    Simulator::Schedule (Seconds (6), &PacketsQueueTest::TestFindFunctions_Scheduled_1, this);
-
-    Simulator::Run ();
-    Simulator::Destroy ();
   }
 
   void
@@ -2528,6 +2619,9 @@ public:
     //    1.1.1.1:1  -            Expired
     //    1.1.1.2:2  -            Expired
     //    1.1.1.5:5  -           second 17
+
+    // Purge expired entries.
+    m_packets_queue.Purge ();
 
     // The following entry to be inserted used to exist but was previously 
     // dropped, so it is inserted as newly inserted.
@@ -2562,7 +2656,6 @@ public:
     // This function is launched by the scheduler at second 25.00
     // At this point in time all entries must have expired.
 
-    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 0u, "Packets queue must be empty.");
     NS_TEST_EXPECT_MSG_EQ (m_packets_queue.GetPacketReceptionStats ().size (), 5u,
                            "Size of the received packets statistics must be 5.");
 
@@ -2847,13 +2940,142 @@ public:
 
     NS_TEST_EXPECT_MSG_EQ (found, false, "Packet queue entry 1.1.1.4:4 must not be found.");
 
-    // The following scheduled call test:
-    //  - That Enqueue calls Purge()
     Simulator::Schedule (Seconds (16), &PacketsQueueTest::TestEnqueueFunction_Scheduled_1, this);
 
     // The following scheduled call test:
     //  - That Enqueue logs the statistics
     Simulator::Schedule (Seconds (20), &PacketsQueueTest::TestEnqueueFunction_Scheduled_2, this);
+
+    Simulator::Run ();
+    Simulator::Destroy ();
+  }
+
+  void
+  TestPurge_Scheduled_1 ()
+  {
+    // This function is launched by the scheduler at second 3.55
+
+    // The packets queue now looks like this:
+    //     Data ID   -   Packet entry expiration time
+    //    9.9.9.9:1  -           second 10
+    //    9.9.9.9:2  -           second 5
+    //    9.9.9.9:3  -           second 7.5
+
+    m_packets_queue.Purge ();
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 3u, "Must be 3");
+  }
+
+  void
+  TestPurge_Scheduled_2 ()
+  {
+    // This function is launched by the scheduler at second 6.2
+
+    // The packets queue now looks like this:
+    //     Data ID   -   Packet entry expiration time
+    //    9.9.9.9:1  -           second 10
+    //    9.9.9.9:2  -           second 5    <EXPIRED>
+    //    9.9.9.9:3  -           second 7.5
+
+    m_packets_queue.Purge ();
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 2u, "Must be 2");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Find (DataIdentifier ("9.9.9.9:1")),
+                           true, "Packet 9.9.9.9:1 must be found");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Find (DataIdentifier ("9.9.9.9:2")),
+                           false, "Packet 9.9.9.9:2 must NOT be found");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Find (DataIdentifier ("9.9.9.9:3")),
+                           true, "Packet 9.9.9.9:3 must be found");
+  }
+
+  void
+  TestPurge_Scheduled_3 ()
+  {
+    // This function is launched by the scheduler at second 8.1
+
+    // The packets queue now looks like this:
+    //     Data ID   -   Packet entry expiration time
+    //    9.9.9.9:1  -           second 10
+    //    9.9.9.9:3  -           second 7.5  <EXPIRED>
+
+    m_packets_queue.Purge ();
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 1u, "Must be 1");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Find (DataIdentifier ("9.9.9.9:1")),
+                           true, "Packet 9.9.9.9:1 must be found");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Find (DataIdentifier ("9.9.9.9:3")),
+                           false, "Packet 9.9.9.9:3 must NOT be found");
+  }
+
+  void
+  TestPurge_Scheduled_4 ()
+  {
+    // This function is launched by the scheduler at second 12
+
+    // The packets queue now looks like this:
+    //     Data ID   -   Packet entry expiration time
+    //    9.9.9.9:1  -           second 10   <EXPIRED>
+
+    m_packets_queue.Purge ();
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 0u, "Packets queue must be empty.");
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Find (DataIdentifier ("9.9.9.9:1")),
+                           false, "Packet 9.9.9.9:1 must NOT be found");
+  }
+
+  void
+  TestPurge ()
+  {
+    m_packets_queue = PacketsQueue (3);
+
+    // Test with empty queue
+
+    m_packets_queue.Purge ();
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 0u, "Packets queue must be empty.");
+
+    // Add some packets
+
+    // - Packet 1
+
+    DataHeader data_packet (/*Data ID*/ DataIdentifier ("9.9.9.9:1"),
+                            /* Creation coordinates */ GeoTemporalLibrary::LibraryUtils::Vector2D (-75.62, 85.62),
+                            /* Geo-temporal area */ GeoTemporalArea (TimePeriod (Seconds (0), Seconds (10)),
+                                                                     Area (0, 0, 100, 100)),
+                            /* Message */ "Message",
+                            /* Hops */ 5);
+    m_packets_queue.Enqueue (data_packet, Ipv4Address ("9.9.9.9"));
+
+    // - Packet 2
+
+    data_packet.SetDataIdentifier (DataIdentifier ("9.9.9.9:2"));
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (Seconds (0), Seconds (5)),
+                                                                Area (0, 0, 100, 100)));
+    m_packets_queue.Enqueue (data_packet, Ipv4Address ("9.9.9.9"));
+
+    // - Packet 3
+
+    data_packet.SetDataIdentifier (DataIdentifier ("9.9.9.9:3"));
+    data_packet.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (Seconds (0), Seconds (7.5)),
+                                                                Area (0, 0, 100, 100)));
+    m_packets_queue.Enqueue (data_packet, Ipv4Address ("9.9.9.9"));
+
+    // The packets queue now looks like this:
+    //     Data ID   -   Packet entry expiration time
+    //    9.9.9.9:1  -           second 10
+    //    9.9.9.9:2  -           second 5
+    //    9.9.9.9:3  -           second 7.5
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 3u, "Must be 3");
+
+    m_packets_queue.Purge ();
+
+    NS_TEST_EXPECT_MSG_EQ (m_packets_queue.Size (), 3u, "Must be 3");
+
+    Simulator::Schedule (Seconds (3.55), &PacketsQueueTest::TestPurge_Scheduled_1, this);
+    Simulator::Schedule (Seconds (6.2), &PacketsQueueTest::TestPurge_Scheduled_2, this);
+    Simulator::Schedule (Seconds (8.1), &PacketsQueueTest::TestPurge_Scheduled_3, this);
+    Simulator::Schedule (Seconds (12), &PacketsQueueTest::TestPurge_Scheduled_4, this);
 
     Simulator::Run ();
     Simulator::Destroy ();
@@ -3146,11 +3368,12 @@ public:
     TestConstructors ();
     TestGettersSetters ();
     TestGetSize ();
-    TestGetSummaryVector ();
     TestClear ();
+    TestGetSummaryVector ();
     TestProcessDisjointVector ();
     TestFindFunctions ();
     TestEnqueueFunction ();
+    TestPurge ();
     TestStatistics ();
     TestToStringFunction ();
   }

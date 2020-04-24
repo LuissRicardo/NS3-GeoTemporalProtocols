@@ -102,17 +102,14 @@ m_data_packet_reception_stats (copy.m_data_packet_reception_stats) { }
 // --------------------------
 
 uint32_t
-PacketsQueue::Size ()
+PacketsQueue::Size () const
 {
-  Purge ();
   return m_packets_table.size ();
 }
 
 void
-PacketsQueue::GetSummaryVector (std::set<DataIdentifier>& summary_vector)
+PacketsQueue::GetSummaryVector (std::set<DataIdentifier>& summary_vector) const
 {
-  Purge ();
-
   summary_vector.clear ();
 
   for (ConstIterator_t entry_it = m_packets_table.begin ();
@@ -129,11 +126,9 @@ PacketsQueue::GetSummaryVector (std::set<DataIdentifier>& summary_vector)
 // --------------------------
 
 bool
-PacketsQueue::Find (const DataIdentifier& data_packet_id, PacketQueueEntry& entry)
+PacketsQueue::Find (const DataIdentifier& data_packet_id, PacketQueueEntry& entry) const
 {
   NS_LOG_FUNCTION (this << data_packet_id);
-
-  Purge ();
 
   ConstIterator_t entry_it = m_packets_table.find (data_packet_id);
 
@@ -149,14 +144,14 @@ PacketsQueue::Find (const DataIdentifier& data_packet_id, PacketQueueEntry& entr
 }
 
 bool
-PacketsQueue::Find (const DataIdentifier& data_packet_id)
+PacketsQueue::Find (const DataIdentifier& data_packet_id) const
 {
   PacketQueueEntry entry;
   return Find (data_packet_id, entry);
 }
 
 bool
-PacketsQueue::Find (const PacketQueueEntry& packet_entry)
+PacketsQueue::Find (const PacketQueueEntry& packet_entry) const
 {
   PacketQueueEntry e;
   return Find (packet_entry.GetDataPacketId (), e);
@@ -263,7 +258,6 @@ PacketsQueue::Enqueue (const DataHeader& data_header, const Ipv4Address& transmi
   NS_LOG_FUNCTION (this << data_header << transmitter_ip);
 
   // Check if the packet entry already exists in the queue.
-  // Find will call Purge () to purge expired entries before performing the search
   if (Find (data_header.GetDataIdentifier ()))
     {
       // Packet already exists in queue, cancel.

@@ -38,6 +38,12 @@ namespace ns3
 namespace geotemporal_restricted_epidemic
 {
 
+/* Forward declaration */
+namespace test
+{
+class NeighborsTableTest;
+}
+
 // =============================================================================
 //                                 NeighborEntry
 // =============================================================================
@@ -187,14 +193,9 @@ public:
 
   /**
    * Returns the size of the neighbors table.
-   * 
-   * This function purges expired entries before counting the neighbor
-   * entries, so if there exist expired neighbor entries first they will be 
-   * purged and then the number of remaining (non expired) entries will be 
-   * returned.
    */
   uint32_t
-  Size ();
+  Size () const;
 
 
   // --------------------------
@@ -203,10 +204,6 @@ public:
 
   /**
    * Finds a neighbor entry with the specified IP address.
-   * 
-   * This function purges expired entries before searching the desired neighbor
-   * entry, so if the neighbor entry exists but has expired then it will be 
-   * purged and it won't be found.
    * 
    * @param neighbor_ip [IN] IPv4 address of the neighbor entry to search for.
    * @param entry [OUT] The neighbor entry with the specified IP address, if it
@@ -217,14 +214,10 @@ public:
    * exists. If no such neighbor entry is found then returns <code>false</code>.
    */
   bool
-  Find (const Ipv4Address & neighbor_ip, NeighborEntry & entry);
+  Find (const Ipv4Address & neighbor_ip, NeighborEntry & entry) const;
 
   /**
    * Finds a neighbor entry with the specified IP address.
-   * 
-   * This function purges expired entries before searching the desired neighbor
-   * entry, so if the neighbor entry exists but has expired then it will be 
-   * purged and it won't be found.
    * 
    * @param neighbor_ip [IN] IPv4 address of the neighbor entry to search for.
    * 
@@ -232,14 +225,10 @@ public:
    * exists. If no such neighbor entry is found then returns <code>false</code>.
    */
   bool
-  Find (const Ipv4Address & neighbor_ip);
+  Find (const Ipv4Address & neighbor_ip) const;
 
   /**
    * Finds a neighbor entry with the same IP address of the given neighbor entry.
-   * 
-   * This function purges expired entries before searching the desired neighbor
-   * entry, so if the neighbor entry exists but has expired then it will be 
-   * purged and it won't be found.
    * 
    * @param neighbor_entry [IN] Neighbor entry of the neighbor to search for.
    * 
@@ -247,7 +236,7 @@ public:
    * exists. If no such neighbor entry is found then returns <code>false</code>.
    */
   bool
-  Find (const NeighborEntry & neighbor_entry);
+  Find (const NeighborEntry & neighbor_entry) const;
 
 
   // --------------------------
@@ -270,13 +259,6 @@ public:
    * <b>entries expiration time</b> parameter. This parameter can be modified
    * with the <code>SetEntriesExpirationTime (const Time &)</code> function.
    * 
-   * This function purges expired entries before inserting the new neighbor
-   * entry, so if the given neighbor entry already exists (identified by its 
-   * IP address) but it has expired it will be purged (along with other expired 
-   * entries) and then the entry will be inserted as new (and will return 
-   * <code>true</code> because the entry was purged and didn't exist before the 
-   * insertion took place).
-   * 
    * @param new_neighbor_ip [IN] IP address of the new neighbor entry to insert.
    * 
    * @return <code>true</code> if the insertion took place. If there was no 
@@ -288,13 +270,6 @@ public:
   /**
    * Removes neighbor entry with the specified IP address from the neighbors 
    * table.
-   * 
-   * This function purges expired entries before removing the desired neighbor
-   * entry, so if the given neighbor entry does exist (identified by its IP
-   * address) but it has expired it will be purged (along with other expired 
-   * entries), and then the function won't be able to remove it (and will return
-   * <code>false</code> because the entry was "purged" and not explicitly 
-   * removed).
    * 
    * @param neighbor_ip_to_delete [IN] IP address of the neighbor entry to remove.
    * 
@@ -308,13 +283,6 @@ public:
    * Removes neighbor entry with the same IP address of the given neighbor entry
    * from the neighbors table.
    * 
-   * This function purges expired entries before removing the desired neighbor
-   * entry, so if the given neighbor entry does exist (identified by its IP
-   * address) but it has expired it will be purged (along with other expired 
-   * entries), and then the function won't be able to remove it (and will return
-   * <code>false</code> because the entry was "purged" and not explicitly 
-   * removed).
-   * 
    * @param neighbor_entry_to_delete [IN] Neighbor entry to remove.
    * 
    * @return <code>true</code> if the removal took place. If there was no 
@@ -327,10 +295,6 @@ public:
    * Restarts the expiration time of the neighbor entry with the specified IP
    * address (if it exists). 
    * 
-   * This function doesn't purge expired entries, so if the given neighbor entry
-   * does exist (identified by its IP address) its expiration time is restarted
-   * regardless if the entry has expired or not.
-   * 
    * @param neighbor_ip [IN] IP address of the neighbor entry to restart its 
    * expiration time.
    * 
@@ -341,17 +305,12 @@ public:
   bool
   RestartNeighborEntryExpirationTime (const Ipv4Address & neighbor_ip);
 
-
-private:
-
   /**
    * Removes all expired neighbor entries from the neighbors table.
    */
   void
   Purge ();
 
-
-public:
 
   void
   Print (std::ostream &os) const;
@@ -363,6 +322,7 @@ public:
   std::string ToString () const;
 
   friend bool operator== (const NeighborsTable & lhs, const NeighborsTable & rhs);
+  friend test::NeighborsTableTest;
 };
 
 // NeighborsTable relational operators
