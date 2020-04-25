@@ -51,10 +51,8 @@ PacketQueueEntry::PacketQueueEntry ()
 : m_data_packet (), m_expiration_time () { }
 
 PacketQueueEntry::PacketQueueEntry (const DataHeader& data_packet)
-: m_data_packet (data_packet), m_expiration_time ()
-{
-  SetExpirationTime (m_data_packet.GetDestinationGeoTemporalArea ().GetTimePeriod ());
-}
+: m_data_packet (data_packet),
+m_expiration_time (data_packet.GetDestinationGeoTemporalArea ().GetTimePeriod ().GetEndTime ()) { }
 
 PacketQueueEntry::PacketQueueEntry (const PacketQueueEntry& copy)
 : m_data_packet (copy.m_data_packet),
@@ -311,9 +309,13 @@ PacketsQueue::Purge ()
 {
   NS_LOG_FUNCTION (this);
 
+  const Time now = Simulator::Now ();
+
   for (ConstIterator_t entry_it = m_packets_table.begin (); entry_it != m_packets_table.end ();)
     {
-      if (entry_it->second.GetExpirationTime () <= Seconds (0))
+      // If the end time of the packet is less or equal than NOW then the packet
+      // is expired.
+      if (entry_it->second.GetExpirationTime () <= now)
         {
           NS_LOG_LOGIC ("Drops expired data packet entry : " << entry_it->second);
           // m_packets_table.erase (entry_it++); // For C++03

@@ -83,10 +83,30 @@ public:
     return m_neighbor_ip;
   }
 
-  inline Time
-  GetExpirationTime () const
+  /**
+   * Returns the remaining time before the neighbor node entry becomes expired.
+   * 
+   * If the returned time is:
+   * 
+   *   - Positive (> 0): The packet has remaining time.
+   * 
+   *   - Zero (= 0): The packet have just become expired.
+   * 
+   *   - Negative (< 0): The packet is expired.
+   */
+  inline const Time
+  GetRemainingTime () const
   {
     return m_expiration_time - Simulator::Now ();
+  }
+
+  /**
+   * Returns the expiration time of the neighbor node entry.
+   */
+  inline const Time &
+  GetExpirationTime () const
+  {
+    return m_expiration_time;
   }
 
   inline void

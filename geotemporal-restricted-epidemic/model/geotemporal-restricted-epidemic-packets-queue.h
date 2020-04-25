@@ -62,7 +62,10 @@ private:
   /** Epidemic data packet. */
   DataHeader m_data_packet;
 
-  /** Expiration time of the data packet entry. */
+  /**
+   * Expiration time of the data packet entry. This is nothing but the ending 
+   * time of the geo-temporal area.
+   */
   Time m_expiration_time;
 
 
@@ -103,28 +106,31 @@ public:
     return m_data_packet.GetDataIdentifier ().GetSourceIp ();
   }
 
+  /**
+   * Returns the remaining time before the packet becomes expired.
+   * 
+   * If the returned time is:
+   * 
+   *   - Positive (> 0): The packet has remaining time.
+   * 
+   *   - Zero (= 0): The packet have just become expired.
+   * 
+   *   - Negative (< 0): The packet is expired.
+   */
   inline const Time
-  GetExpirationTime () const
+  GetRemainingTime () const
   {
     return m_expiration_time - Simulator::Now ();
   }
 
-  inline void
-  SetExpirationTime (const Time & expiration_time)
+  /**
+   * Returns the expiration time of the data packet entry. This is nothing but 
+   * the ending time of the geo-temporal area.
+   */
+  inline const Time &
+  GetExpirationTime () const
   {
-    m_expiration_time = expiration_time + Simulator::Now ();
-  }
-
-  inline void
-  SetExpirationTime (uint32_t packet_initial_time, uint32_t packet_duration)
-  {
-    m_expiration_time = Seconds (packet_initial_time + packet_duration);
-  }
-
-  inline void
-  SetExpirationTime (const TimePeriod & packet_time_period)
-  {
-    m_expiration_time = packet_time_period.GetEndTime ();
+    return m_expiration_time;
   }
 
 

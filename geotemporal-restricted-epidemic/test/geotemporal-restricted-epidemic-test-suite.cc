@@ -823,17 +823,20 @@ public:
     // Default constructor
     NeighborEntry e1;
     NS_TEST_EXPECT_MSG_EQ (e1.GetNeighborIpAddress (), Ipv4Address (), "Must be default IP");
+    NS_TEST_EXPECT_MSG_EQ (e1.GetRemainingTime (), Time (), "Must be default time (0)");
     NS_TEST_EXPECT_MSG_EQ (e1.GetExpirationTime (), Time (), "Must be default time (0)");
 
     // Parameters constructor
     NeighborEntry e2 (Ipv4Address ("1.2.3.4"), Seconds (10));
     NS_TEST_EXPECT_MSG_EQ (e2.GetNeighborIpAddress (), Ipv4Address ("1.2.3.4"), "Must be default IP");
-    NS_TEST_EXPECT_MSG_EQ (e2.GetExpirationTime (), Seconds (10), "Must be default time (0)");
+    NS_TEST_EXPECT_MSG_EQ (e2.GetRemainingTime (), Seconds (10), "Must be 10 seconds");
+    NS_TEST_EXPECT_MSG_EQ (e2.GetExpirationTime (), Seconds (10), "Must be 10 seconds");
 
     // Copy constructor
     NeighborEntry e3 (e2);
     NS_TEST_EXPECT_MSG_EQ (e3.GetNeighborIpAddress (), Ipv4Address ("1.2.3.4"), "Must be default IP");
-    NS_TEST_EXPECT_MSG_EQ (e3.GetExpirationTime (), Seconds (10), "Must be default time (0)");
+    NS_TEST_EXPECT_MSG_EQ (e3.GetRemainingTime (), Seconds (10), "Must be 10 seconds");
+    NS_TEST_EXPECT_MSG_EQ (e3.GetExpirationTime (), Seconds (10), "Must be 10 seconds");
   }
 
   void
@@ -885,7 +888,12 @@ public:
   TestGetSetExpirationTime_Scheduled_1 ()
   {
     // This function is launched by the scheduler at second 2.5
-    Time expected_expiration_time = Seconds (47.5);
+    const Time expected_remaining_time = Seconds (47.5);
+    const Time expected_expiration_time = Seconds (50.0);
+    NS_TEST_EXPECT_MSG_EQ_TOL (m_neighbor_entry.GetRemainingTime (), expected_remaining_time, MicroSeconds (1),
+                               "Expected remaining time: " << expected_remaining_time.ToDouble (Time::S)
+                               << " seconds, got: " << m_neighbor_entry.GetRemainingTime ().ToDouble (Time::S)
+                               << " seconds.");
     NS_TEST_EXPECT_MSG_EQ_TOL (m_neighbor_entry.GetExpirationTime (), expected_expiration_time, MicroSeconds (1),
                                "Expected expiration time: " << expected_expiration_time.ToDouble (Time::S)
                                << " seconds, got: " << m_neighbor_entry.GetExpirationTime ().ToDouble (Time::S)
@@ -899,7 +907,12 @@ public:
   TestGetSetExpirationTime_Scheduled_2 ()
   {
     // This function is launched by the scheduler at second 15.25
-    Time expected_expiration_time = Seconds (167.25);
+    const Time expected_remaining_time = Seconds (167.25);
+    const Time expected_expiration_time = Seconds (182.5);
+    NS_TEST_EXPECT_MSG_EQ_TOL (m_neighbor_entry.GetRemainingTime (), expected_remaining_time, MicroSeconds (1),
+                               "Expected remaining time: " << expected_remaining_time.ToDouble (Time::S)
+                               << " seconds, got: " << m_neighbor_entry.GetRemainingTime ().ToDouble (Time::S)
+                               << " seconds.");
     NS_TEST_EXPECT_MSG_EQ_TOL (m_neighbor_entry.GetExpirationTime (), expected_expiration_time, MicroSeconds (1),
                                "Expected expiration time: " << expected_expiration_time.ToDouble (Time::S)
                                << " seconds, got: " << m_neighbor_entry.GetExpirationTime ().ToDouble (Time::S)
@@ -913,7 +926,12 @@ public:
   TestGetSetExpirationTime_Scheduled_3 ()
   {
     // This function is launched by the scheduler at second 21.9
-    Time expected_expiration_time = Seconds (3.35);
+    const Time expected_remaining_time = Seconds (3.35);
+    const Time expected_expiration_time = Seconds (25.25);
+    NS_TEST_EXPECT_MSG_EQ_TOL (m_neighbor_entry.GetRemainingTime (), expected_remaining_time, MicroSeconds (1),
+                               "Expected remaining time: " << expected_remaining_time.ToDouble (Time::S)
+                               << " seconds, got: " << m_neighbor_entry.GetRemainingTime ().ToDouble (Time::S)
+                               << " seconds.");
     NS_TEST_EXPECT_MSG_EQ_TOL (m_neighbor_entry.GetExpirationTime (), expected_expiration_time, MicroSeconds (1),
                                "Expected expiration time: " << expected_expiration_time.ToDouble (Time::S)
                                << " seconds, got: " << m_neighbor_entry.GetExpirationTime ().ToDouble (Time::S)
@@ -1069,6 +1087,8 @@ public:
     NS_TEST_EXPECT_MSG_EQ (found, true, "Neighbor entry 1.1.1.1 must be found.");
     NS_TEST_EXPECT_MSG_EQ (entry.GetNeighborIpAddress (), Ipv4Address ("1.1.1.1"),
                            "Entry must have IP address 1.1.1.1.");
+    NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetRemainingTime (), Seconds (10), MicroSeconds (1),
+                               "Entry must have 10 seconds of remaining time.");
     NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetExpirationTime (), Seconds (10), MicroSeconds (1),
                                "Entry must have 10 seconds of expiration time.");
 
@@ -1142,8 +1162,10 @@ public:
 
     m_neighbors_table.Find (Ipv4Address ("1.1.1.3"), entry);
 
-    NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetExpirationTime (), Seconds (5), MicroSeconds (1),
-                               "Entry 1.1.1.3 expiration time must be 5 seconds.");
+    NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetRemainingTime (), Seconds (5), MicroSeconds (1),
+                               "Entry 1.1.1.3 remaining time must be 5 seconds.");
+    NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetExpirationTime (), Seconds (12), MicroSeconds (1),
+                               "Entry 1.1.1.3 expiration time must be 12 seconds.");
   }
 
   void
@@ -1184,6 +1206,8 @@ public:
 
     m_neighbors_table.Find (Ipv4Address ("1.1.1.1"), entry);
 
+    NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetRemainingTime (), Seconds (10), MicroSeconds (1),
+                               "Entry 1.1.1.1 remaining time must be 10 seconds.");
     NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetExpirationTime (), Seconds (10), MicroSeconds (1),
                                "Entry 1.1.1.1 expiration time must be 10 seconds.");
 
@@ -1203,6 +1227,8 @@ public:
 
     m_neighbors_table.Find (Ipv4Address ("1.1.1.2"), entry);
 
+    NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetRemainingTime (), Seconds (15), MicroSeconds (1),
+                               "Entry 1.1.1.2 remaining time must be 15 seconds.");
     NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetExpirationTime (), Seconds (15), MicroSeconds (1),
                                "Entry 1.1.1.2 expiration time must be 15 seconds.");
 
@@ -1216,6 +1242,8 @@ public:
 
     m_neighbors_table.Find (Ipv4Address ("1.1.1.3"), entry);
 
+    NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetRemainingTime (), Seconds (5), MicroSeconds (1),
+                               "Entry 1.1.1.3 remaining time must be 5 seconds.");
     NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetExpirationTime (), Seconds (5), MicroSeconds (1),
                                "Entry 1.1.1.3 expiration time must be 5 seconds.");
 
@@ -1332,8 +1360,10 @@ public:
 
     m_neighbors_table.Find (Ipv4Address ("1.1.1.1"), entry);
 
-    NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetExpirationTime (), Seconds (1), MicroSeconds (1),
-                               "Entry 1.1.1.1 expiration time must be 1 seconds.");
+    NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetRemainingTime (), Seconds (1), MicroSeconds (1),
+                               "Entry 1.1.1.1 remaining time must be 1 seconds.");
+    NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetExpirationTime (), Seconds (10), MicroSeconds (1),
+                               "Entry 1.1.1.1 expiration time must be 10 seconds.");
 
     restarted = m_neighbors_table.RestartNeighborEntryExpirationTime (Ipv4Address ("1.1.1.1"));
     NS_TEST_EXPECT_MSG_EQ (restarted, true, "The expiration time of entry 1.1.1.1 must have been restarted.");
@@ -1344,8 +1374,10 @@ public:
 
     m_neighbors_table.Find (Ipv4Address ("1.1.1.1"), entry);
 
-    NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetExpirationTime (), Seconds (10), MicroSeconds (1),
-                               "Entry 1.1.1.1 expiration time must be 10 seconds.");
+    NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetRemainingTime (), Seconds (10), MicroSeconds (1),
+                               "Entry 1.1.1.1 remaining time must be 10 seconds.");
+    NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetExpirationTime (), Seconds (19), MicroSeconds (1),
+                               "Entry 1.1.1.1 expiration time must be 19 seconds.");
   }
 
   void
@@ -1370,8 +1402,10 @@ public:
     found = m_neighbors_table.Find (Ipv4Address ("1.1.1.1"), entry);
 
     NS_TEST_EXPECT_MSG_EQ (found, true, "Neighbor entry 1.1.1.1 must be found.");
-    NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetExpirationTime (), Seconds (10), MicroSeconds (1),
-                               "Entry 1.1.1.1 expiration time must be 10 seconds.");
+    NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetRemainingTime (), Seconds (10), MicroSeconds (1),
+                               "Entry 1.1.1.1 remaining time must be 10 seconds.");
+    NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetExpirationTime (), Seconds (31), MicroSeconds (1),
+                               "Entry 1.1.1.1 expiration time must be 31 seconds.");
   }
 
   void
@@ -1593,6 +1627,7 @@ public:
     NS_TEST_EXPECT_MSG_EQ (e1.GetDataPacketId (), DataIdentifier (), "Must be the default DataIdentifier.");
     NS_TEST_EXPECT_MSG_EQ (e1.GetDataPacket (), DataHeader (), "Must be the default DataHeader.");
     NS_TEST_EXPECT_MSG_EQ (e1.GetHopsCount (), 0u, "Must be zero.");
+    NS_TEST_EXPECT_MSG_EQ (e1.GetRemainingTime (), Time (), "Must be the default Time.");
     NS_TEST_EXPECT_MSG_EQ (e1.GetExpirationTime (), Time (), "Must be the default Time.");
 
     // Parameters constructor
@@ -1601,6 +1636,8 @@ public:
     NS_TEST_EXPECT_MSG_EQ (e2.GetDataPacketId (), m_data_id, "Must be " << m_data_id);
     NS_TEST_EXPECT_MSG_EQ (e2.GetDataPacket (), m_header, "Must be " << m_header);
     NS_TEST_EXPECT_MSG_EQ (e2.GetHopsCount (), m_hops_count, "Must be " << m_hops_count);
+    NS_TEST_EXPECT_MSG_EQ_TOL (e2.GetRemainingTime (), Seconds (74), MicroSeconds (1),
+                               "Must be the second 74.");
     NS_TEST_EXPECT_MSG_EQ_TOL (e2.GetExpirationTime (), Seconds (74), MicroSeconds (1),
                                "Must be the second 74.");
 
@@ -1610,6 +1647,8 @@ public:
     NS_TEST_EXPECT_MSG_EQ (e3.GetDataPacketId (), m_data_id, "Must be " << m_data_id);
     NS_TEST_EXPECT_MSG_EQ (e3.GetDataPacket (), m_header, "Must be " << m_header);
     NS_TEST_EXPECT_MSG_EQ (e3.GetHopsCount (), m_hops_count, "Must be " << m_hops_count);
+    NS_TEST_EXPECT_MSG_EQ_TOL (e3.GetRemainingTime (), Seconds (74), MicroSeconds (1),
+                               "Must be the second 74.");
     NS_TEST_EXPECT_MSG_EQ_TOL (e3.GetExpirationTime (), Seconds (74), MicroSeconds (1),
                                "Must be the second 74.");
   }
@@ -1623,41 +1662,19 @@ public:
   }
 
   void
-  TestExpirationTime_Scheduled_1 ()
+  TestExpirationTimeAndRemaningTime_Scheduled_1 (const Time & expected_expiration_time,
+                                                 const Time & expected_remaining_time)
   {
-    // This function is launched by the scheduler at second 13.82
-    Time expected_time = Seconds (69.18); // 83 - 13.82 = 69.18
-    NS_TEST_EXPECT_MSG_EQ_TOL (m_queue_entry.GetExpirationTime (), expected_time, MicroSeconds (1),
-                               "Expected expiration time: " << expected_time.ToDouble (Time::S)
+    NS_TEST_EXPECT_MSG_EQ_TOL (m_queue_entry.GetRemainingTime (), expected_remaining_time, MicroSeconds (1),
+                               "Expected remaining time: " << expected_remaining_time.ToDouble (Time::S)
                                << " seconds.");
-
-    m_queue_entry.SetExpirationTime (Seconds (28.6)); // Will expire at second 42.42 (13.82 + 28.6)
-  }
-
-  void
-  TestExpirationTime_Scheduled_2 ()
-  {
-    // This function is launched by the scheduler at second 25.25
-    Time expected_time = Seconds (17.17); // 42.42 − 25.25 = 17.17
-    NS_TEST_EXPECT_MSG_EQ_TOL (m_queue_entry.GetExpirationTime (), expected_time, MicroSeconds (1),
-                               "Expected expiration time: " << expected_time.ToDouble (Time::S)
-                               << " seconds.");
-
-    m_queue_entry.SetExpirationTime (30u, 43u); // Will expire at second 73 (30 + 43)
-  }
-
-  void
-  TestExpirationTime_Scheduled_3 ()
-  {
-    // This function is launched by the scheduler at second 61.9
-    Time expected_time = Seconds (11.1); // 73 − 61.9 = 11.1
-    NS_TEST_EXPECT_MSG_EQ_TOL (m_queue_entry.GetExpirationTime (), expected_time, MicroSeconds (1),
-                               "Expected expiration time: " << expected_time.ToDouble (Time::S)
+    NS_TEST_EXPECT_MSG_EQ_TOL (m_queue_entry.GetExpirationTime (), expected_expiration_time, MicroSeconds (1),
+                               "Expected expiration time: " << expected_expiration_time.ToDouble (Time::S)
                                << " seconds.");
   }
 
   void
-  TestExpirationTime ()
+  TestExpirationTimeAndRemaningTime ()
   {
     DataHeader header (m_header);
     header.SetDestinationGeoTemporalArea (GeoTemporalArea (TimePeriod (Seconds (37), Seconds (83)),
@@ -1665,42 +1682,34 @@ public:
 
     m_queue_entry = PacketQueueEntry (header);
 
-    Simulator::Schedule (Seconds (13.82), &PacketQueueEntryTest::TestExpirationTime_Scheduled_1, this);
-    Simulator::Schedule (Seconds (25.25), &PacketQueueEntryTest::TestExpirationTime_Scheduled_2, this);
-    Simulator::Schedule (Seconds (61.9), &PacketQueueEntryTest::TestExpirationTime_Scheduled_3, this);
+    Time expected_remaining_time = Seconds (83); // 83 - 0 = 83
+    Time expected_expiration_time = Seconds (83);
+
+    NS_TEST_EXPECT_MSG_EQ_TOL (m_queue_entry.GetRemainingTime (), expected_remaining_time, MicroSeconds (1),
+                               "Expected remaining time: " << expected_remaining_time.ToDouble (Time::S)
+                               << " seconds.");
+    NS_TEST_EXPECT_MSG_EQ_TOL (m_queue_entry.GetExpirationTime (), expected_expiration_time, MicroSeconds (1),
+                               "Expected expiration time: " << expected_expiration_time.ToDouble (Time::S)
+                               << " seconds.");
+
+    Simulator::ScheduleNow (&PacketQueueEntryTest::TestExpirationTimeAndRemaningTime_Scheduled_1, this,
+                            Seconds (83.0), Seconds (83.0)); // 83 - 0.0 = 83.0
+    Simulator::Schedule (Seconds (0.0), &PacketQueueEntryTest::TestExpirationTimeAndRemaningTime_Scheduled_1, this,
+                         Seconds (83.0), Seconds (83.0)); // 83 - 0.0 = 83.0
+    Simulator::Schedule (Seconds (13.82), &PacketQueueEntryTest::TestExpirationTimeAndRemaningTime_Scheduled_1, this,
+                         Seconds (83.0), Seconds (69.18)); // 83 - 13.82 = 69.18
+    Simulator::Schedule (Seconds (25.25), &PacketQueueEntryTest::TestExpirationTimeAndRemaningTime_Scheduled_1, this,
+                         Seconds (83.0), Seconds (57.75)); // 83 − 25.25 = 57.75
+    Simulator::Schedule (Seconds (61.9), &PacketQueueEntryTest::TestExpirationTimeAndRemaningTime_Scheduled_1, this,
+                         Seconds (83.0), Seconds (21.1)); // 83 − 61.9 = 21.1
 
     Simulator::Run ();
     Simulator::Destroy ();
   }
 
   void
-  TestToStringFunction_Scheduled_1 ()
+  TestToStringFunction_Scheduled_1 (const std::string & expected_str)
   {
-    // This function is launched by the scheduler at second 13.82
-    std::string expected_str = "Packet queue entry 1.1.1.1:1 will expire at second 83";
-
-    NS_TEST_EXPECT_MSG_EQ (m_queue_entry.ToString (), expected_str, "Expected string: " << expected_str);
-
-    m_queue_entry.SetExpirationTime (Seconds (28.6)); // Will expire at second 42.42 (13.82 + 28.6)
-  }
-
-  void
-  TestToStringFunction_Scheduled_2 ()
-  {
-    // This function is launched by the scheduler at second 42.42
-    std::string expected_str = "Packet queue entry 1.1.1.1:1 will expire at second 83";
-
-    NS_TEST_EXPECT_MSG_EQ (m_queue_entry.ToString (), expected_str, "Expected string: " << expected_str);
-
-    m_queue_entry.SetExpirationTime (30u, 43u); // Will expire at second 73 (30 + 43)
-  }
-
-  void
-  TestToStringFunction_Scheduled_3 ()
-  {
-    // This function is launched by the scheduler at second 61.9
-    std::string expected_str = "Packet queue entry 1.1.1.1:1 will expire at second 73";
-
     NS_TEST_EXPECT_MSG_EQ (m_queue_entry.ToString (), expected_str, "Expected string: " << expected_str);
   }
 
@@ -1713,9 +1722,21 @@ public:
 
     m_queue_entry = PacketQueueEntry (header);
 
-    Simulator::Schedule (Seconds (13.82), &PacketQueueEntryTest::TestExpirationTime_Scheduled_1, this);
-    Simulator::Schedule (Seconds (25.25), &PacketQueueEntryTest::TestExpirationTime_Scheduled_2, this);
-    Simulator::Schedule (Seconds (61.9), &PacketQueueEntryTest::TestExpirationTime_Scheduled_3, this);
+    std::string expected_str = "Packet queue entry 1.1.1.1:1 will expire at second 83.00";
+
+    NS_TEST_EXPECT_MSG_EQ (m_queue_entry.ToString (), expected_str, "Expected string: " << expected_str);
+
+    // The result must be the same no matter the current simulation time
+    Simulator::ScheduleNow (&PacketQueueEntryTest::TestToStringFunction_Scheduled_1, this,
+                            expected_str);
+    Simulator::Schedule (Seconds (0.0), &PacketQueueEntryTest::TestToStringFunction_Scheduled_1, this,
+                         expected_str);
+    Simulator::Schedule (Seconds (13.82), &PacketQueueEntryTest::TestToStringFunction_Scheduled_1, this,
+                         expected_str);
+    Simulator::Schedule (Seconds (25.25), &PacketQueueEntryTest::TestToStringFunction_Scheduled_1, this,
+                         expected_str);
+    Simulator::Schedule (Seconds (61.9), &PacketQueueEntryTest::TestToStringFunction_Scheduled_1, this,
+                         expected_str);
 
     Simulator::Run ();
     Simulator::Destroy ();
@@ -1733,15 +1754,6 @@ public:
     PacketQueueEntry different (diff_header);
 
     TestEqualityRelationalOperators (equal_1, equal_2, different);
-
-    // Different expiration time
-    equal_1 = PacketQueueEntry (m_header);
-    equal_2 = PacketQueueEntry (m_header);
-    different = PacketQueueEntry (m_header);
-
-    different.SetExpirationTime (Seconds (400));
-
-    TestEqualityRelationalOperators (equal_1, equal_2, different);
   }
 
   void
@@ -1749,7 +1761,7 @@ public:
   {
     TestConstructors ();
     TestGetHopsCount ();
-    TestExpirationTime ();
+    TestExpirationTimeAndRemaningTime ();
     TestToStringFunction ();
     TestOverloadedOperators ();
   }
@@ -2571,6 +2583,8 @@ public:
 
     NS_TEST_EXPECT_MSG_EQ (found, true, "Packet queue entry 1.1.1.1:1 must be found.");
     NS_TEST_EXPECT_MSG_EQ (entry.GetDataPacketId (), data_id, "Entry must have data ID " << data_id);
+    NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetRemainingTime (), Seconds (10), MicroSeconds (1),
+                               "Packet queue entry must have 10 seconds of remaining time.");
     NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetExpirationTime (), Seconds (10), MicroSeconds (1),
                                "Packet queue entry must have 10 seconds of expiration time.");
 
@@ -2646,8 +2660,10 @@ public:
 
     m_packets_queue.Find (DataIdentifier ("1.1.1.3:3"), entry);
 
-    NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetExpirationTime (), Seconds (4), MicroSeconds (1),
-                               "Packet queue entry 1.1.1.3:3 expiration time must be 4 seconds.");
+    NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetRemainingTime (), Seconds (4), MicroSeconds (1),
+                               "Packet queue entry 1.1.1.3:3 remaining time must be 4 seconds.");
+    NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetExpirationTime (), Seconds (20), MicroSeconds (1),
+                               "Packet queue entry 1.1.1.3:3 expiration time must be 20 seconds.");
   }
 
   void
@@ -2819,6 +2835,8 @@ public:
 
     m_packets_queue.Find (DataIdentifier ("1.1.1.1:1"), entry);
 
+    NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetRemainingTime (), Seconds (10), MicroSeconds (1),
+                               "Packet queue entry 1.1.1.1:1 remaining time must be 10 seconds.");
     NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetExpirationTime (), Seconds (10), MicroSeconds (1),
                                "Packet queue entry 1.1.1.1:1 expiration time must be 10 seconds.");
 
@@ -2848,6 +2866,8 @@ public:
 
     m_packets_queue.Find (DataIdentifier ("1.1.1.2:2"), entry);
 
+    NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetRemainingTime (), Seconds (15), MicroSeconds (1),
+                               "Packet queue entry 1.1.1.2:2 remaining time must be 15 seconds.");
     NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetExpirationTime (), Seconds (15), MicroSeconds (1),
                                "Packet queue entry 1.1.1.2:2 expiration time must be 15 seconds.");
 
@@ -2880,6 +2900,8 @@ public:
 
     m_packets_queue.Find (DataIdentifier ("1.1.1.3:3"), entry);
 
+    NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetRemainingTime (), Seconds (5), MicroSeconds (1),
+                               "Packet queue entry 1.1.1.3:3 remaining time must be 5 seconds.");
     NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetExpirationTime (), Seconds (5), MicroSeconds (1),
                                "Packet queue entry 1.1.1.3:3 expiration time must be 5 seconds.");
 
@@ -2905,6 +2927,8 @@ public:
 
     m_packets_queue.Find (DataIdentifier ("1.1.1.4:4"), entry);
 
+    NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetRemainingTime (), Seconds (9), MicroSeconds (1),
+                               "Packet queue entry 1.1.1.4:4 remaining time must be 9 seconds.");
     NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetExpirationTime (), Seconds (9), MicroSeconds (1),
                                "Packet queue entry 1.1.1.4:4 expiration time must be 9 seconds.");
 
@@ -2933,6 +2957,8 @@ public:
 
     m_packets_queue.Find (DataIdentifier ("1.1.1.5:5"), entry);
 
+    NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetRemainingTime (), Seconds (17), MicroSeconds (1),
+                               "Packet queue entry 1.1.1.5:5 remaining time must be 17 seconds.");
     NS_TEST_EXPECT_MSG_EQ_TOL (entry.GetExpirationTime (), Seconds (17), MicroSeconds (1),
                                "Packet queue entry 1.1.1.5:5 expiration time must be 17 seconds.");
 
