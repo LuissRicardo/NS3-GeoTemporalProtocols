@@ -1014,12 +1014,12 @@ GeoTemporalInstaller::Report (const std::string& output_xml_filename)
 
   std::cout << "Computing statistics... ";
 
-  SimulationStatisticsFile simulation_stats (m_gta_visitor_vehicles_input_filename,
-                                             m_node_id_to_ip);
+  PrioritySimulationStatisticsFile simulation_stats (m_gta_visitor_vehicles_input_filename,
+                                                     m_node_id_to_ip);
 
   Ptr<Node> node;
   Ptr<geotemporal::RoutingProtocol> routing_protocol;
-  DataPacketStatistics packet_stats;
+  PriorityDataPacketStatistics packet_stats;
 
   // Initialize SimulationStatisticsFile object with the counter of transmitted
   // packets and the created DATA packets of each node.
@@ -1039,12 +1039,13 @@ GeoTemporalInstaller::Report (const std::string& output_xml_filename)
         packet_it = created_packets.begin ();
               packet_it != created_packets.end (); ++packet_it)
         {
-          packet_stats = DataPacketStatistics (/*Data ID*/ packet_it->first.GetDataIdentifier (),
-                                               /*Source node ID*/ node_id,
-                                               /*Creation time*/ packet_it->second,
-                                               /*Message size*/ packet_it->first.GetMessage ().size (),
-                                               /*Data header size*/ packet_it->first.GetSerializedSize () + 1u, // DATA header size + Type header size
-                                               /*Destination geo-temporal area*/ packet_it->first.GetDestinationGeoTemporalArea ());
+          packet_stats = PriorityDataPacketStatistics (/*Data ID*/ packet_it->first.GetDataIdentifier (),
+                                                       /*Emergency flag*/ packet_it->first.IsEmergencyPacket (),
+                                                       /*Source node ID*/ node_id,
+                                                       /*Creation time*/ packet_it->second,
+                                                       /*Message size*/ packet_it->first.GetMessage ().size (),
+                                                       /*Data header size*/ packet_it->first.GetSerializedSize () + 1u, // DATA header size + Type header size
+                                                       /*Destination geo-temporal area*/ packet_it->first.GetDestinationGeoTemporalArea ());
 
           simulation_stats.AddDataPacket (packet_stats);
         }

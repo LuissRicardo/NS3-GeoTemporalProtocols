@@ -2071,8 +2071,6 @@ public:
     NS_TEST_EXPECT_MSG_EQ (entry.GetRequestedPacketsSet (), requested_packets,
                            "Entry 1.1.1.3 requested packets set must be the expected");
 
-    // The following scheduled calls test:
-    //  - That Insert calls Purge()
     Simulator::Schedule (Seconds (7), &NeighborsTableTest::TestInsertFunction_Scheduled_1, this);
     Simulator::Schedule (Seconds (13), &NeighborsTableTest::TestInsertFunction_Scheduled_2, this);
 
@@ -2316,10 +2314,6 @@ public:
 
     bool restarted, found;
     NeighborEntry entry;
-
-    // Before calling RestartNeighborEntryExpirationTime (const Ipv4Address&)
-    // we don't use other functions that call Purge () to avoid purging the 
-    // expired entry.
 
     restarted = m_neighbors_table.RestartNeighborEntryExpirationTime (Ipv4Address ("1.1.1.1"));
     NS_TEST_EXPECT_MSG_EQ (restarted, true, "The expiration time of entry 1.1.1.1 must have been restarted.");
@@ -4451,7 +4445,6 @@ public:
     NS_TEST_EXPECT_MSG_EQ (found, false, "Packet queue entry 1.1.1.3:3 must not be found.");
 
     // The following scheduled call test:
-    //  - That Enqueue calls Purge()
     Simulator::Schedule (Seconds (16), &PacketsQueueTest::TestEnqueueFunction_Scheduled_1, this);
 
     // The following scheduled call test:
