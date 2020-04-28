@@ -1174,7 +1174,7 @@ public:
 
     NS_TEST_EXPECT_MSG_EQ (packet_stats.IsExpectedReceiverNodesSet (), false, "Must be false");
 
-    std::map<Ipv4Address, Time> expected_receiver_nodes{
+    std::map<Ipv4Address, Time> expected_receiver_nodes {
       {Ipv4Address ("10.0.0.1"), Seconds (30)}, // Source node, will be discarded.
       {Ipv4Address ("10.0.0.2"), Seconds (40)},
       {Ipv4Address ("10.0.0.3"), Seconds (50)},
@@ -1201,7 +1201,7 @@ public:
 
     NS_TEST_EXPECT_MSG_EQ (packet_stats.IsExpectedReceiverNodesSet (), false, "Must be false");
 
-    std::map<Ipv4Address, Time> expected_receiver_nodes{
+    std::map<Ipv4Address, Time> expected_receiver_nodes {
       {Ipv4Address ("10.0.0.1"), Seconds (30)}, // Source node, will be discarded.
       {Ipv4Address ("10.0.0.2"), Seconds (40)},
       {Ipv4Address ("10.0.0.3"), Seconds (50)},
@@ -2118,6 +2118,194 @@ public:
 
 
 // =============================================================================
+//                        SimulationStatisticsValuesTest
+// =============================================================================
+
+/**
+ * SimulationStatisticsValues test suite.
+ * 
+ * \ingroup tests
+ * \ingroup geotemporal-library-test
+ */
+class SimulationStatisticsValuesTest : public LibraryUtilsTestCase
+{
+public:
+
+  SimulationStatisticsValuesTest () : LibraryUtilsTestCase ("SimulationStatisticsValues") { }
+
+  void
+  TestConstructors ()
+  {
+    // Default constructor
+    SimulationStatisticsValues s1;
+    NS_TEST_EXPECT_MSG_EQ (s1.m_average_delivery_delay, -1.0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_average_delivery_ratio, -1.0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_total_overhead, -1.0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_data_overhead, -1.0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_control_overhead, -1.0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_total_transmitted_bytes, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_data_transmitted_bytes, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_control_transmitted_bytes, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_total_delivered_data_bytes, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_expected_receivers, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_confirmed_receivers, 0u, "Must be equal");
+
+    s1.m_average_delivery_delay = 1.1;
+    s1.m_average_delivery_ratio = 2.2;
+    s1.m_total_overhead = 3.3;
+    s1.m_data_overhead = 4.4;
+    s1.m_control_overhead = 5.5;
+    s1.m_total_transmitted_bytes = 6u;
+    s1.m_data_transmitted_bytes = 7u;
+    s1.m_control_transmitted_bytes = 8u;
+    s1.m_total_delivered_data_bytes = 9u;
+    s1.m_expected_receivers = 10u;
+    s1.m_confirmed_receivers = 11u;
+
+    // Copy constructor
+    SimulationStatisticsValues s2 (s1);
+    NS_TEST_EXPECT_MSG_EQ (s2.m_average_delivery_delay, s1.m_average_delivery_delay, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s2.m_average_delivery_ratio, s1.m_average_delivery_ratio, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s2.m_total_overhead, s1.m_total_overhead, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s2.m_data_overhead, s1.m_data_overhead, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s2.m_control_overhead, s1.m_control_overhead, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s2.m_total_transmitted_bytes, s1.m_total_transmitted_bytes, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s2.m_data_transmitted_bytes, s1.m_data_transmitted_bytes, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s2.m_control_transmitted_bytes, s1.m_control_transmitted_bytes, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s2.m_total_delivered_data_bytes, s1.m_total_delivered_data_bytes, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s2.m_expected_receivers, s1.m_expected_receivers, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s2.m_confirmed_receivers, s1.m_confirmed_receivers, "Must be equal");
+  }
+
+  void
+  TestInitializeValues ()
+  {
+    SimulationStatisticsValues s1;
+
+    s1.m_average_delivery_delay = 1.1;
+    s1.m_average_delivery_ratio = 2.2;
+    s1.m_total_overhead = 3.3;
+    s1.m_data_overhead = 4.4;
+    s1.m_control_overhead = 5.5;
+    s1.m_total_transmitted_bytes = 6u;
+    s1.m_data_transmitted_bytes = 7u;
+    s1.m_control_transmitted_bytes = 8u;
+    s1.m_total_delivered_data_bytes = 9u;
+    s1.m_expected_receivers = 10u;
+    s1.m_confirmed_receivers = 11u;
+
+    s1.InitializeValues ();
+
+    NS_TEST_EXPECT_MSG_EQ (s1.m_average_delivery_delay, -1.0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_average_delivery_ratio, -1.0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_total_overhead, -1.0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_data_overhead, -1.0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_control_overhead, -1.0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_total_transmitted_bytes, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_data_transmitted_bytes, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_control_transmitted_bytes, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_total_delivered_data_bytes, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_expected_receivers, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_confirmed_receivers, 0u, "Must be equal");
+  }
+
+  void
+  TestOverloadedOperators ()
+  {
+    SimulationStatisticsValues equal_1;
+
+    equal_1.m_average_delivery_delay = 1.1;
+    equal_1.m_average_delivery_ratio = 2.2;
+    equal_1.m_total_overhead = 3.3;
+    equal_1.m_data_overhead = 4.4;
+    equal_1.m_control_overhead = 5.5;
+    equal_1.m_total_transmitted_bytes = 6u;
+    equal_1.m_data_transmitted_bytes = 7u;
+    equal_1.m_control_transmitted_bytes = 8u;
+    equal_1.m_total_delivered_data_bytes = 9u;
+    equal_1.m_expected_receivers = 10u;
+    equal_1.m_confirmed_receivers = 11u;
+
+    SimulationStatisticsValues equal_2 (equal_1);
+
+    // Different average delivery delay
+    SimulationStatisticsValues different (equal_1);
+    different.m_average_delivery_delay = 100.001;
+
+    DoTestEqualityRelationalOperators (equal_1, equal_2, different);
+
+    // Different average delivery ratio
+    different = SimulationStatisticsValues (equal_1);
+    different.m_average_delivery_ratio = 200.002;
+
+    DoTestEqualityRelationalOperators (equal_1, equal_2, different);
+
+    // Different total overhead
+    different = SimulationStatisticsValues (equal_1);
+    different.m_total_overhead = 300.003;
+
+    DoTestEqualityRelationalOperators (equal_1, equal_2, different);
+
+    // Different data overhead
+    different = SimulationStatisticsValues (equal_1);
+    different.m_data_overhead = 400.004;
+
+    DoTestEqualityRelationalOperators (equal_1, equal_2, different);
+
+    // Different control overhead
+    different = SimulationStatisticsValues (equal_1);
+    different.m_control_overhead = 500.005;
+
+    DoTestEqualityRelationalOperators (equal_1, equal_2, different);
+
+    // Different total transmitted bytes
+    different = SimulationStatisticsValues (equal_1);
+    different.m_total_transmitted_bytes = 600u;
+
+    DoTestEqualityRelationalOperators (equal_1, equal_2, different);
+
+    // Different data transmitted bytes
+    different = SimulationStatisticsValues (equal_1);
+    different.m_data_transmitted_bytes = 700u;
+
+    DoTestEqualityRelationalOperators (equal_1, equal_2, different);
+
+    // Different control transmitted bytes
+    different = SimulationStatisticsValues (equal_1);
+    different.m_control_transmitted_bytes = 800u;
+
+    DoTestEqualityRelationalOperators (equal_1, equal_2, different);
+
+    // Different total delivered data bytes
+    different = SimulationStatisticsValues (equal_1);
+    different.m_total_delivered_data_bytes = 900u;
+
+    DoTestEqualityRelationalOperators (equal_1, equal_2, different);
+
+    // Different expected receivers
+    different = SimulationStatisticsValues (equal_1);
+    different.m_expected_receivers = 1000u;
+
+    DoTestEqualityRelationalOperators (equal_1, equal_2, different);
+
+    // Different confirmed receivers
+    different = SimulationStatisticsValues (equal_1);
+    different.m_confirmed_receivers = 1100u;
+
+    DoTestEqualityRelationalOperators (equal_1, equal_2, different);
+  }
+
+  void
+  DoRun () override
+  {
+    TestConstructors ();
+    TestInitializeValues ();
+    TestOverloadedOperators ();
+  }
+};
+
+
+// =============================================================================
 //                              SimulationStatisticsTest
 // =============================================================================
 
@@ -2720,40 +2908,32 @@ protected:
 public:
 
   virtual void
-  TestGetStatistics ()
+  TestCalculateStatistics ()
   {
     SimulationStatistics simulation_stats (m_gta_visitor_nodes,
                                            m_node_id_to_ip);
 
     bool result;
-    double total_average_delivery_delay, total_average_delivery_ratio, total_overhead,
-            data_overhead, control_overhead;
-    uint64_t total_transmitted_bytes, data_transmitted_bytes, control_transmitted_bytes,
-            total_delivered_data_bytes;
-    uint32_t total_expected_receivers, total_confirmed_receivers;
+    SimulationStatisticsValues values;
 
     // ======= No packets yet =======
 
-    result = simulation_stats.GetStatistics (total_average_delivery_delay, total_average_delivery_ratio,
-                                             total_overhead, data_overhead, control_overhead,
-                                             total_transmitted_bytes, data_transmitted_bytes,
-                                             control_transmitted_bytes, total_delivered_data_bytes,
-                                             total_expected_receivers, total_confirmed_receivers);
+    result = simulation_stats.CalculateStatistics (values);
     NS_TEST_EXPECT_MSG_EQ (result, false, "Must be false");
 
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (total_average_delivery_delay, -1.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (total_average_delivery_ratio, -1.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (total_overhead, -1.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (data_overhead, -1.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (control_overhead, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_total_overhead, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_data_overhead, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_control_overhead, -1.0), true, "Must be equal");
 
-    NS_TEST_EXPECT_MSG_EQ (total_transmitted_bytes, 0u, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (data_transmitted_bytes, 0u, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (control_transmitted_bytes, 0u, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (total_delivered_data_bytes, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_transmitted_bytes, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_data_transmitted_bytes, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_control_transmitted_bytes, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 0u, "Must be equal");
 
-    NS_TEST_EXPECT_MSG_EQ (total_expected_receivers, 0u, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (total_confirmed_receivers, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 0u, "Must be equal");
 
     // Set up transmitted packet counters
     SetUpTransmittedPacketsCounters (simulation_stats);
@@ -2762,126 +2942,106 @@ public:
 
     SetUpFirstPacketReceivers (simulation_stats);
 
-    result = simulation_stats.GetStatistics (total_average_delivery_delay, total_average_delivery_ratio,
-                                             total_overhead, data_overhead, control_overhead,
-                                             total_transmitted_bytes, data_transmitted_bytes,
-                                             control_transmitted_bytes, total_delivered_data_bytes,
-                                             total_expected_receivers, total_confirmed_receivers);
+    result = simulation_stats.CalculateStatistics (values);
     NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
 
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (total_average_delivery_delay, 10.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (total_average_delivery_ratio, 10.0 / 12.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (total_overhead, 80000.0 / 6490.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (data_overhead, 38000 / 6490.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (control_overhead, 42000.0 / 6490.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, 10.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, 10.0 / 12.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_total_overhead, 80000.0 / 6490.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_data_overhead, 38000 / 6490.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_control_overhead, 42000.0 / 6490.0), true, "Must be equal");
 
-    NS_TEST_EXPECT_MSG_EQ (total_transmitted_bytes, 80000u, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (data_transmitted_bytes, 38000u, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (control_transmitted_bytes, 42000u, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (total_delivered_data_bytes, 6490u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_transmitted_bytes, 80000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_data_transmitted_bytes, 38000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_control_transmitted_bytes, 42000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 6490u, "Must be equal");
 
-    NS_TEST_EXPECT_MSG_EQ (total_expected_receivers, 12, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (total_confirmed_receivers, 10, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 12, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 10, "Must be equal");
 
     // ======= Second packet =======
 
     SetUpSecondPacketRececeivers (simulation_stats);
 
-    result = simulation_stats.GetStatistics (total_average_delivery_delay, total_average_delivery_ratio,
-                                             total_overhead, data_overhead, control_overhead,
-                                             total_transmitted_bytes, data_transmitted_bytes,
-                                             control_transmitted_bytes, total_delivered_data_bytes,
-                                             total_expected_receivers, total_confirmed_receivers);
+    result = simulation_stats.CalculateStatistics (values);
     NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
 
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (total_average_delivery_delay, 11.25), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (total_average_delivery_ratio, 7.0 / 12.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (total_overhead, 80000.0 / 13456.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (data_overhead, 38000 / 13456.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (control_overhead, 42000.0 / 13456.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, 11.25), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, 7.0 / 12.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_total_overhead, 80000.0 / 13456.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_data_overhead, 38000 / 13456.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_control_overhead, 42000.0 / 13456.0), true, "Must be equal");
 
-    NS_TEST_EXPECT_MSG_EQ (total_transmitted_bytes, 80000u, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (data_transmitted_bytes, 38000u, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (control_transmitted_bytes, 42000u, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (total_delivered_data_bytes, 13456u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_transmitted_bytes, 80000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_data_transmitted_bytes, 38000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_control_transmitted_bytes, 42000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 13456u, "Must be equal");
 
-    NS_TEST_EXPECT_MSG_EQ (total_expected_receivers, 30, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (total_confirmed_receivers, 16, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 30, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 16, "Must be equal");
 
     // ======= Third packet =======
 
     SetUpThirdPacketReceivers (simulation_stats);
 
-    result = simulation_stats.GetStatistics (total_average_delivery_delay, total_average_delivery_ratio,
-                                             total_overhead, data_overhead, control_overhead,
-                                             total_transmitted_bytes, data_transmitted_bytes,
-                                             control_transmitted_bytes, total_delivered_data_bytes,
-                                             total_expected_receivers, total_confirmed_receivers);
+    result = simulation_stats.CalculateStatistics (values);
     NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
 
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (total_average_delivery_delay, 155.0 / 9.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (total_average_delivery_ratio, 29.0 / 63.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (total_overhead, 80000.0 / 17350.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (data_overhead, 38000 / 17350.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (control_overhead, 42000.0 / 17350.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, 155.0 / 9.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, 29.0 / 63.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_total_overhead, 80000.0 / 17350.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_data_overhead, 38000 / 17350.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_control_overhead, 42000.0 / 17350.0), true, "Must be equal");
 
-    NS_TEST_EXPECT_MSG_EQ (total_transmitted_bytes, 80000u, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (data_transmitted_bytes, 38000u, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (control_transmitted_bytes, 42000u, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (total_delivered_data_bytes, 17350, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_transmitted_bytes, 80000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_data_transmitted_bytes, 38000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_control_transmitted_bytes, 42000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 17350, "Must be equal");
 
-    NS_TEST_EXPECT_MSG_EQ (total_expected_receivers, 58, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (total_confirmed_receivers, 22, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 58, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 22, "Must be equal");
 
     // ======= Fourth packet =======
 
     SetUpFourthPacketReceivers (simulation_stats);
 
-    result = simulation_stats.GetStatistics (total_average_delivery_delay, total_average_delivery_ratio,
-                                             total_overhead, data_overhead, control_overhead,
-                                             total_transmitted_bytes, data_transmitted_bytes,
-                                             control_transmitted_bytes, total_delivered_data_bytes,
-                                             total_expected_receivers, total_confirmed_receivers);
+    result = simulation_stats.CalculateStatistics (values);
     NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
 
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (total_average_delivery_delay, 155.0 / 9.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (total_average_delivery_ratio, 29.0 / 84.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (total_overhead, 80000.0 / 17350.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (data_overhead, 38000 / 17350.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (control_overhead, 42000.0 / 17350.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, 155.0 / 9.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, 29.0 / 84.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_total_overhead, 80000.0 / 17350.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_data_overhead, 38000 / 17350.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_control_overhead, 42000.0 / 17350.0), true, "Must be equal");
 
-    NS_TEST_EXPECT_MSG_EQ (total_transmitted_bytes, 80000u, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (data_transmitted_bytes, 38000u, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (control_transmitted_bytes, 42000u, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (total_delivered_data_bytes, 17350, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_transmitted_bytes, 80000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_data_transmitted_bytes, 38000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_control_transmitted_bytes, 42000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 17350, "Must be equal");
 
-    NS_TEST_EXPECT_MSG_EQ (total_expected_receivers, 66, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (total_confirmed_receivers, 22, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 66, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 22, "Must be equal");
 
     // ======= Fifth packet =======
 
     SetUpFifthPacketReceivers (simulation_stats);
 
-    result = simulation_stats.GetStatistics (total_average_delivery_delay, total_average_delivery_ratio,
-                                             total_overhead, data_overhead, control_overhead,
-                                             total_transmitted_bytes, data_transmitted_bytes,
-                                             control_transmitted_bytes, total_delivered_data_bytes,
-                                             total_expected_receivers, total_confirmed_receivers);
+    result = simulation_stats.CalculateStatistics (values);
     NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
 
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (total_average_delivery_delay, 155.0 / 9.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (total_average_delivery_ratio, 29.0 / 84.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (total_overhead, 80000.0 / 17350.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (data_overhead, 38000 / 17350.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (control_overhead, 42000.0 / 17350.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, 155.0 / 9.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, 29.0 / 84.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_total_overhead, 80000.0 / 17350.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_data_overhead, 38000 / 17350.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_control_overhead, 42000.0 / 17350.0), true, "Must be equal");
 
-    NS_TEST_EXPECT_MSG_EQ (total_transmitted_bytes, 80000u, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (data_transmitted_bytes, 38000u, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (control_transmitted_bytes, 42000u, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (total_delivered_data_bytes, 17350, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_transmitted_bytes, 80000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_data_transmitted_bytes, 38000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_control_transmitted_bytes, 42000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 17350, "Must be equal");
 
-    NS_TEST_EXPECT_MSG_EQ (total_expected_receivers, 66, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (total_confirmed_receivers, 22, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 66, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 22, "Must be equal");
   }
 
   virtual void
@@ -2974,31 +3134,26 @@ public:
   }
 
   virtual void
-  TestGetAreaStatistics ()
+  TestCalculateAreaStatistics ()
   {
     SimulationStatistics simulation_stats (m_gta_visitor_nodes,
                                            m_node_id_to_ip);
 
     bool result;
+    SimulationStatisticsValues values;
     Area destination_area;
-    double average_delivery_delay, average_delivery_ratio;
-    uint64_t total_delivered_data_bytes;
-    uint32_t expected_receivers, confirmed_receivers;
-
 
     // ======= No packets yet =======
 
-    result = simulation_stats.GetAreaStatistics (destination_area, average_delivery_delay,
-                                                 average_delivery_ratio, total_delivered_data_bytes,
-                                                 expected_receivers, confirmed_receivers);
+    result = simulation_stats.CalculateAreaStatistics (destination_area, values);
     NS_TEST_EXPECT_MSG_EQ (result, false, "Must be false");
 
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (average_delivery_delay, -1.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (average_delivery_ratio, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, -1.0), true, "Must be equal");
 
-    NS_TEST_EXPECT_MSG_EQ (total_delivered_data_bytes, 0, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (expected_receivers, 0, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (confirmed_receivers, 0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 0, "Must be equal");
 
     // Set up transmitted packet counters
     SetUpTransmittedPacketsCounters (simulation_stats);
@@ -3012,99 +3167,87 @@ public:
     // ======= First area =======
 
     destination_area = m_destination_areas.at (0);
-    result = simulation_stats.GetAreaStatistics (destination_area, average_delivery_delay,
-                                                 average_delivery_ratio, total_delivered_data_bytes,
-                                                 expected_receivers, confirmed_receivers);
+    result = simulation_stats.CalculateAreaStatistics (destination_area, values);
     NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
 
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (average_delivery_delay, 10.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (average_delivery_ratio, 10.0 / 12.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, 10.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, 10.0 / 12.0), true, "Must be equal");
 
-    NS_TEST_EXPECT_MSG_EQ (total_delivered_data_bytes, 6490, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (expected_receivers, 12, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (confirmed_receivers, 10, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 6490, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 12, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 10, "Must be equal");
 
     // ======= Second area =======
 
     destination_area = m_destination_areas.at (1);
-    result = simulation_stats.GetAreaStatistics (destination_area, average_delivery_delay,
-                                                 average_delivery_ratio, total_delivered_data_bytes,
-                                                 expected_receivers, confirmed_receivers);
+    result = simulation_stats.CalculateAreaStatistics (destination_area, values);
     NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
 
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (average_delivery_delay, 12.5), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (average_delivery_ratio, 6.0 / 18.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, 12.5), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, 6.0 / 18.0), true, "Must be equal");
 
-    NS_TEST_EXPECT_MSG_EQ (total_delivered_data_bytes, 6966, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (expected_receivers, 18, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (confirmed_receivers, 6, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 6966, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 18, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 6, "Must be equal");
 
     // ======= Third area =======
 
     destination_area = m_destination_areas.at (2);
-    result = simulation_stats.GetAreaStatistics (destination_area, average_delivery_delay,
-                                                 average_delivery_ratio, total_delivered_data_bytes,
-                                                 expected_receivers, confirmed_receivers);
+    result = simulation_stats.CalculateAreaStatistics (destination_area, values);
     NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
 
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (average_delivery_delay, 175.0 / 6.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (average_delivery_ratio, 6. / 28.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, 175.0 / 6.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, 6. / 28.0), true, "Must be equal");
 
-    NS_TEST_EXPECT_MSG_EQ (total_delivered_data_bytes, 3894, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (expected_receivers, 28, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (confirmed_receivers, 6, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 3894, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 28, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 6, "Must be equal");
 
     // ======= Unknown area =======
 
-    result = simulation_stats.GetAreaStatistics (Area (-10, -10, -20, -20), average_delivery_delay,
-                                                 average_delivery_ratio, total_delivered_data_bytes,
-                                                 expected_receivers, confirmed_receivers);
+    result = simulation_stats.CalculateAreaStatistics (Area (-10, -10, -20, -20), values);
     NS_TEST_EXPECT_MSG_EQ (result, false, "Must be false");
 
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (average_delivery_delay, -1.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (average_delivery_ratio, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, -1.0), true, "Must be equal");
 
-    NS_TEST_EXPECT_MSG_EQ (total_delivered_data_bytes, 0, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (expected_receivers, 0, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (confirmed_receivers, 0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 0, "Must be equal");
 
     // ======= Fourth area =======
 
     destination_area = m_destination_areas.at (3);
-    result = simulation_stats.GetAreaStatistics (destination_area, average_delivery_delay,
-                                                 average_delivery_ratio, total_delivered_data_bytes,
-                                                 expected_receivers, confirmed_receivers);
+    result = simulation_stats.CalculateAreaStatistics (destination_area, values);
     NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
 
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (average_delivery_delay, -1.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (average_delivery_ratio, 0.0 / 8.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, 0.0 / 8.0), true, "Must be equal");
 
-    NS_TEST_EXPECT_MSG_EQ (total_delivered_data_bytes, 0, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (expected_receivers, 8, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (confirmed_receivers, 0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 8, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 0, "Must be equal");
 
     // ======= Fifth area =======
 
     destination_area = m_destination_areas.at (4);
-    result = simulation_stats.GetAreaStatistics (destination_area, average_delivery_delay,
-                                                 average_delivery_ratio, total_delivered_data_bytes,
-                                                 expected_receivers, confirmed_receivers);
+    result = simulation_stats.CalculateAreaStatistics (destination_area, values);
     NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
 
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (average_delivery_delay, -1.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (average_delivery_ratio, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, -1.0), true, "Must be equal");
 
-    NS_TEST_EXPECT_MSG_EQ (total_delivered_data_bytes, 0, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (expected_receivers, 0, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (confirmed_receivers, 0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 0, "Must be equal");
   }
 
   void
   DoRun () override
   {
-    TestGetStatistics ();
+    TestCalculateStatistics ();
     TestGetDataPacketStatistics ();
-    TestGetAreaStatistics ();
+    TestCalculateAreaStatistics ();
   }
 };
 
@@ -3134,40 +3277,32 @@ public:
   }
 
   void
-  TestGetStatistics () override
+  TestCalculateStatistics () override
   {
     SimulationStatisticsFile simulation_stats_file (m_gta_visitor_nodes,
                                                     m_node_id_to_ip);
 
     bool result;
-    double total_average_delivery_delay, total_average_delivery_ratio, total_overhead,
-            data_overhead, control_overhead;
-    uint64_t total_transmitted_bytes, data_transmitted_bytes, control_transmitted_bytes,
-            total_delivered_data_bytes;
-    uint32_t total_expected_receivers, total_confirmed_receivers;
+    SimulationStatisticsValues values;
 
     // ======= No packets yet =======
 
-    result = simulation_stats_file.GetStatistics (total_average_delivery_delay, total_average_delivery_ratio,
-                                                  total_overhead, data_overhead, control_overhead,
-                                                  total_transmitted_bytes, data_transmitted_bytes,
-                                                  control_transmitted_bytes, total_delivered_data_bytes,
-                                                  total_expected_receivers, total_confirmed_receivers);
+    result = simulation_stats_file.CalculateStatistics (values);
     NS_TEST_EXPECT_MSG_EQ (result, false, "Must be false");
 
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (total_average_delivery_delay, -1.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (total_average_delivery_ratio, -1.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (total_overhead, -1.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (data_overhead, -1.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (control_overhead, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_total_overhead, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_data_overhead, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_control_overhead, -1.0), true, "Must be equal");
 
-    NS_TEST_EXPECT_MSG_EQ (total_transmitted_bytes, 0u, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (data_transmitted_bytes, 0u, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (control_transmitted_bytes, 0u, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (total_delivered_data_bytes, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_transmitted_bytes, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_data_transmitted_bytes, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_control_transmitted_bytes, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 0u, "Must be equal");
 
-    NS_TEST_EXPECT_MSG_EQ (total_expected_receivers, 0u, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (total_confirmed_receivers, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 0u, "Must be equal");
 
     // Set up transmitted packet counters
     SetUpTransmittedPacketsCounters (simulation_stats_file);
@@ -3176,126 +3311,106 @@ public:
 
     SetUpFirstPacketReceivers (simulation_stats_file);
 
-    result = simulation_stats_file.GetStatistics (total_average_delivery_delay, total_average_delivery_ratio,
-                                                  total_overhead, data_overhead, control_overhead,
-                                                  total_transmitted_bytes, data_transmitted_bytes,
-                                                  control_transmitted_bytes, total_delivered_data_bytes,
-                                                  total_expected_receivers, total_confirmed_receivers);
+    result = simulation_stats_file.CalculateStatistics (values);
     NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
 
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (total_average_delivery_delay, 10.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (total_average_delivery_ratio, 10.0 / 12.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (total_overhead, 80000.0 / 6490.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (data_overhead, 38000 / 6490.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (control_overhead, 42000.0 / 6490.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, 10.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, 10.0 / 12.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_total_overhead, 80000.0 / 6490.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_data_overhead, 38000 / 6490.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_control_overhead, 42000.0 / 6490.0), true, "Must be equal");
 
-    NS_TEST_EXPECT_MSG_EQ (total_transmitted_bytes, 80000u, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (data_transmitted_bytes, 38000u, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (control_transmitted_bytes, 42000u, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (total_delivered_data_bytes, 6490u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_transmitted_bytes, 80000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_data_transmitted_bytes, 38000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_control_transmitted_bytes, 42000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 6490u, "Must be equal");
 
-    NS_TEST_EXPECT_MSG_EQ (total_expected_receivers, 12, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (total_confirmed_receivers, 10, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 12, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 10, "Must be equal");
 
     // ======= Second packet =======
 
     SetUpSecondPacketRececeivers (simulation_stats_file);
 
-    result = simulation_stats_file.GetStatistics (total_average_delivery_delay, total_average_delivery_ratio,
-                                                  total_overhead, data_overhead, control_overhead,
-                                                  total_transmitted_bytes, data_transmitted_bytes,
-                                                  control_transmitted_bytes, total_delivered_data_bytes,
-                                                  total_expected_receivers, total_confirmed_receivers);
+    result = simulation_stats_file.CalculateStatistics (values);
     NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
 
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (total_average_delivery_delay, 11.25), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (total_average_delivery_ratio, 7.0 / 12.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (total_overhead, 80000.0 / 13456.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (data_overhead, 38000 / 13456.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (control_overhead, 42000.0 / 13456.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, 11.25), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, 7.0 / 12.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_total_overhead, 80000.0 / 13456.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_data_overhead, 38000 / 13456.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_control_overhead, 42000.0 / 13456.0), true, "Must be equal");
 
-    NS_TEST_EXPECT_MSG_EQ (total_transmitted_bytes, 80000u, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (data_transmitted_bytes, 38000u, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (control_transmitted_bytes, 42000u, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (total_delivered_data_bytes, 13456u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_transmitted_bytes, 80000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_data_transmitted_bytes, 38000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_control_transmitted_bytes, 42000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 13456u, "Must be equal");
 
-    NS_TEST_EXPECT_MSG_EQ (total_expected_receivers, 30, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (total_confirmed_receivers, 16, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 30, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 16, "Must be equal");
 
     // ======= Third packet =======
 
     SetUpThirdPacketReceivers (simulation_stats_file);
 
-    result = simulation_stats_file.GetStatistics (total_average_delivery_delay, total_average_delivery_ratio,
-                                                  total_overhead, data_overhead, control_overhead,
-                                                  total_transmitted_bytes, data_transmitted_bytes,
-                                                  control_transmitted_bytes, total_delivered_data_bytes,
-                                                  total_expected_receivers, total_confirmed_receivers);
+    result = simulation_stats_file.CalculateStatistics (values);
     NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
 
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (total_average_delivery_delay, 155.0 / 9.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (total_average_delivery_ratio, 29.0 / 63.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (total_overhead, 80000.0 / 17350.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (data_overhead, 38000 / 17350.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (control_overhead, 42000.0 / 17350.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, 155.0 / 9.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, 29.0 / 63.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_total_overhead, 80000.0 / 17350.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_data_overhead, 38000 / 17350.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_control_overhead, 42000.0 / 17350.0), true, "Must be equal");
 
-    NS_TEST_EXPECT_MSG_EQ (total_transmitted_bytes, 80000u, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (data_transmitted_bytes, 38000u, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (control_transmitted_bytes, 42000u, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (total_delivered_data_bytes, 17350, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_transmitted_bytes, 80000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_data_transmitted_bytes, 38000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_control_transmitted_bytes, 42000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 17350, "Must be equal");
 
-    NS_TEST_EXPECT_MSG_EQ (total_expected_receivers, 58, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (total_confirmed_receivers, 22, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 58, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 22, "Must be equal");
 
     // ======= Fourth packet =======
 
     SetUpFourthPacketReceivers (simulation_stats_file);
 
-    result = simulation_stats_file.GetStatistics (total_average_delivery_delay, total_average_delivery_ratio,
-                                                  total_overhead, data_overhead, control_overhead,
-                                                  total_transmitted_bytes, data_transmitted_bytes,
-                                                  control_transmitted_bytes, total_delivered_data_bytes,
-                                                  total_expected_receivers, total_confirmed_receivers);
+    result = simulation_stats_file.CalculateStatistics (values);
     NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
 
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (total_average_delivery_delay, 155.0 / 9.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (total_average_delivery_ratio, 29.0 / 84.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (total_overhead, 80000.0 / 17350.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (data_overhead, 38000 / 17350.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (control_overhead, 42000.0 / 17350.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, 155.0 / 9.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, 29.0 / 84.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_total_overhead, 80000.0 / 17350.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_data_overhead, 38000 / 17350.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_control_overhead, 42000.0 / 17350.0), true, "Must be equal");
 
-    NS_TEST_EXPECT_MSG_EQ (total_transmitted_bytes, 80000u, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (data_transmitted_bytes, 38000u, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (control_transmitted_bytes, 42000u, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (total_delivered_data_bytes, 17350, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_transmitted_bytes, 80000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_data_transmitted_bytes, 38000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_control_transmitted_bytes, 42000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 17350, "Must be equal");
 
-    NS_TEST_EXPECT_MSG_EQ (total_expected_receivers, 66, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (total_confirmed_receivers, 22, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 66, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 22, "Must be equal");
 
     // ======= Fifth packet =======
 
     SetUpFifthPacketReceivers (simulation_stats_file);
 
-    result = simulation_stats_file.GetStatistics (total_average_delivery_delay, total_average_delivery_ratio,
-                                                  total_overhead, data_overhead, control_overhead,
-                                                  total_transmitted_bytes, data_transmitted_bytes,
-                                                  control_transmitted_bytes, total_delivered_data_bytes,
-                                                  total_expected_receivers, total_confirmed_receivers);
+    result = simulation_stats_file.CalculateStatistics (values);
     NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
 
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (total_average_delivery_delay, 155.0 / 9.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (total_average_delivery_ratio, 29.0 / 84.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (total_overhead, 80000.0 / 17350.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (data_overhead, 38000 / 17350.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (control_overhead, 42000.0 / 17350.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, 155.0 / 9.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, 29.0 / 84.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_total_overhead, 80000.0 / 17350.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_data_overhead, 38000 / 17350.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_control_overhead, 42000.0 / 17350.0), true, "Must be equal");
 
-    NS_TEST_EXPECT_MSG_EQ (total_transmitted_bytes, 80000u, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (data_transmitted_bytes, 38000u, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (control_transmitted_bytes, 42000u, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (total_delivered_data_bytes, 17350, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_transmitted_bytes, 80000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_data_transmitted_bytes, 38000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_control_transmitted_bytes, 42000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 17350, "Must be equal");
 
-    NS_TEST_EXPECT_MSG_EQ (total_expected_receivers, 66, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (total_confirmed_receivers, 22, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 66, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 22, "Must be equal");
   }
 
   void
@@ -3388,31 +3503,26 @@ public:
   }
 
   void
-  TestGetAreaStatistics () override
+  TestCalculateAreaStatistics () override
   {
     SimulationStatisticsFile simulation_stats_file (m_gta_visitor_nodes,
                                                     m_node_id_to_ip);
 
     bool result;
+    SimulationStatisticsValues values;
     Area destination_area;
-    double average_delivery_delay, average_delivery_ratio;
-    uint64_t total_delivered_data_bytes;
-    uint32_t expected_receivers, confirmed_receivers;
-
 
     // ======= No packets yet =======
 
-    result = simulation_stats_file.GetAreaStatistics (destination_area, average_delivery_delay,
-                                                      average_delivery_ratio, total_delivered_data_bytes,
-                                                      expected_receivers, confirmed_receivers);
+    result = simulation_stats_file.CalculateAreaStatistics (destination_area, values);
     NS_TEST_EXPECT_MSG_EQ (result, false, "Must be false");
 
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (average_delivery_delay, -1.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (average_delivery_ratio, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, -1.0), true, "Must be equal");
 
-    NS_TEST_EXPECT_MSG_EQ (total_delivered_data_bytes, 0, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (expected_receivers, 0, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (confirmed_receivers, 0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 0, "Must be equal");
 
     // Set up transmitted packet counters
     SetUpTransmittedPacketsCounters (simulation_stats_file);
@@ -3426,91 +3536,79 @@ public:
     // ======= First area =======
 
     destination_area = m_destination_areas.at (0);
-    result = simulation_stats_file.GetAreaStatistics (destination_area, average_delivery_delay,
-                                                      average_delivery_ratio, total_delivered_data_bytes,
-                                                      expected_receivers, confirmed_receivers);
+    result = simulation_stats_file.CalculateAreaStatistics (destination_area, values);
     NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
 
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (average_delivery_delay, 10.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (average_delivery_ratio, 10.0 / 12.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, 10.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, 10.0 / 12.0), true, "Must be equal");
 
-    NS_TEST_EXPECT_MSG_EQ (total_delivered_data_bytes, 6490, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (expected_receivers, 12, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (confirmed_receivers, 10, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 6490, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 12, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 10, "Must be equal");
 
     // ======= Second area =======
 
     destination_area = m_destination_areas.at (1);
-    result = simulation_stats_file.GetAreaStatistics (destination_area, average_delivery_delay,
-                                                      average_delivery_ratio, total_delivered_data_bytes,
-                                                      expected_receivers, confirmed_receivers);
+    result = simulation_stats_file.CalculateAreaStatistics (destination_area, values);
     NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
 
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (average_delivery_delay, 12.5), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (average_delivery_ratio, 6.0 / 18.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, 12.5), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, 6.0 / 18.0), true, "Must be equal");
 
-    NS_TEST_EXPECT_MSG_EQ (total_delivered_data_bytes, 6966, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (expected_receivers, 18, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (confirmed_receivers, 6, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 6966, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 18, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 6, "Must be equal");
 
     // ======= Third area =======
 
     destination_area = m_destination_areas.at (2);
-    result = simulation_stats_file.GetAreaStatistics (destination_area, average_delivery_delay,
-                                                      average_delivery_ratio, total_delivered_data_bytes,
-                                                      expected_receivers, confirmed_receivers);
+    result = simulation_stats_file.CalculateAreaStatistics (destination_area, values);
     NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
 
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (average_delivery_delay, 175.0 / 6.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (average_delivery_ratio, 6. / 28.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, 175.0 / 6.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, 6. / 28.0), true, "Must be equal");
 
-    NS_TEST_EXPECT_MSG_EQ (total_delivered_data_bytes, 3894, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (expected_receivers, 28, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (confirmed_receivers, 6, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 3894, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 28, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 6, "Must be equal");
 
     // ======= Unknown area =======
 
-    result = simulation_stats_file.GetAreaStatistics (Area (-10, -10, -20, -20), average_delivery_delay,
-                                                      average_delivery_ratio, total_delivered_data_bytes,
-                                                      expected_receivers, confirmed_receivers);
+    result = simulation_stats_file.CalculateAreaStatistics (Area (-10, -10, -20, -20), values);
     NS_TEST_EXPECT_MSG_EQ (result, false, "Must be false");
 
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (average_delivery_delay, -1.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (average_delivery_ratio, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, -1.0), true, "Must be equal");
 
-    NS_TEST_EXPECT_MSG_EQ (total_delivered_data_bytes, 0, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (expected_receivers, 0, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (confirmed_receivers, 0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 0, "Must be equal");
 
     // ======= Fourth area =======
 
     destination_area = m_destination_areas.at (3);
-    result = simulation_stats_file.GetAreaStatistics (destination_area, average_delivery_delay,
-                                                      average_delivery_ratio, total_delivered_data_bytes,
-                                                      expected_receivers, confirmed_receivers);
+    result = simulation_stats_file.CalculateAreaStatistics (destination_area, values);
     NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
 
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (average_delivery_delay, -1.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (average_delivery_ratio, 0.0 / 8.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, 0.0 / 8.0), true, "Must be equal");
 
-    NS_TEST_EXPECT_MSG_EQ (total_delivered_data_bytes, 0, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (expected_receivers, 8, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (confirmed_receivers, 0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 8, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 0, "Must be equal");
 
     // ======= Fifth area =======
 
     destination_area = m_destination_areas.at (4);
-    result = simulation_stats_file.GetAreaStatistics (destination_area, average_delivery_delay,
-                                                      average_delivery_ratio, total_delivered_data_bytes,
-                                                      expected_receivers, confirmed_receivers);
+    result = simulation_stats_file.CalculateAreaStatistics (destination_area, values);
     NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
 
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (average_delivery_delay, -1.0), true, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (average_delivery_ratio, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, -1.0), true, "Must be equal");
 
-    NS_TEST_EXPECT_MSG_EQ (total_delivered_data_bytes, 0, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (expected_receivers, 0, "Must be equal");
-    NS_TEST_EXPECT_MSG_EQ (confirmed_receivers, 0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 0, "Must be equal");
   }
 
   void
@@ -3571,9 +3669,2664 @@ public:
   void
   DoRun () override
   {
-    TestGetStatistics ();
+    TestCalculateStatistics ();
     TestGetDataPacketStatistics ();
-    TestGetAreaStatistics ();
+    TestCalculateAreaStatistics ();
+    TestSaveToXmlFile ();
+  }
+};
+
+
+// =============================================================================
+//                       PriorityDataPacketStatisticsTest
+// =============================================================================
+
+/**
+ * PriorityDataPacketStatistics test suite.
+ * 
+ * \ingroup tests
+ * \ingroup geotemporal-library-test
+ */
+class PriorityDataPacketStatisticsTest : public LibraryUtilsTestCase
+{
+public:
+
+  PriorityDataPacketStatisticsTest () : LibraryUtilsTestCase ("PriorityDataPacketStatistics") { }
+
+  void
+  TestConstructors ()
+  {
+    // Default constructor
+    PriorityDataPacketStatistics dps1;
+
+    NS_TEST_EXPECT_MSG_EQ (dps1.GetDataIdentifier (), DataIdentifier (), "Must be default data ID");
+    NS_TEST_EXPECT_MSG_EQ (dps1.IsEmergencyPacket (), false, "Must be false");
+    NS_TEST_EXPECT_MSG_EQ (dps1.GetSourceNodeIp (), Ipv4Address (), "Must be default IP address");
+    NS_TEST_EXPECT_MSG_EQ (dps1.GetSourceNodeId (), 0u, "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (dps1.GetPacketCreationTime (), Seconds (0), "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (dps1.GetPacketMessageSize (), 0u, "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (dps1.GetPacketSize (), 0u, "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (dps1.GetPacketDestinationGeoTemporalArea (), GeoTemporalArea (), "Must be default geo-temporal area");
+    NS_TEST_EXPECT_MSG_EQ (dps1.GetExpectedReceiverNodesCount (), 0u, "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (dps1.GetConfirmedReceiverNodesCount (), 0u, "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (dps1.IsExpectedReceiverNodesSet (), false, "Must be false");
+
+    // Parameters constructor
+    PriorityDataPacketStatistics dps2 (/*Data ID*/ DataIdentifier ("10.0.0.1:32"),
+                                       /*Emergency flag*/ true,
+                                       /*Source ID*/ 0,
+                                       /*Creation time*/ Seconds (10),
+                                       /*Message size*/ 256,
+                                       /*DataHeader size*/ 305, // 256 bytes (message) + 1 byte (terminator) + 48 bytes (other fields in DATA header)
+                                       /*Geo-temporal area*/ GeoTemporalArea (TimePeriod (Seconds (30), Seconds (130)),
+                                                                              Area (10, 20, 30, 40)));
+
+    NS_TEST_EXPECT_MSG_EQ (dps2.GetDataIdentifier (), DataIdentifier ("10.0.0.1:32"), "Must be 10.0.0.1:32");
+    NS_TEST_EXPECT_MSG_EQ (dps2.IsEmergencyPacket (), true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (dps2.GetSourceNodeIp (), Ipv4Address ("10.0.0.1"), "Must be 10.0.0.1");
+    NS_TEST_EXPECT_MSG_EQ (dps2.GetSourceNodeId (), 0u, "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (dps2.GetPacketCreationTime (), Seconds (10), "Must be second 10");
+    NS_TEST_EXPECT_MSG_EQ (dps2.GetPacketMessageSize (), 256u, "Must be 256");
+    NS_TEST_EXPECT_MSG_EQ (dps2.GetPacketSize (), 305u + 64u, "Must be 369 (305 + 64)");
+    NS_TEST_EXPECT_MSG_EQ (dps2.GetPacketDestinationGeoTemporalArea (),
+                           GeoTemporalArea (TimePeriod (Seconds (30), Seconds (130)), Area (10, 20, 30, 40)),
+                           "Must be the given area");
+    NS_TEST_EXPECT_MSG_EQ (dps2.GetExpectedReceiverNodesCount (), 0u, "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (dps2.GetConfirmedReceiverNodesCount (), 0u, "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (dps2.IsExpectedReceiverNodesSet (), false, "Must be false");
+
+    // Copy constructor
+    PriorityDataPacketStatistics dps3 (dps2);
+
+    NS_TEST_EXPECT_MSG_EQ (dps3.GetDataIdentifier (), DataIdentifier ("10.0.0.1:32"), "Must be 10.0.0.1:32");
+    NS_TEST_EXPECT_MSG_EQ (dps3.IsEmergencyPacket (), true, "Must be true");
+    NS_TEST_EXPECT_MSG_EQ (dps3.GetSourceNodeIp (), Ipv4Address ("10.0.0.1"), "Must be 10.0.0.1");
+    NS_TEST_EXPECT_MSG_EQ (dps3.GetSourceNodeId (), 0u, "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (dps3.GetPacketCreationTime (), Seconds (10), "Must be second 10");
+    NS_TEST_EXPECT_MSG_EQ (dps3.GetPacketMessageSize (), 256u, "Must be 256");
+    NS_TEST_EXPECT_MSG_EQ (dps3.GetPacketSize (), 305u + 64u, "Must be 369 (305 + 64)");
+    NS_TEST_EXPECT_MSG_EQ (dps3.GetPacketDestinationGeoTemporalArea (),
+                           GeoTemporalArea (TimePeriod (Seconds (30), Seconds (130)), Area (10, 20, 30, 40)),
+                           "Must be the given area");
+    NS_TEST_EXPECT_MSG_EQ (dps3.GetExpectedReceiverNodesCount (), 0u, "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (dps3.GetConfirmedReceiverNodesCount (), 0u, "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (dps3.IsExpectedReceiverNodesSet (), false, "Must be false");
+    NS_TEST_EXPECT_MSG_EQ (dps2, dps3, "Must be equal");
+  }
+
+  void
+  TestCountReception ()
+  {
+    DataPacketStatistics packet_stats (/*Data ID*/ DataIdentifier ("10.0.0.1:32"),
+                                       /*Source ID*/ 0,
+                                       /*Creation time*/ Seconds (10),
+                                       /*Message size*/ 256,
+                                       /*DataHeader size*/ 305, // 256 bytes (message) + 1 byte (terminator) + 48 bytes (other fields in DATA header)
+                                       /*Geo-temporal area*/ GeoTemporalArea (TimePeriod (Seconds (30), Seconds (130)),
+                                                                              Area (10, 20, 30, 40)));
+    bool result = false;
+    bool throwed_exception = false;
+
+    // Packet doesn't have its expected receiver nodes configured.
+    DataPacketReceptionStats reception (DataIdentifier ("10.0.0.1:32"),
+                                        Ipv4Address ("10.0.0.2"),
+                                        Seconds (20),
+                                        true);
+    try
+      {
+        result = packet_stats.CountReception (Ipv4Address ("10.0.0.10"), reception);
+      }
+    catch (std::runtime_error & e)
+      {
+        throwed_exception = true;
+        NS_TEST_EXPECT_MSG_EQ (1, 1, "Must happen.");
+      }
+    catch (...)
+      {
+        throwed_exception = false;
+        NS_TEST_EXPECT_MSG_EQ (1, 0, "Must never happen.");
+      }
+
+    NS_TEST_EXPECT_MSG_EQ (throwed_exception, true, "Right exception must have been thrown.");
+    NS_TEST_EXPECT_MSG_EQ (result, false, "Must be false"); // Result must have not been changed since its last assignment.
+
+    // Data ID doesn't match
+    reception = DataPacketReceptionStats (DataIdentifier ("10.0.0.1:200"),
+                                          Ipv4Address ("10.0.0.2"),
+                                          Seconds (20),
+                                          true);
+    try
+      {
+        throwed_exception = false;
+        result = packet_stats.CountReception (Ipv4Address ("10.0.0.10"), reception);
+      }
+    catch (std::runtime_error & e)
+      {
+        throwed_exception = true;
+        NS_TEST_EXPECT_MSG_EQ (1, 1, "Must happen.");
+      }
+    catch (...)
+      {
+        throwed_exception = false;
+        NS_TEST_EXPECT_MSG_EQ (1, 0, "Must never happen.");
+      }
+
+    NS_TEST_EXPECT_MSG_EQ (throwed_exception, true, "Right exception must have been thrown.");
+    NS_TEST_EXPECT_MSG_EQ (result, false, "Must be false"); // Result must have not been changed since its last assignment.
+
+    std::map<Ipv4Address, Time> expected_receiver_nodes = {
+      {Ipv4Address ("10.0.0.1"), Seconds (30)}, // Source node, will be discarded.
+      {Ipv4Address ("10.0.0.2"), Seconds (30)},
+      {Ipv4Address ("10.0.0.3"), Seconds (40)},
+      {Ipv4Address ("10.0.0.4"), Seconds (50)},
+      {Ipv4Address ("10.0.0.5"), Seconds (60)},
+      {Ipv4Address ("10.0.0.6"), Seconds (131)} // Didn't arrive to the area on time, will be discarded.
+    };
+    packet_stats.SetExpectedReceiverNodes (expected_receiver_nodes);
+
+    // Node is not an expected receiver node
+    reception = DataPacketReceptionStats (DataIdentifier ("10.0.0.1:32"),
+                                          Ipv4Address ("10.0.0.2"),
+                                          Seconds (20),
+                                          true);
+    result = packet_stats.CountReception (Ipv4Address ("10.0.0.6"), reception);
+    NS_TEST_EXPECT_MSG_EQ (result, false, "Must be false");
+
+    // Valid reception
+    result = packet_stats.CountReception (Ipv4Address ("10.0.0.2"), reception);
+    NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
+
+    // Node already processed
+    try
+      {
+        throwed_exception = false;
+        result = packet_stats.CountReception (Ipv4Address ("10.0.0.2"), reception);
+      }
+    catch (std::runtime_error & e)
+      {
+        throwed_exception = true;
+        NS_TEST_EXPECT_MSG_EQ (1, 1, "Must happen.");
+      }
+    catch (...)
+      {
+        throwed_exception = false;
+        NS_TEST_EXPECT_MSG_EQ (1, 0, "Must never happen.");
+      }
+
+    NS_TEST_EXPECT_MSG_EQ (throwed_exception, true, "Right exception must have been thrown.");
+    NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true"); // Result must have not been changed since its last assignment.
+
+    // Dropped packet
+    reception.SetPacketDropped ();
+
+    result = packet_stats.CountReception (Ipv4Address ("10.0.0.3"), reception);
+    NS_TEST_EXPECT_MSG_EQ (result, false, "Must be false");
+  }
+
+  void
+  TestGetStatistics ()
+  {
+    // Used as output references by the function
+    uint32_t output_confirmed_receivers_count, output_expected_receivers_count;
+    double output_delivery_ratio, output_average_delivery_delay;
+    uint32_t output_delivered_data_bytes;
+
+    PriorityDataPacketStatistics packet_stats (/*Data ID*/ DataIdentifier ("10.0.0.1:32"),
+                                               /*Emergency flag*/ true,
+                                               /*Source ID*/ 0,
+                                               /*Creation time*/ Seconds (10),
+                                               /*Message size*/ 256,
+                                               /*DataHeader size*/ 305, // 256 bytes (message) + 1 byte (terminator) + 48 bytes (other fields in DATA header)
+                                               /*Geo-temporal area*/ GeoTemporalArea (TimePeriod (Seconds (30), Seconds (130)),
+                                                                                      Area (10, 20, 30, 40)));
+
+    // No expected receiver nodes at all
+    std::map<Ipv4Address, Time> expected_receiver_nodes;
+    packet_stats.SetExpectedReceiverNodes (expected_receiver_nodes);
+
+    packet_stats.GetStatistics (output_confirmed_receivers_count, output_expected_receivers_count,
+                                output_delivery_ratio, output_average_delivery_delay,
+                                output_delivered_data_bytes);
+
+    NS_TEST_EXPECT_MSG_EQ (output_confirmed_receivers_count, 0, "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (output_expected_receivers_count, 0, "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_delivery_ratio, -1.0), true, "Must be -1.0");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_average_delivery_delay, -1.0), true, "Must be -1.0");
+    NS_TEST_EXPECT_MSG_EQ (output_delivered_data_bytes, 0, "Must be 0");
+
+    // 4 expected receivers
+    expected_receiver_nodes = {
+      {Ipv4Address ("10.0.0.1"), Seconds (30)}, // Source node, will be discarded.
+      {Ipv4Address ("10.0.0.2"), Seconds (30)},
+      {Ipv4Address ("10.0.0.3"), Seconds (40)},
+      {Ipv4Address ("10.0.0.4"), Seconds (50)},
+      {Ipv4Address ("10.0.0.5"), Seconds (60)},
+      {Ipv4Address ("10.0.0.6"), Seconds (131)} // Didn't arrive to the area on time, will be discarded.
+    };
+    packet_stats.SetExpectedReceiverNodes (expected_receiver_nodes);
+
+    // 4 Expected receivers, no confirmed receivers.
+    packet_stats.GetStatistics (output_confirmed_receivers_count, output_expected_receivers_count,
+                                output_delivery_ratio, output_average_delivery_delay,
+                                output_delivered_data_bytes);
+
+    NS_TEST_EXPECT_MSG_EQ (output_confirmed_receivers_count, 0, "Must be 0");
+    NS_TEST_EXPECT_MSG_EQ (output_expected_receivers_count, 4, "Must be 4");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_delivery_ratio, 0.0), true, "Must be 0.0");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_average_delivery_delay, -1.0), true, "Must be -1.0");
+    NS_TEST_EXPECT_MSG_EQ (output_delivered_data_bytes, 0, "Must be 0");
+
+    // 4 Expected receivers, 1 confirmed receivers.
+    DataPacketReceptionStats reception (DataIdentifier ("10.0.0.1:32"),
+                                        Ipv4Address ("10.0.0.1"),
+                                        Seconds (20),
+                                        true);
+    packet_stats.CountReception (Ipv4Address ("10.0.0.2"), reception);
+
+    packet_stats.GetStatistics (output_confirmed_receivers_count, output_expected_receivers_count,
+                                output_delivery_ratio, output_average_delivery_delay,
+                                output_delivered_data_bytes);
+
+    NS_TEST_EXPECT_MSG_EQ (output_confirmed_receivers_count, 1, "Must be 1");
+    NS_TEST_EXPECT_MSG_EQ (output_expected_receivers_count, 4, "Must be 4");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_delivery_ratio, 1.0 / 4.0), true, "Must be 1/4 (0.25)");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_average_delivery_delay, 0.0), true, "Must be 0.0");
+    NS_TEST_EXPECT_MSG_EQ (output_delivered_data_bytes, 369 * 1, "Must be 369 (305 + 64)");
+
+    // 4 Expected receivers, 2 confirmed receivers.
+    reception = DataPacketReceptionStats (DataIdentifier ("10.0.0.1:32"),
+                                          Ipv4Address ("10.0.0.2"),
+                                          Seconds (50),
+                                          true);
+    packet_stats.CountReception (Ipv4Address ("10.0.0.3"), reception);
+
+    packet_stats.GetStatistics (output_confirmed_receivers_count, output_expected_receivers_count,
+                                output_delivery_ratio, output_average_delivery_delay,
+                                output_delivered_data_bytes);
+
+    NS_TEST_EXPECT_MSG_EQ (output_confirmed_receivers_count, 2, "Must be 2");
+    NS_TEST_EXPECT_MSG_EQ (output_expected_receivers_count, 4, "Must be 4");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_delivery_ratio, 2.0 / 4.0), true, "Must be 2/4 (0.5)");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_average_delivery_delay, (0.0 + 10.0) / 2.0), true, "Must be 5.0");
+    NS_TEST_EXPECT_MSG_EQ (output_delivered_data_bytes, 369 * 2, "Must be 738");
+
+    // 4 Expected receivers, third expected receiver dropped the packet
+    reception = DataPacketReceptionStats (DataIdentifier ("10.0.0.1:32"),
+                                          Ipv4Address ("10.0.0.3"),
+                                          Seconds (20),
+                                          true);
+    reception.SetPacketDropped ();
+    packet_stats.CountReception (Ipv4Address ("10.0.0.5"), reception);
+
+    packet_stats.GetStatistics (output_confirmed_receivers_count, output_expected_receivers_count,
+                                output_delivery_ratio, output_average_delivery_delay,
+                                output_delivered_data_bytes);
+
+    NS_TEST_EXPECT_MSG_EQ (output_confirmed_receivers_count, 2, "Must be 2");
+    NS_TEST_EXPECT_MSG_EQ (output_expected_receivers_count, 4, "Must be 4");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_delivery_ratio, 2.0 / 4.0), true, "Must be 2/4 (0.5)");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_average_delivery_delay, (0.0 + 10.0) / 2.0), true, "Must be 5.0");
+    NS_TEST_EXPECT_MSG_EQ (output_delivered_data_bytes, 369 * 2, "Must be 738");
+
+    // 4 Expected receivers, 3 confirmed receivers.
+    reception = DataPacketReceptionStats (DataIdentifier ("10.0.0.1:32"),
+                                          Ipv4Address ("10.0.0.3"),
+                                          Seconds (130),
+                                          true);
+    packet_stats.CountReception (Ipv4Address ("10.0.0.4"), reception);
+
+    packet_stats.GetStatistics (output_confirmed_receivers_count, output_expected_receivers_count,
+                                output_delivery_ratio, output_average_delivery_delay,
+                                output_delivered_data_bytes);
+
+    NS_TEST_EXPECT_MSG_EQ (output_confirmed_receivers_count, 3, "Must be 3");
+    NS_TEST_EXPECT_MSG_EQ (output_expected_receivers_count, 4, "Must be 4");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_delivery_ratio, 3.0 / 4.0), true, "Must be 3/4 (0.75)");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_average_delivery_delay, (0.0 + 10.0 + 80.0) / 3.0), true, "Must be 30.0");
+    NS_TEST_EXPECT_MSG_EQ (output_delivered_data_bytes, 369 * 3, "Must be 1107");
+  }
+
+  void
+  TestToString ()
+  {
+    PriorityDataPacketStatistics packet_stats (/*Data ID*/ DataIdentifier ("10.0.0.1:32"),
+                                               /*Emergency flag*/ true,
+                                               /*Source ID*/ 0,
+                                               /*Creation time*/ Seconds (10),
+                                               /*Message size*/ 256,
+                                               /*DataHeader size*/ 305, // 256 bytes (message) + 1 byte (terminator) + 48 bytes (other fields in DATA header)
+                                               /*Geo-temporal area*/ GeoTemporalArea (TimePeriod (Seconds (30), Seconds (130)),
+                                                                                      Area (10, 20, 30, 40)));
+
+    std::string expected_str = "<data-packet data-id=\"10.0.0.1:32\" "
+            "priority=\"Emergency\" "
+            "source-node-ip=\"10.0.0.1\" "
+            "source-node-id=\"0\" "
+            "creation-time=\"10.000000\" "
+            "destination-area=\"10.000000,20.000000, 30.000000,40.000000\" "
+            "initial-time=\"30.00\" "
+            "duration=\"100.00\" "
+            "data-message-size=\"256\" "
+            "packet-size=\"369\" />";
+
+    NS_TEST_EXPECT_MSG_EQ (packet_stats.ToString (), expected_str, "Expected string: " + expected_str);
+
+    packet_stats = PriorityDataPacketStatistics (/*Data ID*/ DataIdentifier ("10.0.0.1:32"),
+                                                 /*Emergency flag*/ false,
+                                                 /*Source ID*/ 0,
+                                                 /*Creation time*/ Seconds (10),
+                                                 /*Message size*/ 256,
+                                                 /*DataHeader size*/ 305, // 256 bytes (message) + 1 byte (terminator) + 48 bytes (other fields in DATA header)
+                                                 /*Geo-temporal area*/ GeoTemporalArea (TimePeriod (Seconds (30), Seconds (130)),
+                                                                                        Area (10, 20, 30, 40)));
+
+    expected_str = "<data-packet data-id=\"10.0.0.1:32\" "
+            "priority=\"Normal\" "
+            "source-node-ip=\"10.0.0.1\" "
+            "source-node-id=\"0\" "
+            "creation-time=\"10.000000\" "
+            "destination-area=\"10.000000,20.000000, 30.000000,40.000000\" "
+            "initial-time=\"30.00\" "
+            "duration=\"100.00\" "
+            "data-message-size=\"256\" "
+            "packet-size=\"369\" />";
+
+    NS_TEST_EXPECT_MSG_EQ (packet_stats.ToString (), expected_str, "Expected string: " + expected_str);
+  }
+
+  void
+  TestEqualityRelationalOperators ()
+  {
+    // Different DATA ID
+    PriorityDataPacketStatistics equal_1 (/*Data ID*/ DataIdentifier ("10.0.0.1:32"),
+                                          /*Emergency flag*/ false,
+                                          /*Source ID*/ 0,
+                                          /*Creation time*/ Seconds (10),
+                                          /*Message size*/ 256,
+                                          /*DataHeader size*/ 305, // 256 bytes (message) + 1 byte (terminator) + 48 bytes (other fields in DATA header)
+                                          /*Geo-temporal area*/ GeoTemporalArea (TimePeriod (Seconds (30), Seconds (130)),
+                                                                                 Area (10, 20, 30, 40)));
+    PriorityDataPacketStatistics equal_2 (/*Data ID*/ DataIdentifier ("10.0.0.1:32"),
+                                          /*Emergency flag*/ false,
+                                          /*Source ID*/ 0,
+                                          /*Creation time*/ Seconds (10),
+                                          /*Message size*/ 256,
+                                          /*DataHeader size*/ 305, // 256 bytes (message) + 1 byte (terminator) + 48 bytes (other fields in DATA header)
+                                          /*Geo-temporal area*/ GeoTemporalArea (TimePeriod (Seconds (30), Seconds (130)),
+                                                                                 Area (10, 20, 30, 40)));
+    PriorityDataPacketStatistics different (/*Data ID*/ DataIdentifier ("10.0.0.1:33"),
+                                            /*Emergency flag*/ false,
+                                            /*Source ID*/ 0,
+                                            /*Creation time*/ Seconds (10),
+                                            /*Message size*/ 256,
+                                            /*DataHeader size*/ 305, // 256 bytes (message) + 1 byte (terminator) + 48 bytes (other fields in DATA header)
+                                            /*Geo-temporal area*/ GeoTemporalArea (TimePeriod (Seconds (30), Seconds (130)),
+                                                                                   Area (10, 20, 30, 40)));
+
+    DoTestEqualityRelationalOperators (equal_1, equal_2, different);
+
+    // Different EMERGENCY FLAG
+    different = PriorityDataPacketStatistics (/*Data ID*/ DataIdentifier ("10.0.0.1:33"),
+                                              /*Emergency flag*/ true,
+                                              /*Source ID*/ 0,
+                                              /*Creation time*/ Seconds (10),
+                                              /*Message size*/ 256,
+                                              /*DataHeader size*/ 305, // 256 bytes (message) + 1 byte (terminator) + 48 bytes (other fields in DATA header)
+                                              /*Geo-temporal area*/ GeoTemporalArea (TimePeriod (Seconds (30), Seconds (130)),
+                                                                                     Area (10, 20, 30, 40)));
+
+    DoTestEqualityRelationalOperators (equal_1, equal_2, different);
+
+    // Different SOURCE NODE ID
+    different = PriorityDataPacketStatistics (/*Data ID*/ DataIdentifier ("10.0.0.1:33"),
+                                              /*Emergency flag*/ false,
+                                              /*Source ID*/ 2,
+                                              /*Creation time*/ Seconds (10),
+                                              /*Message size*/ 256,
+                                              /*DataHeader size*/ 305, // 256 bytes (message) + 1 byte (terminator) + 48 bytes (other fields in DATA header)
+                                              /*Geo-temporal area*/ GeoTemporalArea (TimePeriod (Seconds (30), Seconds (130)),
+                                                                                     Area (10, 20, 30, 40)));
+
+    DoTestEqualityRelationalOperators (equal_1, equal_2, different);
+
+    // Different CREATION TIME
+    different = PriorityDataPacketStatistics (/*Data ID*/ DataIdentifier ("10.0.0.1:33"),
+                                              /*Emergency flag*/ false,
+                                              /*Source ID*/ 0,
+                                              /*Creation time*/ MicroSeconds (10),
+                                              /*Message size*/ 256,
+                                              /*DataHeader size*/ 305, // 256 bytes (message) + 1 byte (terminator) + 48 bytes (other fields in DATA header)
+                                              /*Geo-temporal area*/ GeoTemporalArea (TimePeriod (Seconds (30), Seconds (130)),
+                                                                                     Area (10, 20, 30, 40)));
+
+    DoTestEqualityRelationalOperators (equal_1, equal_2, different);
+
+    // Different DATA MESSAGE SIZE
+    different = PriorityDataPacketStatistics (/*Data ID*/ DataIdentifier ("10.0.0.1:33"),
+                                              /*Emergency flag*/ false,
+                                              /*Source ID*/ 0,
+                                              /*Creation time*/ Seconds (10),
+                                              /*Message size*/ 64,
+                                              /*DataHeader size*/ 305, // 256 bytes (message) + 1 byte (terminator) + 48 bytes (other fields in DATA header)
+                                              /*Geo-temporal area*/ GeoTemporalArea (TimePeriod (Seconds (30), Seconds (130)),
+                                                                                     Area (10, 20, 30, 40)));
+
+    DoTestEqualityRelationalOperators (equal_1, equal_2, different);
+
+    // Different PACKET SIZE
+    different = PriorityDataPacketStatistics (/*Data ID*/ DataIdentifier ("10.0.0.1:33"),
+                                              /*Emergency flag*/ false,
+                                              /*Source ID*/ 0,
+                                              /*Creation time*/ Seconds (10),
+                                              /*Message size*/ 256,
+                                              /*DataHeader size*/ 150,
+                                              /*Geo-temporal area*/ GeoTemporalArea (TimePeriod (Seconds (30), Seconds (130)),
+                                                                                     Area (10, 20, 30, 40)));
+
+    DoTestEqualityRelationalOperators (equal_1, equal_2, different);
+
+    // Different GEO-TEMPORAL AREA
+    different = PriorityDataPacketStatistics (/*Data ID*/ DataIdentifier ("10.0.0.1:33"),
+                                              /*Emergency flag*/ false,
+                                              /*Source ID*/ 0,
+                                              /*Creation time*/ Seconds (10),
+                                              /*Message size*/ 256,
+                                              /*DataHeader size*/ 305,
+                                              /*Geo-temporal area*/ GeoTemporalArea (TimePeriod (Seconds (20), Seconds (120)),
+                                                                                     Area (10, 20, 30, 40)));
+
+    DoTestEqualityRelationalOperators (equal_1, equal_2, different);
+
+    // Different RECEIVER NODES SET FLAG
+    different = PriorityDataPacketStatistics (/*Data ID*/ DataIdentifier ("10.0.0.1:32"),
+                                              /*Emergency flag*/ false,
+                                              /*Source ID*/ 0,
+                                              /*Creation time*/ Seconds (10),
+                                              /*Message size*/ 256,
+                                              /*DataHeader size*/ 305, // 256 bytes (message) + 1 byte (terminator) + 48 bytes (other fields in DATA header)
+                                              /*Geo-temporal area*/ GeoTemporalArea (TimePeriod (Seconds (30), Seconds (130)),
+                                                                                     Area (10, 20, 30, 40)));
+    different.SetExpectedReceiverNodes ({
+      {Ipv4Address ("2.2.2.2"), Seconds (10)}
+    });
+
+    DoTestEqualityRelationalOperators (equal_1, equal_2, different);
+
+    // Different RECEIVER NODES ARRIVAL TIME MAPPING
+    equal_1.SetExpectedReceiverNodes ({
+      {Ipv4Address ("1.1.1.1"), Seconds (30)},
+      {Ipv4Address ("1.1.1.2"), Seconds (40)}
+    });
+    equal_2.SetExpectedReceiverNodes ({
+      {Ipv4Address ("1.1.1.1"), Seconds (30)},
+      {Ipv4Address ("1.1.1.2"), Seconds (40)}
+    });
+
+    different = PriorityDataPacketStatistics (/*Data ID*/ DataIdentifier ("10.0.0.1:32"),
+                                              /*Emergency flag*/ false,
+                                              /*Source ID*/ 0,
+                                              /*Creation time*/ Seconds (10),
+                                              /*Message size*/ 256,
+                                              /*DataHeader size*/ 305, // 256 bytes (message) + 1 byte (terminator) + 48 bytes (other fields in DATA header)
+                                              /*Geo-temporal area*/ GeoTemporalArea (TimePeriod (Seconds (30), Seconds (130)),
+                                                                                     Area (10, 20, 30, 40)));
+    different.SetExpectedReceiverNodes ({
+      {Ipv4Address ("1.1.1.1"), Seconds (50)},
+      {Ipv4Address ("1.1.1.2"), Seconds (60)}
+    });
+
+    DoTestEqualityRelationalOperators (equal_1, equal_2, different);
+
+    // Different CONFIRMED RECEIVER NODES
+    different = PriorityDataPacketStatistics (/*Data ID*/ DataIdentifier ("10.0.0.1:32"),
+                                              /*Emergency flag*/ false,
+                                              /*Source ID*/ 0,
+                                              /*Creation time*/ Seconds (10),
+                                              /*Message size*/ 256,
+                                              /*DataHeader size*/ 305, // 256 bytes (message) + 1 byte (terminator) + 48 bytes (other fields in DATA header)
+                                              /*Geo-temporal area*/ GeoTemporalArea (TimePeriod (Seconds (30), Seconds (130)),
+                                                                                     Area (10, 20, 30, 40)));
+    different.SetExpectedReceiverNodes ({
+      {Ipv4Address ("1.1.1.1"), Seconds (30)},
+      {Ipv4Address ("1.1.1.2"), Seconds (40)}
+    });
+
+    DataPacketReceptionStats reception (DataIdentifier ("10.0.0.1:32"),
+                                        Ipv4Address ("10.0.0.1"),
+                                        Seconds (70),
+                                        true);
+    different.CountReception (Ipv4Address ("1.1.1.2"), reception);
+
+    DoTestEqualityRelationalOperators (equal_1, equal_2, different);
+
+    // Different DELIVERY DELAY LIST
+    reception = DataPacketReceptionStats (DataIdentifier ("10.0.0.1:32"),
+                                          Ipv4Address ("10.0.0.1"),
+                                          Seconds (50),
+                                          true);
+
+    equal_1.CountReception (Ipv4Address ("1.1.1.2"), reception);
+    equal_2.CountReception (Ipv4Address ("1.1.1.2"), reception);
+
+    different = PriorityDataPacketStatistics (/*Data ID*/ DataIdentifier ("10.0.0.1:32"),
+                                              /*Emergency flag*/ false,
+                                              /*Source ID*/ 0,
+                                              /*Creation time*/ Seconds (10),
+                                              /*Message size*/ 256,
+                                              /*DataHeader size*/ 305, // 256 bytes (message) + 1 byte (terminator) + 48 bytes (other fields in DATA header)
+                                              /*Geo-temporal area*/ GeoTemporalArea (TimePeriod (Seconds (30), Seconds (130)),
+                                                                                     Area (10, 20, 30, 40)));
+    different.SetExpectedReceiverNodes ({
+      {Ipv4Address ("1.1.1.1"), Seconds (30)},
+      {Ipv4Address ("1.1.1.2"), Seconds (40)}
+    });
+
+    reception = DataPacketReceptionStats (DataIdentifier ("10.0.0.1:32"),
+                                          Ipv4Address ("10.0.0.1"),
+                                          Seconds (40),
+                                          true);
+    different.CountReception (Ipv4Address ("1.1.1.2"), reception);
+
+    DoTestEqualityRelationalOperators (equal_1, equal_2, different);
+  }
+
+  void
+  TestOrderingRelationalOperators ()
+  {
+    // Different "data ID"
+    PriorityDataPacketStatistics smaller (/*Data ID*/ DataIdentifier ("10.0.0.1:30"),
+                                          /*Emergency flag*/ true,
+                                          /*Source ID*/ 0,
+                                          /*Creation time*/ Seconds (10),
+                                          /*Message size*/ 256,
+                                          /*DataHeader size*/ 305, // 256 bytes (message) + 1 byte (terminator) + 48 bytes (other fields in DATA header)
+                                          /*Geo-temporal area*/ GeoTemporalArea (TimePeriod (Seconds (30), Seconds (130)),
+                                                                                 Area (10, 20, 30, 40)));
+    PriorityDataPacketStatistics greater (/*Data ID*/ DataIdentifier ("10.0.0.1:32"),
+                                          /*Emergency flag*/ false,
+                                          /*Source ID*/ 0,
+                                          /*Creation time*/ Seconds (10),
+                                          /*Message size*/ 256,
+                                          /*DataHeader size*/ 305, // 256 bytes (message) + 1 byte (terminator) + 48 bytes (other fields in DATA header)
+                                          /*Geo-temporal area*/ GeoTemporalArea (TimePeriod (Seconds (30), Seconds (130)),
+                                                                                 Area (10, 20, 30, 40)));
+
+    DoTestOrderingRelationalOperators (smaller, greater);
+  }
+
+  void
+  SimulateScenario ()
+  {
+    // Used to calculate expected statistics
+    uint32_t expected_receivers_count = 12u, expected_confirmed_receivers_count = 0u;
+    double expected_delay_sum = 0.0;
+    double expected_delay_average, expected_delivery_ratio;
+
+    // Used as output references by the function
+    uint32_t output_confirmed_receivers_count, output_expected_receivers_count;
+    double output_delivery_ratio, output_average_delivery_delay;
+    uint32_t output_delivered_data_bytes;
+
+    // Set up
+    DataIdentifier data_id ("10.0.0.99:32");
+
+    std::map<Ipv4Address, Time> expected_receiver_nodes = {
+      {Ipv4Address ("10.0.0.1"), Seconds (30)},
+      {Ipv4Address ("10.0.0.2"), Seconds (30)},
+      {Ipv4Address ("10.0.0.3"), Seconds (30)},
+      {Ipv4Address ("10.0.0.4"), Seconds (30)},
+      {Ipv4Address ("10.0.0.5"), Seconds (40)},
+      {Ipv4Address ("10.0.0.6"), Seconds (50)},
+      {Ipv4Address ("10.0.0.7"), Seconds (60)},
+      {Ipv4Address ("10.0.0.8"), Seconds (70)},
+      {Ipv4Address ("10.0.0.9"), Seconds (80)},
+      {Ipv4Address ("10.0.0.10"), Seconds (90)},
+      {Ipv4Address ("10.0.0.11"), Seconds (30)}, // This node drops the packet
+      {Ipv4Address ("10.0.0.12"), Seconds (40)} // This node drops the packet
+    };
+
+    PriorityDataPacketStatistics packet_stats (/*Data ID*/ data_id,
+                                               /*Emergency flag*/ true,
+                                               /*Source ID*/ 0,
+                                               /*Creation time*/ Seconds (10),
+                                               /*Message size*/ 512,
+                                               /*DataHeader size*/ 561, // 512 bytes (message) + 1 byte (terminator) + 48 bytes (other fields in DATA header)
+                                               /*Geo-temporal area*/ GeoTemporalArea (TimePeriod (Seconds (30), Seconds (130)),
+                                                                                      Area (10, 20, 30, 40)));
+    packet_stats.SetExpectedReceiverNodes (expected_receiver_nodes);
+
+    // ----- Non-Visitor node 1 (should be ignored) -----
+    DataPacketReceptionStats reception_stats (data_id,
+                                              Ipv4Address ("10.0.0.99"),
+                                              Seconds (50),
+                                              true);
+    packet_stats.CountReception (Ipv4Address ("10.0.0.91"), reception_stats);
+
+    // Get statistics (should get double values as -1.0)
+    packet_stats.GetStatistics (output_confirmed_receivers_count, output_expected_receivers_count,
+                                output_delivery_ratio, output_average_delivery_delay,
+                                output_delivered_data_bytes);
+
+    NS_TEST_EXPECT_MSG_EQ (output_confirmed_receivers_count, expected_confirmed_receivers_count, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (output_expected_receivers_count, expected_receivers_count, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_delivery_ratio, 0.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_average_delivery_delay, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (output_delivered_data_bytes, 625 * output_confirmed_receivers_count, "Must be equal");
+
+    // *** Visitor node 1
+    reception_stats = DataPacketReceptionStats (data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (40),
+                                                true);
+    packet_stats.CountReception (Ipv4Address ("10.0.0.1"), reception_stats);
+
+    // Calculate expected values so far
+    ++expected_confirmed_receivers_count;
+    expected_delay_sum += 10.0;
+    expected_delay_average = expected_delay_sum / (double) expected_confirmed_receivers_count;
+    expected_delivery_ratio = (double) expected_confirmed_receivers_count / (double) expected_receivers_count;
+
+    // Get statistics
+    packet_stats.GetStatistics (output_confirmed_receivers_count, output_expected_receivers_count,
+                                output_delivery_ratio, output_average_delivery_delay,
+                                output_delivered_data_bytes);
+
+    NS_TEST_EXPECT_MSG_EQ (output_confirmed_receivers_count, expected_confirmed_receivers_count, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (output_expected_receivers_count, expected_receivers_count, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_delivery_ratio, expected_delivery_ratio), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_average_delivery_delay, expected_delay_average), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (output_delivered_data_bytes, 625 * output_confirmed_receivers_count, "Must be equal");
+
+    // *** Visitor node 2
+    reception_stats = DataPacketReceptionStats (data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (20),
+                                                true);
+    packet_stats.CountReception (Ipv4Address ("10.0.0.2"), reception_stats);
+
+    // Calculate expected values so far
+    ++expected_confirmed_receivers_count;
+    expected_delay_sum += 0.;
+    expected_delay_average = expected_delay_sum / (double) expected_confirmed_receivers_count;
+    expected_delivery_ratio = (double) expected_confirmed_receivers_count / (double) expected_receivers_count;
+
+    // Get statistics
+    packet_stats.GetStatistics (output_confirmed_receivers_count, output_expected_receivers_count,
+                                output_delivery_ratio, output_average_delivery_delay,
+                                output_delivered_data_bytes);
+
+    NS_TEST_EXPECT_MSG_EQ (output_confirmed_receivers_count, expected_confirmed_receivers_count, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (output_expected_receivers_count, expected_receivers_count, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_delivery_ratio, expected_delivery_ratio), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_average_delivery_delay, expected_delay_average), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (output_delivered_data_bytes, 625 * output_confirmed_receivers_count, "Must be equal");
+
+    // *** Visitor node 3
+    reception_stats = DataPacketReceptionStats (data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (20),
+                                                true);
+    packet_stats.CountReception (Ipv4Address ("10.0.0.3"), reception_stats);
+
+    // Calculate expected values so far
+    ++expected_confirmed_receivers_count;
+    expected_delay_sum += 0.;
+    expected_delay_average = expected_delay_sum / (double) expected_confirmed_receivers_count;
+    expected_delivery_ratio = (double) expected_confirmed_receivers_count / (double) expected_receivers_count;
+
+    // Get statistics
+    packet_stats.GetStatistics (output_confirmed_receivers_count, output_expected_receivers_count,
+                                output_delivery_ratio, output_average_delivery_delay,
+                                output_delivered_data_bytes);
+
+    NS_TEST_EXPECT_MSG_EQ (output_confirmed_receivers_count, expected_confirmed_receivers_count, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (output_expected_receivers_count, expected_receivers_count, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_delivery_ratio, expected_delivery_ratio), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_average_delivery_delay, expected_delay_average), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (output_delivered_data_bytes, 625 * output_confirmed_receivers_count, "Must be equal");
+
+    // *** Visitor node 4
+    reception_stats = DataPacketReceptionStats (data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (30),
+                                                true);
+    packet_stats.CountReception (Ipv4Address ("10.0.0.4"), reception_stats);
+
+    // Calculate expected values so far
+    ++expected_confirmed_receivers_count;
+    expected_delay_sum += 0.;
+    expected_delay_average = expected_delay_sum / (double) expected_confirmed_receivers_count;
+    expected_delivery_ratio = (double) expected_confirmed_receivers_count / (double) expected_receivers_count;
+
+    // Get statistics
+    packet_stats.GetStatistics (output_confirmed_receivers_count, output_expected_receivers_count,
+                                output_delivery_ratio, output_average_delivery_delay,
+                                output_delivered_data_bytes);
+
+    NS_TEST_EXPECT_MSG_EQ (output_confirmed_receivers_count, expected_confirmed_receivers_count, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (output_expected_receivers_count, expected_receivers_count, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_delivery_ratio, expected_delivery_ratio), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_average_delivery_delay, expected_delay_average), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (output_delivered_data_bytes, 625 * output_confirmed_receivers_count, "Must be equal");
+
+    // *** Visitor node 11 (DROPS the packet)
+    reception_stats = DataPacketReceptionStats (data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (30),
+                                                true);
+    reception_stats.SetPacketDropped ();
+    packet_stats.CountReception (Ipv4Address ("10.0.0.11"), reception_stats);
+
+    // The expected values remain unchanged, use the last computed values.
+
+    // Get statistics
+    packet_stats.GetStatistics (output_confirmed_receivers_count, output_expected_receivers_count,
+                                output_delivery_ratio, output_average_delivery_delay,
+                                output_delivered_data_bytes);
+
+    NS_TEST_EXPECT_MSG_EQ (output_confirmed_receivers_count, expected_confirmed_receivers_count, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (output_expected_receivers_count, expected_receivers_count, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_delivery_ratio, expected_delivery_ratio), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_average_delivery_delay, expected_delay_average), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (output_delivered_data_bytes, 625 * output_confirmed_receivers_count, "Must be equal");
+
+    // *** Visitor node 5
+    reception_stats = DataPacketReceptionStats (data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (30),
+                                                true);
+    packet_stats.CountReception (Ipv4Address ("10.0.0.5"), reception_stats);
+
+    // Calculate expected values so far
+    ++expected_confirmed_receivers_count;
+    expected_delay_sum += 0.;
+    expected_delay_average = expected_delay_sum / (double) expected_confirmed_receivers_count;
+    expected_delivery_ratio = (double) expected_confirmed_receivers_count / (double) expected_receivers_count;
+
+    // Get statistics
+    packet_stats.GetStatistics (output_confirmed_receivers_count, output_expected_receivers_count,
+                                output_delivery_ratio, output_average_delivery_delay,
+                                output_delivered_data_bytes);
+
+    NS_TEST_EXPECT_MSG_EQ (output_confirmed_receivers_count, expected_confirmed_receivers_count, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (output_expected_receivers_count, expected_receivers_count, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_delivery_ratio, expected_delivery_ratio), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_average_delivery_delay, expected_delay_average), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (output_delivered_data_bytes, 625 * output_confirmed_receivers_count, "Must be equal");
+
+    // ----- Non-Visitor node 2 (should be ignored) -----
+    reception_stats = DataPacketReceptionStats (data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (50),
+                                                true);
+    packet_stats.CountReception (Ipv4Address ("10.0.0.92"), reception_stats);
+
+    // Get statistics (should be the same as the last computed expected statistics)
+    packet_stats.GetStatistics (output_confirmed_receivers_count, output_expected_receivers_count,
+                                output_delivery_ratio, output_average_delivery_delay,
+                                output_delivered_data_bytes);
+
+    NS_TEST_EXPECT_MSG_EQ (output_confirmed_receivers_count, expected_confirmed_receivers_count, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (output_expected_receivers_count, expected_receivers_count, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_delivery_ratio, expected_delivery_ratio), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_average_delivery_delay, expected_delay_average), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (output_delivered_data_bytes, 625 * output_confirmed_receivers_count, "Must be equal");
+
+    // *** Visitor node 6
+    reception_stats = DataPacketReceptionStats (data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (70),
+                                                true);
+    packet_stats.CountReception (Ipv4Address ("10.0.0.6"), reception_stats);
+
+    // Calculate expected values so far
+    ++expected_confirmed_receivers_count;
+    expected_delay_sum += 20.;
+    expected_delay_average = expected_delay_sum / (double) expected_confirmed_receivers_count;
+    expected_delivery_ratio = (double) expected_confirmed_receivers_count / (double) expected_receivers_count;
+
+    // Get statistics
+    packet_stats.GetStatistics (output_confirmed_receivers_count, output_expected_receivers_count,
+                                output_delivery_ratio, output_average_delivery_delay,
+                                output_delivered_data_bytes);
+
+    NS_TEST_EXPECT_MSG_EQ (output_confirmed_receivers_count, expected_confirmed_receivers_count, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (output_expected_receivers_count, expected_receivers_count, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_delivery_ratio, expected_delivery_ratio), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_average_delivery_delay, expected_delay_average), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (output_delivered_data_bytes, 625 * output_confirmed_receivers_count, "Must be equal");
+
+    // *** Visitor node 7
+    reception_stats = DataPacketReceptionStats (data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (90),
+                                                true);
+    packet_stats.CountReception (Ipv4Address ("10.0.0.7"), reception_stats);
+
+    // Calculate expected values so far
+    ++expected_confirmed_receivers_count;
+    expected_delay_sum += 30.;
+    expected_delay_average = expected_delay_sum / (double) expected_confirmed_receivers_count;
+    expected_delivery_ratio = (double) expected_confirmed_receivers_count / (double) expected_receivers_count;
+
+    // Get statistics
+    packet_stats.GetStatistics (output_confirmed_receivers_count, output_expected_receivers_count,
+                                output_delivery_ratio, output_average_delivery_delay,
+                                output_delivered_data_bytes);
+
+    NS_TEST_EXPECT_MSG_EQ (output_confirmed_receivers_count, expected_confirmed_receivers_count, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (output_expected_receivers_count, expected_receivers_count, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_delivery_ratio, expected_delivery_ratio), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_average_delivery_delay, expected_delay_average), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (output_delivered_data_bytes, 625 * output_confirmed_receivers_count, "Must be equal");
+
+    // *** Visitor node 8
+    reception_stats = DataPacketReceptionStats (data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (80),
+                                                true);
+    packet_stats.CountReception (Ipv4Address ("10.0.0.8"), reception_stats);
+
+    // Calculate expected values so far
+    ++expected_confirmed_receivers_count;
+    expected_delay_sum += 10.;
+    expected_delay_average = expected_delay_sum / (double) expected_confirmed_receivers_count;
+    expected_delivery_ratio = (double) expected_confirmed_receivers_count / (double) expected_receivers_count;
+
+    // Get statistics
+    packet_stats.GetStatistics (output_confirmed_receivers_count, output_expected_receivers_count,
+                                output_delivery_ratio, output_average_delivery_delay,
+                                output_delivered_data_bytes);
+
+    NS_TEST_EXPECT_MSG_EQ (output_confirmed_receivers_count, expected_confirmed_receivers_count, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (output_expected_receivers_count, expected_receivers_count, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_delivery_ratio, expected_delivery_ratio), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_average_delivery_delay, expected_delay_average), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (output_delivered_data_bytes, 625 * output_confirmed_receivers_count, "Must be equal");
+
+    // *** Visitor node 12 (DROPS the packet)
+    reception_stats = DataPacketReceptionStats (data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (30),
+                                                true);
+    reception_stats.SetPacketDropped ();
+    packet_stats.CountReception (Ipv4Address ("10.0.0.12"), reception_stats);
+
+    // The expected values remain unchanged, use the last computed values.
+
+    // Get statistics
+    packet_stats.GetStatistics (output_confirmed_receivers_count, output_expected_receivers_count,
+                                output_delivery_ratio, output_average_delivery_delay,
+                                output_delivered_data_bytes);
+
+    NS_TEST_EXPECT_MSG_EQ (output_confirmed_receivers_count, expected_confirmed_receivers_count, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (output_expected_receivers_count, expected_receivers_count, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_delivery_ratio, expected_delivery_ratio), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_average_delivery_delay, expected_delay_average), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (output_delivered_data_bytes, 625 * output_confirmed_receivers_count, "Must be equal");
+
+    // *** Visitor node 9
+    reception_stats = DataPacketReceptionStats (data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (10),
+                                                true);
+    packet_stats.CountReception (Ipv4Address ("10.0.0.9"), reception_stats);
+
+    // Calculate expected values so far
+    ++expected_confirmed_receivers_count;
+    expected_delay_sum += 0.;
+    expected_delay_average = expected_delay_sum / (double) expected_confirmed_receivers_count;
+    expected_delivery_ratio = (double) expected_confirmed_receivers_count / (double) expected_receivers_count;
+
+    // Get statistics
+    packet_stats.GetStatistics (output_confirmed_receivers_count, output_expected_receivers_count,
+                                output_delivery_ratio, output_average_delivery_delay,
+                                output_delivered_data_bytes);
+
+    NS_TEST_EXPECT_MSG_EQ (output_confirmed_receivers_count, expected_confirmed_receivers_count, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (output_expected_receivers_count, expected_receivers_count, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_delivery_ratio, expected_delivery_ratio), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_average_delivery_delay, expected_delay_average), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (output_delivered_data_bytes, 625 * output_confirmed_receivers_count, "Must be equal");
+
+    // *** Visitor node 10
+    reception_stats = DataPacketReceptionStats (data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (120),
+                                                true);
+    packet_stats.CountReception (Ipv4Address ("10.0.0.10"), reception_stats);
+
+    // Calculate expected values so far
+    ++expected_confirmed_receivers_count;
+    expected_delay_sum += 30.;
+    expected_delay_average = expected_delay_sum / (double) expected_confirmed_receivers_count;
+    expected_delivery_ratio = (double) expected_confirmed_receivers_count / (double) expected_receivers_count;
+
+    // Get statistics
+    packet_stats.GetStatistics (output_confirmed_receivers_count, output_expected_receivers_count,
+                                output_delivery_ratio, output_average_delivery_delay,
+                                output_delivered_data_bytes);
+
+    NS_TEST_EXPECT_MSG_EQ (output_confirmed_receivers_count, expected_confirmed_receivers_count, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (output_expected_receivers_count, expected_receivers_count, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_delivery_ratio, expected_delivery_ratio), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_average_delivery_delay, expected_delay_average), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (output_delivered_data_bytes, 625 * output_confirmed_receivers_count, "Must be equal");
+
+    // ----- Non-Visitor node 3 (should be ignored) -----
+    reception_stats = DataPacketReceptionStats (data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (45),
+                                                true);
+    packet_stats.CountReception (Ipv4Address ("10.0.0.93"), reception_stats);
+
+    // Get statistics (should be the same as the last computed expected statistics)
+    packet_stats.GetStatistics (output_confirmed_receivers_count, output_expected_receivers_count,
+                                output_delivery_ratio, output_average_delivery_delay,
+                                output_delivered_data_bytes);
+
+    NS_TEST_EXPECT_MSG_EQ (output_confirmed_receivers_count, expected_confirmed_receivers_count, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (output_expected_receivers_count, expected_receivers_count, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_delivery_ratio, expected_delivery_ratio), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_average_delivery_delay, expected_delay_average), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (output_delivered_data_bytes, 625 * output_confirmed_receivers_count, "Must be equal");
+
+    // Compare with manually calculated expected values
+    NS_TEST_EXPECT_MSG_EQ (output_confirmed_receivers_count, 10u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (output_expected_receivers_count, 12u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_delivery_ratio, 10.0 / 12.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (output_average_delivery_delay, 10.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (output_delivered_data_bytes, 6250u, "Must be equal");
+  }
+
+  void
+  DoRun () override
+  {
+    TestConstructors ();
+    TestCountReception ();
+    TestGetStatistics ();
+    TestToString ();
+    TestEqualityRelationalOperators ();
+    TestOrderingRelationalOperators ();
+    SimulateScenario ();
+  }
+};
+
+
+// =============================================================================
+//                    PrioritySimulationStatisticsValuesTest
+// =============================================================================
+
+/**
+ * PrioritySimulationStatisticsValues test suite.
+ * 
+ * \ingroup tests
+ * \ingroup geotemporal-library-test
+ */
+class PrioritySimulationStatisticsValuesTest : public LibraryUtilsTestCase
+{
+public:
+
+  PrioritySimulationStatisticsValuesTest () : LibraryUtilsTestCase ("PrioritySimulationStatisticsValues") { }
+
+  void
+  TestConstructors ()
+  {
+    // Default constructor
+    PrioritySimulationStatisticsValues s1;
+    NS_TEST_EXPECT_MSG_EQ (s1.m_average_delivery_delay, -1.0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_average_delivery_ratio, -1.0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_total_overhead, -1.0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_data_overhead, -1.0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_control_overhead, -1.0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_total_transmitted_bytes, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_data_transmitted_bytes, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_control_transmitted_bytes, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_total_delivered_data_bytes, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_expected_receivers, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_confirmed_receivers, 0u, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (s1.m_emergency_average_delivery_delay, -1.0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_emergency_average_delivery_ratio, -1.0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_normal_average_delivery_delay, -1.0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_normal_average_delivery_ratio, -1.0, "Must be equal");
+
+    s1.m_average_delivery_delay = 1.1;
+    s1.m_average_delivery_ratio = 2.2;
+    s1.m_total_overhead = 3.3;
+    s1.m_data_overhead = 4.4;
+    s1.m_control_overhead = 5.5;
+    s1.m_total_transmitted_bytes = 6u;
+    s1.m_data_transmitted_bytes = 7u;
+    s1.m_control_transmitted_bytes = 8u;
+    s1.m_total_delivered_data_bytes = 9u;
+    s1.m_expected_receivers = 10u;
+    s1.m_confirmed_receivers = 11u;
+
+    s1.m_emergency_average_delivery_delay = 12.12;
+    s1.m_emergency_average_delivery_ratio = 13.13;
+    s1.m_normal_average_delivery_delay = 14.14;
+    s1.m_normal_average_delivery_ratio = 15.15;
+
+    // Copy constructor
+    PrioritySimulationStatisticsValues s2 (s1);
+    NS_TEST_EXPECT_MSG_EQ (s2.m_average_delivery_delay, s1.m_average_delivery_delay, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s2.m_average_delivery_ratio, s1.m_average_delivery_ratio, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s2.m_total_overhead, s1.m_total_overhead, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s2.m_data_overhead, s1.m_data_overhead, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s2.m_control_overhead, s1.m_control_overhead, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s2.m_total_transmitted_bytes, s1.m_total_transmitted_bytes, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s2.m_data_transmitted_bytes, s1.m_data_transmitted_bytes, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s2.m_control_transmitted_bytes, s1.m_control_transmitted_bytes, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s2.m_total_delivered_data_bytes, s1.m_total_delivered_data_bytes, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s2.m_expected_receivers, s1.m_expected_receivers, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s2.m_confirmed_receivers, s1.m_confirmed_receivers, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (s2.m_emergency_average_delivery_delay, s1.m_emergency_average_delivery_delay, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s2.m_emergency_average_delivery_ratio, s1.m_emergency_average_delivery_ratio, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s2.m_normal_average_delivery_delay, s1.m_normal_average_delivery_delay, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s2.m_normal_average_delivery_ratio, s1.m_normal_average_delivery_ratio, "Must be equal");
+  }
+
+  void
+  TestInitializeValues ()
+  {
+    PrioritySimulationStatisticsValues s1;
+
+    s1.m_average_delivery_delay = 1.1;
+    s1.m_average_delivery_ratio = 2.2;
+    s1.m_total_overhead = 3.3;
+    s1.m_data_overhead = 4.4;
+    s1.m_control_overhead = 5.5;
+    s1.m_total_transmitted_bytes = 6u;
+    s1.m_data_transmitted_bytes = 7u;
+    s1.m_control_transmitted_bytes = 8u;
+    s1.m_total_delivered_data_bytes = 9u;
+    s1.m_expected_receivers = 10u;
+    s1.m_confirmed_receivers = 11u;
+
+    s1.m_emergency_average_delivery_delay = 12.12;
+    s1.m_emergency_average_delivery_ratio = 13.13;
+    s1.m_normal_average_delivery_delay = 14.14;
+    s1.m_normal_average_delivery_ratio = 15.15;
+
+    s1.InitializeValues ();
+
+    NS_TEST_EXPECT_MSG_EQ (s1.m_average_delivery_delay, -1.0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_average_delivery_ratio, -1.0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_total_overhead, -1.0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_data_overhead, -1.0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_control_overhead, -1.0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_total_transmitted_bytes, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_data_transmitted_bytes, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_control_transmitted_bytes, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_total_delivered_data_bytes, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_expected_receivers, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_confirmed_receivers, 0u, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (s1.m_emergency_average_delivery_delay, -1.0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_emergency_average_delivery_ratio, -1.0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_normal_average_delivery_delay, -1.0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (s1.m_normal_average_delivery_ratio, -1.0, "Must be equal");
+  }
+
+  void
+  TestOverloadedOperators ()
+  {
+    PrioritySimulationStatisticsValues equal_1;
+
+    equal_1.m_average_delivery_delay = 1.1;
+    equal_1.m_average_delivery_ratio = 2.2;
+    equal_1.m_total_overhead = 3.3;
+    equal_1.m_data_overhead = 4.4;
+    equal_1.m_control_overhead = 5.5;
+    equal_1.m_total_transmitted_bytes = 6u;
+    equal_1.m_data_transmitted_bytes = 7u;
+    equal_1.m_control_transmitted_bytes = 8u;
+    equal_1.m_total_delivered_data_bytes = 9u;
+    equal_1.m_expected_receivers = 10u;
+    equal_1.m_confirmed_receivers = 11u;
+
+    equal_1.m_emergency_average_delivery_delay = 12.12;
+    equal_1.m_emergency_average_delivery_ratio = 13.13;
+    equal_1.m_normal_average_delivery_delay = 14.14;
+    equal_1.m_normal_average_delivery_ratio = 15.15;
+
+    PrioritySimulationStatisticsValues equal_2 (equal_1);
+
+    // Different average delivery delay
+    PrioritySimulationStatisticsValues different (equal_1);
+    different.m_average_delivery_delay = 100.001;
+
+    DoTestEqualityRelationalOperators (equal_1, equal_2, different);
+
+    // Different average delivery ratio
+    different = PrioritySimulationStatisticsValues (equal_1);
+    different.m_average_delivery_ratio = 200.002;
+
+    DoTestEqualityRelationalOperators (equal_1, equal_2, different);
+
+    // Different total overhead
+    different = PrioritySimulationStatisticsValues (equal_1);
+    different.m_total_overhead = 300.003;
+
+    DoTestEqualityRelationalOperators (equal_1, equal_2, different);
+
+    // Different data overhead
+    different = PrioritySimulationStatisticsValues (equal_1);
+    different.m_data_overhead = 400.004;
+
+    DoTestEqualityRelationalOperators (equal_1, equal_2, different);
+
+    // Different control overhead
+    different = PrioritySimulationStatisticsValues (equal_1);
+    different.m_control_overhead = 500.005;
+
+    DoTestEqualityRelationalOperators (equal_1, equal_2, different);
+
+    // Different total transmitted bytes
+    different = PrioritySimulationStatisticsValues (equal_1);
+    different.m_total_transmitted_bytes = 600u;
+
+    DoTestEqualityRelationalOperators (equal_1, equal_2, different);
+
+    // Different data transmitted bytes
+    different = PrioritySimulationStatisticsValues (equal_1);
+    different.m_data_transmitted_bytes = 700u;
+
+    DoTestEqualityRelationalOperators (equal_1, equal_2, different);
+
+    // Different control transmitted bytes
+    different = PrioritySimulationStatisticsValues (equal_1);
+    different.m_control_transmitted_bytes = 800u;
+
+    DoTestEqualityRelationalOperators (equal_1, equal_2, different);
+
+    // Different total delivered data bytes
+    different = PrioritySimulationStatisticsValues (equal_1);
+    different.m_total_delivered_data_bytes = 900u;
+
+    DoTestEqualityRelationalOperators (equal_1, equal_2, different);
+
+    // Different expected receivers
+    different = PrioritySimulationStatisticsValues (equal_1);
+    different.m_expected_receivers = 1000u;
+
+    DoTestEqualityRelationalOperators (equal_1, equal_2, different);
+
+    // Different confirmed receivers
+    different = PrioritySimulationStatisticsValues (equal_1);
+    different.m_confirmed_receivers = 1100u;
+
+    DoTestEqualityRelationalOperators (equal_1, equal_2, different);
+
+    // Different emergency average delivery delay
+    different = PrioritySimulationStatisticsValues (equal_1);
+    different.m_emergency_average_delivery_delay = 1200.0021;
+
+    DoTestEqualityRelationalOperators (equal_1, equal_2, different);
+
+    // Different emergency average delivery ratio
+    different = PrioritySimulationStatisticsValues (equal_1);
+    different.m_emergency_average_delivery_ratio = 1300.0031;
+
+    DoTestEqualityRelationalOperators (equal_1, equal_2, different);
+
+    // Different normal average delivery delay
+    different = PrioritySimulationStatisticsValues (equal_1);
+    different.m_normal_average_delivery_delay = 1400.0041;
+
+    DoTestEqualityRelationalOperators (equal_1, equal_2, different);
+
+    // Different normal average delivery ratio
+    different = PrioritySimulationStatisticsValues (equal_1);
+    different.m_normal_average_delivery_ratio = 1500.0051;
+
+    DoTestEqualityRelationalOperators (equal_1, equal_2, different);
+  }
+
+  void
+  DoRun () override
+  {
+    TestConstructors ();
+    TestInitializeValues ();
+    TestOverloadedOperators ();
+  }
+};
+
+
+// =============================================================================
+//                       PrioritySimulationStatisticsTest
+// =============================================================================
+
+/**
+ * PrioritySimulationStatistics test suite.
+ * 
+ * \ingroup tests
+ * \ingroup geotemporal-library-test
+ */
+class PrioritySimulationStatisticsTest : public LibraryUtilsTestCase
+{
+protected:
+
+  std::vector<Area> m_destination_areas;
+  std::vector<PriorityDataPacketStatistics> m_priority_data_packets_list;
+  GeoTemporalAreasVisitorNodes m_gta_visitor_nodes;
+  std::vector<PacketsCounter> m_nodes_packets_counter;
+  std::map<uint32_t, Ipv4Address> m_node_id_to_ip;
+  std::map<Ipv4Address, uint32_t> m_node_ip_to_id;
+
+public:
+
+  PrioritySimulationStatisticsTest () : PrioritySimulationStatisticsTest ("PrioritySimulationStatistics") { }
+
+  PrioritySimulationStatisticsTest (std::string name) : LibraryUtilsTestCase (name),
+  m_destination_areas (), m_priority_data_packets_list (), m_gta_visitor_nodes (),
+  m_nodes_packets_counter (), m_node_id_to_ip (), m_node_ip_to_id ()
+  {
+    SetUpInternalData ();
+  }
+
+private:
+
+  void
+  SetUpInternalData ()
+  {
+    m_destination_areas = {
+      Area (0, 0, 10, 10),
+      Area (10, 10, 20, 20),
+      Area (20, 20, 30, 30),
+      Area (30, 30, 40, 40),
+      Area (40, 40, 50, 50)
+    };
+
+    // Create data packets and populate geo temporal areas visitor nodes object
+
+    // - First geo-temporal area
+    GeoTemporalArea geo_temporal_area (TimePeriod (Seconds (30), Seconds (130)), m_destination_areas.at (0));
+    m_gta_visitor_nodes.AddGeoTemporalArea (geo_temporal_area);
+
+    // Create and store first data packet
+    PriorityDataPacketStatistics packet_stats (/*Data ID*/ DataIdentifier ("10.0.0.0:1"),
+                                               /*Emergency*/ true,
+                                               /*Source ID*/ 0,
+                                               /*Creation time*/ Seconds (0),
+                                               /*Message size*/ 512,
+                                               /*DataHeader size*/ 585, // 512 bytes (message) + 1 byte (terminator) + 72 bytes (other fields in DATA header)
+                                               /*Geo-temporal area*/ geo_temporal_area);
+    m_priority_data_packets_list.push_back (packet_stats);
+
+    m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (0, 30));
+    m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (1, 30));
+    m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (2, 30));
+    m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (3, 30));
+    m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (4, 30));
+    m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (5, 40));
+    m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (6, 50));
+    m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (7, 60));
+    m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (8, 70));
+    m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (9, 80));
+    m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (10, 90));
+
+    // Other 2 expected receiver nodes
+    for (uint32_t i = 0u; i < 2; ++i)
+      m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (11 + i, 50 + (i * 20)));
+
+    // - Second geo-temporal area
+    geo_temporal_area = GeoTemporalArea (TimePeriod (Seconds (120), Seconds (220)), m_destination_areas.at (1));
+    m_gta_visitor_nodes.AddGeoTemporalArea (geo_temporal_area);
+
+    // Create and store second data packet
+    packet_stats = PriorityDataPacketStatistics (/*Data ID*/ DataIdentifier ("10.0.0.0:2"),
+                                                 /*Emergency*/ false,
+                                                 /*Source ID*/ 0,
+                                                 /*Creation time*/ Seconds (70),
+                                                 /*Message size*/ 1024,
+                                                 /*DataHeader size*/ 1097, // 1024 bytes (message) + 1 byte (terminator) + 72 bytes (other fields in DATA header)
+                                                 /*Geo-temporal area*/ geo_temporal_area);
+    m_priority_data_packets_list.push_back (packet_stats);
+
+    m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (0, 120));
+    m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (1, 120));
+    m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (2, 120));
+    m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (3, 190));
+    m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (4, 150));
+    m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (5, 220));
+    m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (6, 165));
+    m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (7, 135));
+
+    // Other 11 expected receiver nodes
+    for (uint32_t i = 0u; i < 11; ++i)
+      m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (8 + i, 120 + (i * 10)));
+
+    // - Third geo-temporal area
+    geo_temporal_area = GeoTemporalArea (TimePeriod (Seconds (350), Seconds (450)), m_destination_areas.at (2));
+    m_gta_visitor_nodes.AddGeoTemporalArea (geo_temporal_area);
+
+    // Create and store third data packet
+    packet_stats = PriorityDataPacketStatistics (/*Data ID*/ DataIdentifier ("10.0.0.0:3"),
+                                                 /*Emergency*/ true,
+                                                 /*Source ID*/ 0,
+                                                 /*Creation time*/ Seconds (200),
+                                                 /*Message size*/ 512,
+                                                 /*DataHeader size*/ 585, // 512 bytes (message) + 1 byte (terminator) + 72 bytes (other fields in DATA header)
+                                                 /*Geo-temporal area*/ geo_temporal_area);
+    m_priority_data_packets_list.push_back (packet_stats);
+
+    m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (0, 370));
+    m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (1, 370));
+    m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (2, 405));
+    m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (3, 385));
+    m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (4, 425));
+    m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (5, 350));
+    m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (6, 350));
+    m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (7, 350));
+    m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (8, 435));
+
+    // Other 20 expected receiver nodes
+    for (uint32_t i = 0u; i < 20; ++i)
+      m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (9 + i, 350 + (i * 5)));
+
+    // - Fourth geo-temporal area
+    geo_temporal_area = GeoTemporalArea (TimePeriod (Seconds (210), Seconds (310)), m_destination_areas.at (3));
+    m_gta_visitor_nodes.AddGeoTemporalArea (geo_temporal_area);
+
+    // Create and store fourth data packet
+    packet_stats = PriorityDataPacketStatistics (/*Data ID*/ DataIdentifier ("10.0.0.0:4"),
+                                                 /*Emergency*/ false,
+                                                 /*Source ID*/ 0,
+                                                 /*Creation time*/ Seconds (130),
+                                                 /*Message size*/ 1024,
+                                                 /*DataHeader size*/ 1097, // 1024 bytes (message) + 1 byte (terminator) + 72 bytes (other fields in DATA header)
+                                                 /*Geo-temporal area*/ geo_temporal_area);
+    m_priority_data_packets_list.push_back (packet_stats);
+
+    m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (0, 210));
+    m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (1, 210));
+    m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (2, 220));
+    m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (3, 215));
+    m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (4, 240));
+    m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (5, 275));
+    m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (6, 220));
+    m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (7, 210));
+    m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (8, 240));
+
+    // - Fifth geo-temporal area
+    geo_temporal_area = GeoTemporalArea (TimePeriod (Seconds (350), Seconds (450)), m_destination_areas.at (4));
+    m_gta_visitor_nodes.AddGeoTemporalArea (geo_temporal_area);
+
+    // Create and store fifth data packet
+    packet_stats = PriorityDataPacketStatistics (/*Data ID*/ DataIdentifier ("10.0.0.0:5"),
+                                                 /*Emergency*/ true,
+                                                 /*Source ID*/ 0,
+                                                 /*Creation time*/ Seconds (200),
+                                                 /*Message size*/ 256,
+                                                 /*DataHeader size*/ 329, // 256 bytes (message) + 1 byte (terminator) + 72 bytes (other fields in DATA header)
+                                                 /*Geo-temporal area*/ geo_temporal_area);
+    m_priority_data_packets_list.push_back (packet_stats);
+
+    m_gta_visitor_nodes.AddVisitorNode (geo_temporal_area, VisitorNode (0, 350));
+
+    // Create the transmitted packets of the nodes and stablish the mapping of
+    // node IP to ID and viceversa.
+    PacketsCounter packets_counter;
+    char ip_str [30];
+    Ipv4Address node_ip;
+
+    for (uint32_t node_id = 0u; node_id < 40u; ++node_id)
+      {
+        packets_counter = PacketsCounter ();
+        packets_counter.CountPacket (PacketClass::Control, 1050); // 40 * 1,050 = 42,000
+        packets_counter.CountPacket (PacketClass::Data, 950); // 38 * 950 = 38,000
+
+        m_nodes_packets_counter.push_back (packets_counter);
+
+        std::sprintf (ip_str, "10.0.0.%u", node_id);
+        node_ip = Ipv4Address (ip_str);
+
+        m_node_id_to_ip.insert (std::make_pair (node_id, node_ip));
+        m_node_ip_to_id.insert (std::make_pair (node_ip, node_id));
+      }
+  }
+
+protected:
+
+  void
+  SetUpTransmittedPacketsCounters (PrioritySimulationStatistics & priority_simulation_statistics)
+  {
+    for (uint32_t node_id = 0u; node_id < m_nodes_packets_counter.size (); ++node_id)
+      {
+        priority_simulation_statistics.SetNodeTransmittedPacketsCounter (m_node_id_to_ip.at (node_id),
+                                                                         m_nodes_packets_counter.at (node_id));
+      }
+  }
+
+  /**
+   * Sets up the receivers nodes of the first data packet.
+   *
+   * Returns the DATA ID of the data packet.
+   */
+  DataIdentifier
+  SetUpFirstPacketReceivers (PrioritySimulationStatistics & priority_simulation_stats)
+  {
+    priority_simulation_stats.AddDataPacket (m_priority_data_packets_list.at (0));
+    const DataIdentifier & packet_1_data_id = m_priority_data_packets_list.at (0).GetDataIdentifier ();
+
+    // Non-Visitor node 1 (should be ignored)
+    DataPacketReceptionStats reception_stats (packet_1_data_id,
+                                              Ipv4Address ("10.0.0.25"),
+                                              Seconds (50),
+                                              true);
+    priority_simulation_stats.CountDataPacketReceiverNode (Ipv4Address ("10.0.0.91"), reception_stats);
+
+    // Visitor node 1
+    reception_stats = DataPacketReceptionStats (packet_1_data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (40),
+                                                true);
+    priority_simulation_stats.CountDataPacketReceiverNode (Ipv4Address ("10.0.0.1"), reception_stats);
+
+    // Visitor node 2
+    reception_stats = DataPacketReceptionStats (packet_1_data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (20),
+                                                true);
+    priority_simulation_stats.CountDataPacketReceiverNode (Ipv4Address ("10.0.0.2"), reception_stats);
+
+    // Visitor node 3
+    reception_stats = DataPacketReceptionStats (packet_1_data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (20),
+                                                true);
+    priority_simulation_stats.CountDataPacketReceiverNode (Ipv4Address ("10.0.0.3"), reception_stats);
+
+    // Visitor node 4
+    reception_stats = DataPacketReceptionStats (packet_1_data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (30),
+                                                true);
+    priority_simulation_stats.CountDataPacketReceiverNode (Ipv4Address ("10.0.0.4"), reception_stats);
+
+    // Visitor node 5
+    reception_stats = DataPacketReceptionStats (packet_1_data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (30),
+                                                true);
+    priority_simulation_stats.CountDataPacketReceiverNode (Ipv4Address ("10.0.0.5"), reception_stats);
+
+    // Non-Visitor node 2 (should be ignored)
+    reception_stats = DataPacketReceptionStats (packet_1_data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (50),
+                                                true);
+    priority_simulation_stats.CountDataPacketReceiverNode (Ipv4Address ("10.0.0.92"), reception_stats);
+
+    // Visitor node 6
+    reception_stats = DataPacketReceptionStats (packet_1_data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (70),
+                                                true);
+    priority_simulation_stats.CountDataPacketReceiverNode (Ipv4Address ("10.0.0.6"), reception_stats);
+
+    // Visitor node 7
+    reception_stats = DataPacketReceptionStats (packet_1_data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (90),
+                                                true);
+    priority_simulation_stats.CountDataPacketReceiverNode (Ipv4Address ("10.0.0.7"), reception_stats);
+
+    // Visitor node 8
+    reception_stats = DataPacketReceptionStats (packet_1_data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (80),
+                                                true);
+    priority_simulation_stats.CountDataPacketReceiverNode (Ipv4Address ("10.0.0.8"), reception_stats);
+
+    // Non-Visitor node 3 (should be ignored)
+    reception_stats = DataPacketReceptionStats (packet_1_data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (45),
+                                                true);
+    priority_simulation_stats.CountDataPacketReceiverNode (Ipv4Address ("10.0.0.93"), reception_stats);
+
+    // Visitor node 9
+    reception_stats = DataPacketReceptionStats (packet_1_data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (10),
+                                                true);
+    priority_simulation_stats.CountDataPacketReceiverNode (Ipv4Address ("10.0.0.9"), reception_stats);
+
+    // Visitor node 10
+    reception_stats = DataPacketReceptionStats (packet_1_data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (120),
+                                                true);
+    priority_simulation_stats.CountDataPacketReceiverNode (Ipv4Address ("10.0.0.10"), reception_stats);
+
+    // Visitor node 11 (DROPS the packet)
+    reception_stats = DataPacketReceptionStats (packet_1_data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (30),
+                                                true);
+    reception_stats.SetPacketDropped ();
+    priority_simulation_stats.CountDataPacketReceiverNode (Ipv4Address ("10.0.0.11"), reception_stats);
+
+    // Visitor node 12 (DROPS the packet)
+    reception_stats = DataPacketReceptionStats (packet_1_data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (30),
+                                                true);
+    reception_stats.SetPacketDropped ();
+    priority_simulation_stats.CountDataPacketReceiverNode (Ipv4Address ("10.0.0.12"), reception_stats);
+
+    // Some non-expected nodes receptions
+    char ip_address_str[20];
+
+    for (uint32_t i = 0; i < 20; ++i)
+      {
+        reception_stats = DataPacketReceptionStats (packet_1_data_id,
+                                                    Ipv4Address ("10.0.0.25"),
+                                                    Seconds (10.0 + (i * 5.0)),
+                                                    true);
+
+        // Create the string of some IP address
+        std::sprintf (ip_address_str, "10.0.0.%u", 100 + i);
+
+        priority_simulation_stats.CountDataPacketReceiverNode (Ipv4Address (ip_address_str), reception_stats);
+      }
+
+    return packet_1_data_id;
+  }
+
+  /**
+   * Sets up the receiver nodes of the second data packet.
+   *
+   * Returns the DATA ID of the data packet.
+   */
+  DataIdentifier
+  SetUpSecondPacketRececeivers (PrioritySimulationStatistics & priority_simulation_stats)
+  {
+    priority_simulation_stats.AddDataPacket (m_priority_data_packets_list.at (1));
+    const DataIdentifier & packet_2_data_id = m_priority_data_packets_list.at (1).GetDataIdentifier ();
+
+    // Visitor node 1
+    DataPacketReceptionStats reception_stats (packet_2_data_id,
+                                              Ipv4Address ("10.0.0.25"),
+                                              Seconds (135),
+                                              true);
+    priority_simulation_stats.CountDataPacketReceiverNode (Ipv4Address ("10.0.0.1"), reception_stats);
+
+    // Visitor node 2
+    reception_stats = DataPacketReceptionStats (packet_2_data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (100),
+                                                true);
+    priority_simulation_stats.CountDataPacketReceiverNode (Ipv4Address ("10.0.0.2"), reception_stats);
+
+    // Visitor node 3
+    reception_stats = DataPacketReceptionStats (packet_2_data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (155),
+                                                true);
+    priority_simulation_stats.CountDataPacketReceiverNode (Ipv4Address ("10.0.0.3"), reception_stats);
+
+    // Visitor node 4
+    reception_stats = DataPacketReceptionStats (packet_2_data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (175),
+                                                true);
+    priority_simulation_stats.CountDataPacketReceiverNode (Ipv4Address ("10.0.0.4"), reception_stats);
+
+    // Visitor node 5
+    reception_stats = DataPacketReceptionStats (packet_2_data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (140),
+                                                true);
+    priority_simulation_stats.CountDataPacketReceiverNode (Ipv4Address ("10.0.0.5"), reception_stats);
+
+    // Visitor node 6
+    reception_stats = DataPacketReceptionStats (packet_2_data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (200),
+                                                true);
+    priority_simulation_stats.CountDataPacketReceiverNode (Ipv4Address ("10.0.0.6"), reception_stats);
+
+    // Visitor node 7 (First non-receiver that was expected to receive it)
+    reception_stats = DataPacketReceptionStats (packet_2_data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (80),
+                                                true);
+    reception_stats.SetPacketDropped ();
+    priority_simulation_stats.CountDataPacketReceiverNode (Ipv4Address ("10.0.0.7"), reception_stats);
+
+    // Some non-expected nodes receptions
+    char ip_address_str[20];
+
+    for (uint32_t i = 0; i < 20; ++i)
+      {
+        reception_stats = DataPacketReceptionStats (packet_2_data_id,
+                                                    Ipv4Address ("10.0.0.25"),
+                                                    Seconds (70.0 + (i * 5.0)),
+                                                    true);
+
+        // Create the string of some IP address
+        std::sprintf (ip_address_str, "10.0.0.%u", 100 + i);
+
+        priority_simulation_stats.CountDataPacketReceiverNode (Ipv4Address (ip_address_str), reception_stats);
+      }
+
+    return packet_2_data_id;
+  }
+
+  /**
+   * Sets up the receiver nodes of the third data packet.
+   *
+   * Returns the DATA ID of the data packet.
+   */
+  DataIdentifier
+  SetUpThirdPacketReceivers (PrioritySimulationStatistics & priority_simulation_stats)
+  {
+    priority_simulation_stats.AddDataPacket (m_priority_data_packets_list.at (2));
+    const DataIdentifier & packet_3_data_id = m_priority_data_packets_list.at (2).GetDataIdentifier ();
+
+    // Visitor node 1
+    DataPacketReceptionStats reception_stats (packet_3_data_id,
+                                              Ipv4Address ("10.0.0.25"),
+                                              Seconds (230),
+                                              true);
+    priority_simulation_stats.CountDataPacketReceiverNode (Ipv4Address ("10.0.0.1"), reception_stats);
+
+    // Visitor node 2 (First non-receiver that was expected to receive it)
+    reception_stats = DataPacketReceptionStats (packet_3_data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (210),
+                                                true);
+    reception_stats.SetPacketDropped ();
+    priority_simulation_stats.CountDataPacketReceiverNode (Ipv4Address ("10.0.0.2"), reception_stats);
+
+    // Visitor node 3 (Second non-receiver that was expected to receive it)
+    reception_stats = DataPacketReceptionStats (packet_3_data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (225),
+                                                true);
+    reception_stats.SetPacketDropped ();
+    priority_simulation_stats.CountDataPacketReceiverNode (Ipv4Address ("10.0.0.3"), reception_stats);
+
+    // Visitor node 4
+    reception_stats = DataPacketReceptionStats (packet_3_data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (445),
+                                                true);
+    priority_simulation_stats.CountDataPacketReceiverNode (Ipv4Address ("10.0.0.4"), reception_stats);
+
+    // Visitor node 5
+    reception_stats = DataPacketReceptionStats (packet_3_data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (405),
+                                                true);
+    priority_simulation_stats.CountDataPacketReceiverNode (Ipv4Address ("10.0.0.5"), reception_stats);
+
+    // Visitor node 6
+    reception_stats = DataPacketReceptionStats (packet_3_data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (420),
+                                                true);
+    priority_simulation_stats.CountDataPacketReceiverNode (Ipv4Address ("10.0.0.6"), reception_stats);
+
+    // Visitor node 7
+    reception_stats = DataPacketReceptionStats (packet_3_data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (380),
+                                                true);
+    priority_simulation_stats.CountDataPacketReceiverNode (Ipv4Address ("10.0.0.7"), reception_stats);
+
+    // Visitor node 8
+    reception_stats = DataPacketReceptionStats (packet_3_data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (395),
+                                                true);
+    priority_simulation_stats.CountDataPacketReceiverNode (Ipv4Address ("10.0.0.8"), reception_stats);
+
+    // Some non-expected nodes receptions
+    char ip_address_str[20];
+
+    for (uint32_t i = 0; i < 20; ++i)
+      {
+        reception_stats = DataPacketReceptionStats (packet_3_data_id,
+                                                    Ipv4Address ("10.0.0.25"),
+                                                    Seconds (330.0 + (i * 5.0)),
+                                                    true);
+
+        // Create the string of some IP address
+        std::sprintf (ip_address_str, "10.0.0.%u", 100 + i);
+
+        priority_simulation_stats.CountDataPacketReceiverNode (Ipv4Address (ip_address_str), reception_stats);
+      }
+
+    return packet_3_data_id;
+  }
+
+  /**
+   * Sets up the receiver nodes of the fourth data packet.
+   *
+   * Returns the DATA ID of the data packet.
+   */
+  DataIdentifier
+  SetUpFourthPacketReceivers (PrioritySimulationStatistics & priority_simulation_stats)
+  {
+    priority_simulation_stats.AddDataPacket (m_priority_data_packets_list.at (3));
+    const DataIdentifier & packet_4_data_id = m_priority_data_packets_list.at (3).GetDataIdentifier ();
+
+    // Visitor node 1 (First non-receiver that was expected to receive it)
+    DataPacketReceptionStats reception_stats (packet_4_data_id,
+                                              Ipv4Address ("10.0.0.25"),
+                                              Seconds (180),
+                                              true);
+    reception_stats.SetPacketDropped ();
+    priority_simulation_stats.CountDataPacketReceiverNode (Ipv4Address ("10.0.0.1"), reception_stats);
+
+    // Visitor node 2 (Second non-receiver that was expected to receive it)
+    reception_stats = DataPacketReceptionStats (packet_4_data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (170),
+                                                true);
+    reception_stats.SetPacketDropped ();
+    priority_simulation_stats.CountDataPacketReceiverNode (Ipv4Address ("10.0.0.2"), reception_stats);
+
+    // Some non-expected nodes receptions
+    char ip_address_str[20];
+
+    for (uint32_t i = 0; i < 20; ++i)
+      {
+        reception_stats = DataPacketReceptionStats (packet_4_data_id,
+                                                    Ipv4Address ("10.0.0.25"),
+                                                    Seconds (180.0 + (i * 5.0)),
+                                                    true);
+
+        // Create the string of some IP address
+        std::sprintf (ip_address_str, "10.0.0.%u", 100 + i);
+
+        priority_simulation_stats.CountDataPacketReceiverNode (Ipv4Address (ip_address_str), reception_stats);
+      }
+
+    return packet_4_data_id;
+  }
+
+  /**
+   * Sets up the receiver nodes of the fifth data packet.
+   *
+   * Returns the DATA ID of the data packet.
+   */
+  DataIdentifier
+  SetUpFifthPacketReceivers (PrioritySimulationStatistics & priority_simulation_stats)
+  {
+    priority_simulation_stats.AddDataPacket (m_priority_data_packets_list.at (4));
+    const DataIdentifier & packet_5_data_id = m_priority_data_packets_list.at (4).GetDataIdentifier ();
+
+    DataPacketReceptionStats reception_stats;
+
+    // Some non-expected nodes receptions
+    char ip_address_str[20];
+
+    for (uint32_t i = 0; i < 20; ++i)
+      {
+        reception_stats = DataPacketReceptionStats (packet_5_data_id,
+                                                    Ipv4Address ("10.0.0.25"),
+                                                    Seconds (300.0 + (i * 5.0)),
+                                                    true);
+
+        // Create the string of some IP address
+        std::sprintf (ip_address_str, "10.0.0.%u", 100 + i);
+
+        priority_simulation_stats.CountDataPacketReceiverNode (Ipv4Address (ip_address_str), reception_stats);
+      }
+
+    // Node 1 that dropped the packet
+    reception_stats = DataPacketReceptionStats (packet_5_data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (180),
+                                                true);
+    reception_stats.SetPacketDropped ();
+    priority_simulation_stats.CountDataPacketReceiverNode (Ipv4Address ("10.0.0.1"), reception_stats);
+
+    // Node 2 that dropped the packet
+    reception_stats = DataPacketReceptionStats (packet_5_data_id,
+                                                Ipv4Address ("10.0.0.25"),
+                                                Seconds (170),
+                                                true);
+    reception_stats.SetPacketDropped ();
+    priority_simulation_stats.CountDataPacketReceiverNode (Ipv4Address ("10.0.0.2"), reception_stats);
+
+    return packet_5_data_id;
+  }
+
+public:
+
+  virtual void
+  TestCalculateStatistics ()
+  {
+    PrioritySimulationStatistics priority_simulation_stats (m_gta_visitor_nodes,
+                                                            m_node_id_to_ip);
+
+    bool result;
+    PrioritySimulationStatisticsValues values;
+
+    // ======= No packets yet =======
+
+    result = priority_simulation_stats.CalculateStatistics (values);
+    NS_TEST_EXPECT_MSG_EQ (result, false, "Must be false");
+
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_total_overhead, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_data_overhead, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_control_overhead, -1.0), true, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_transmitted_bytes, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_data_transmitted_bytes, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_control_transmitted_bytes, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 0u, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 0u, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_emergency_average_delivery_delay, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_emergency_average_delivery_ratio, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_normal_average_delivery_delay, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_normal_average_delivery_ratio, -1.0), true, "Must be equal");
+
+    // Set up transmitted packet counters
+    SetUpTransmittedPacketsCounters (priority_simulation_stats);
+
+    // ======= First packet =======
+
+    SetUpFirstPacketReceivers (priority_simulation_stats);
+
+    result = priority_simulation_stats.CalculateStatistics (values);
+    NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
+
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, 10.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, 10.0 / 12.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_total_overhead, 80000.0 / 6490.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_data_overhead, 38000 / 6490.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_control_overhead, 42000.0 / 6490.0), true, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_transmitted_bytes, 80000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_data_transmitted_bytes, 38000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_control_transmitted_bytes, 42000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 6490u, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 12, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 10, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_emergency_average_delivery_delay, 10), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_emergency_average_delivery_ratio, 10.0 / 12.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_normal_average_delivery_delay, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_normal_average_delivery_ratio, -1.0), true, "Must be equal");
+
+    // ======= Second packet =======
+
+    SetUpSecondPacketRececeivers (priority_simulation_stats);
+
+    result = priority_simulation_stats.CalculateStatistics (values);
+    NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
+
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, 11.25), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, 7.0 / 12.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_total_overhead, 80000.0 / 13456.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_data_overhead, 38000 / 13456.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_control_overhead, 42000.0 / 13456.0), true, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_transmitted_bytes, 80000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_data_transmitted_bytes, 38000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_control_transmitted_bytes, 42000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 13456u, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 30, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 16, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_emergency_average_delivery_delay, 10), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_emergency_average_delivery_ratio, 10.0 / 12.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_normal_average_delivery_delay, 12.5), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_normal_average_delivery_ratio, 6.0 / 18.0), true, "Must be equal");
+
+    // ======= Third packet =======
+
+    SetUpThirdPacketReceivers (priority_simulation_stats);
+
+    result = priority_simulation_stats.CalculateStatistics (values);
+    NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
+
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, 155.0 / 9.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, 29.0 / 63.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_total_overhead, 80000.0 / 17350.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_data_overhead, 38000 / 17350.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_control_overhead, 42000.0 / 17350.0), true, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_transmitted_bytes, 80000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_data_transmitted_bytes, 38000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_control_transmitted_bytes, 42000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 17350, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 58, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 22, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_emergency_average_delivery_delay, 235.0 / 12.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_emergency_average_delivery_ratio, 11.0 / 21.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_normal_average_delivery_delay, 12.5), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_normal_average_delivery_ratio, 6.0 / 18.0), true, "Must be equal");
+
+    // ======= Fourth packet =======
+
+    SetUpFourthPacketReceivers (priority_simulation_stats);
+
+    result = priority_simulation_stats.CalculateStatistics (values);
+    NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
+
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, 155.0 / 9.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, 29.0 / 84.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_total_overhead, 80000.0 / 17350.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_data_overhead, 38000 / 17350.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_control_overhead, 42000.0 / 17350.0), true, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_transmitted_bytes, 80000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_data_transmitted_bytes, 38000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_control_transmitted_bytes, 42000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 17350, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 66, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 22, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_emergency_average_delivery_delay, 235.0 / 12.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_emergency_average_delivery_ratio, 11.0 / 21.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_normal_average_delivery_delay, 12.5), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_normal_average_delivery_ratio, 1.0 / 6.0), true, "Must be equal");
+
+    // ======= Fifth packet =======
+
+    SetUpFifthPacketReceivers (priority_simulation_stats);
+
+    result = priority_simulation_stats.CalculateStatistics (values);
+    NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
+
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, 155.0 / 9.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, 29.0 / 84.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_total_overhead, 80000.0 / 17350.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_data_overhead, 38000 / 17350.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_control_overhead, 42000.0 / 17350.0), true, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_transmitted_bytes, 80000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_data_transmitted_bytes, 38000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_control_transmitted_bytes, 42000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 17350, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 66, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 22, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_emergency_average_delivery_delay, 235.0 / 12.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_emergency_average_delivery_ratio, 11.0 / 21.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_normal_average_delivery_delay, 12.5), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_normal_average_delivery_ratio, 1.0 / 6.0), true, "Must be equal");
+  }
+
+  virtual void
+  TestGetDataPacketStatistics ()
+  {
+    PrioritySimulationStatistics priority_simulation_stats (m_gta_visitor_nodes,
+                                                            m_node_id_to_ip);
+
+    uint32_t packet_confirmed_receivers_count, packet_expected_receivers_count;
+    double packet_delivery_ratio, packet_average_delivery_delay;
+    uint32_t packet_delivered_data_bytes;
+
+    // Set up transmitted packet counters
+    SetUpTransmittedPacketsCounters (priority_simulation_stats);
+
+    // ======= First packet =======
+
+    const DataIdentifier packet_1_data_id = SetUpFirstPacketReceivers (priority_simulation_stats);
+
+    priority_simulation_stats.GetDataPacketStatistics (packet_1_data_id)
+            .GetStatistics (packet_confirmed_receivers_count, packet_expected_receivers_count,
+                            packet_delivery_ratio, packet_average_delivery_delay,
+                            packet_delivered_data_bytes);
+
+    NS_TEST_EXPECT_MSG_EQ (packet_confirmed_receivers_count, 10u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (packet_expected_receivers_count, 12u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (packet_delivery_ratio, 10.0 / 12.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (packet_average_delivery_delay, 10.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (packet_delivered_data_bytes, 6490u, "Must be equal");
+
+    // ======= Second packet =======
+
+    const DataIdentifier packet_2_data_id = SetUpSecondPacketRececeivers (priority_simulation_stats);
+
+    priority_simulation_stats.GetDataPacketStatistics (packet_2_data_id)
+            .GetStatistics (packet_confirmed_receivers_count, packet_expected_receivers_count,
+                            packet_delivery_ratio, packet_average_delivery_delay,
+                            packet_delivered_data_bytes);
+
+    NS_TEST_EXPECT_MSG_EQ (packet_confirmed_receivers_count, 6u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (packet_expected_receivers_count, 18u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (packet_delivery_ratio, 6.0 / 18.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (packet_average_delivery_delay, 12.5), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (packet_delivered_data_bytes, 6966u, "Must be equal");
+
+    // ======= Third packet =======
+
+    const DataIdentifier packet_3_data_id = SetUpThirdPacketReceivers (priority_simulation_stats);
+
+    priority_simulation_stats.GetDataPacketStatistics (packet_3_data_id)
+            .GetStatistics (packet_confirmed_receivers_count, packet_expected_receivers_count,
+                            packet_delivery_ratio, packet_average_delivery_delay,
+                            packet_delivered_data_bytes);
+
+    NS_TEST_EXPECT_MSG_EQ (packet_confirmed_receivers_count, 6u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (packet_expected_receivers_count, 28u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (packet_delivery_ratio, 6.0 / 28.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (packet_average_delivery_delay, 175.0 / 6.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (packet_delivered_data_bytes, 3894u, "Must be equal");
+
+    // ======= Fourth packet =======
+
+    const DataIdentifier packet_4_data_id = SetUpFourthPacketReceivers (priority_simulation_stats);
+
+    priority_simulation_stats.GetDataPacketStatistics (packet_4_data_id)
+            .GetStatistics (packet_confirmed_receivers_count, packet_expected_receivers_count,
+                            packet_delivery_ratio, packet_average_delivery_delay,
+                            packet_delivered_data_bytes);
+
+    NS_TEST_EXPECT_MSG_EQ (packet_confirmed_receivers_count, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (packet_expected_receivers_count, 8u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (packet_delivery_ratio, 0.0 / 8.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (packet_average_delivery_delay, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (packet_delivered_data_bytes, 0u, "Must be equal");
+
+    // ======= Fifth packet =======
+
+    const DataIdentifier packet_5_data_id = SetUpFifthPacketReceivers (priority_simulation_stats);
+
+    priority_simulation_stats.GetDataPacketStatistics (packet_5_data_id)
+            .GetStatistics (packet_confirmed_receivers_count, packet_expected_receivers_count,
+                            packet_delivery_ratio, packet_average_delivery_delay,
+                            packet_delivered_data_bytes);
+
+    NS_TEST_EXPECT_MSG_EQ (packet_confirmed_receivers_count, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (packet_expected_receivers_count, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (packet_delivery_ratio, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (packet_average_delivery_delay, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (packet_delivered_data_bytes, 0u, "Must be equal");
+  }
+
+  virtual void
+  TestCalculateAreaStatistics ()
+  {
+    PrioritySimulationStatistics priority_simulation_stats (m_gta_visitor_nodes,
+                                                            m_node_id_to_ip);
+
+    bool result;
+    PrioritySimulationStatisticsValues values;
+    Area destination_area;
+
+    // ======= No packets yet =======
+
+    result = priority_simulation_stats.CalculateAreaStatistics (destination_area, values);
+    NS_TEST_EXPECT_MSG_EQ (result, false, "Must be false");
+
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, -1.0), true, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 0, "Must be equal");
+
+    // Set up transmitted packet counters
+    SetUpTransmittedPacketsCounters (priority_simulation_stats);
+
+    SetUpFirstPacketReceivers (priority_simulation_stats);
+    SetUpSecondPacketRececeivers (priority_simulation_stats);
+    SetUpThirdPacketReceivers (priority_simulation_stats);
+    SetUpFourthPacketReceivers (priority_simulation_stats);
+    SetUpFifthPacketReceivers (priority_simulation_stats);
+
+    // ======= First area =======
+
+    destination_area = m_destination_areas.at (0);
+    result = priority_simulation_stats.CalculateAreaStatistics (destination_area, values);
+    NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
+
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, 10.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, 10.0 / 12.0), true, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 6490, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 12, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 10, "Must be equal");
+
+    // ======= Second area =======
+
+    destination_area = m_destination_areas.at (1);
+    result = priority_simulation_stats.CalculateAreaStatistics (destination_area, values);
+    NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
+
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, 12.5), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, 6.0 / 18.0), true, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 6966, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 18, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 6, "Must be equal");
+
+    // ======= Third area =======
+
+    destination_area = m_destination_areas.at (2);
+    result = priority_simulation_stats.CalculateAreaStatistics (destination_area, values);
+    NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
+
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, 175.0 / 6.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, 6. / 28.0), true, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 3894, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 28, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 6, "Must be equal");
+
+    // ======= Unknown area =======
+
+    result = priority_simulation_stats.CalculateAreaStatistics (Area (-10, -10, -20, -20), values);
+    NS_TEST_EXPECT_MSG_EQ (result, false, "Must be false");
+
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, -1.0), true, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 0, "Must be equal");
+
+    // ======= Fourth area =======
+
+    destination_area = m_destination_areas.at (3);
+    result = priority_simulation_stats.CalculateAreaStatistics (destination_area, values);
+    NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
+
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, 0.0 / 8.0), true, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 8, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 0, "Must be equal");
+
+    // ======= Fifth area =======
+
+    destination_area = m_destination_areas.at (4);
+    result = priority_simulation_stats.CalculateAreaStatistics (destination_area, values);
+    NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
+
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, -1.0), true, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 0, "Must be equal");
+  }
+
+  void
+  DoRun () override
+  {
+    TestCalculateStatistics ();
+    TestGetDataPacketStatistics ();
+    TestCalculateAreaStatistics ();
+  }
+};
+
+
+// =============================================================================
+//                     PrioritySimulationStatisticsFileTest
+// =============================================================================
+
+/**
+ * PrioritySimulationStatisticsFile test suite.
+ * 
+ * \ingroup tests
+ * \ingroup geotemporal-library-test
+ */
+class PrioritySimulationStatisticsFileTest : public PrioritySimulationStatisticsTest
+{
+protected:
+
+  std::string m_output_filename;
+
+public:
+
+  PrioritySimulationStatisticsFileTest ()
+  : PrioritySimulationStatisticsTest ("PrioritySimulationStatisticsFile"), m_output_filename ()
+  {
+    m_output_filename = "test_PrioritySimulationStatisticsFile.xml";
+  }
+
+  void
+  TestCalculateStatistics () override
+  {
+    PrioritySimulationStatisticsFile priority_simulation_stats_file (m_gta_visitor_nodes,
+                                                                     m_node_id_to_ip);
+
+    bool result;
+    PrioritySimulationStatisticsValues values;
+
+    // ======= No packets yet =======
+
+    result = priority_simulation_stats_file.CalculateStatistics (values);
+    NS_TEST_EXPECT_MSG_EQ (result, false, "Must be false");
+
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_total_overhead, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_data_overhead, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_control_overhead, -1.0), true, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_transmitted_bytes, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_data_transmitted_bytes, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_control_transmitted_bytes, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 0u, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 0u, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_emergency_average_delivery_delay, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_emergency_average_delivery_ratio, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_normal_average_delivery_delay, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_normal_average_delivery_ratio, -1.0), true, "Must be equal");
+
+    // Set up transmitted packet counters
+    SetUpTransmittedPacketsCounters (priority_simulation_stats_file);
+
+    // ======= First packet =======
+
+    SetUpFirstPacketReceivers (priority_simulation_stats_file);
+
+    result = priority_simulation_stats_file.CalculateStatistics (values);
+    NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
+
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, 10.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, 10.0 / 12.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_total_overhead, 80000.0 / 6490.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_data_overhead, 38000 / 6490.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_control_overhead, 42000.0 / 6490.0), true, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_transmitted_bytes, 80000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_data_transmitted_bytes, 38000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_control_transmitted_bytes, 42000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 6490u, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 12, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 10, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_emergency_average_delivery_delay, 10), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_emergency_average_delivery_ratio, 10.0 / 12.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_normal_average_delivery_delay, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_normal_average_delivery_ratio, -1.0), true, "Must be equal");
+
+    // ======= Second packet =======
+
+    SetUpSecondPacketRececeivers (priority_simulation_stats_file);
+
+    result = priority_simulation_stats_file.CalculateStatistics (values);
+    NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
+
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, 11.25), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, 7.0 / 12.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_total_overhead, 80000.0 / 13456.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_data_overhead, 38000 / 13456.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_control_overhead, 42000.0 / 13456.0), true, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_transmitted_bytes, 80000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_data_transmitted_bytes, 38000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_control_transmitted_bytes, 42000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 13456u, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 30, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 16, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_emergency_average_delivery_delay, 10), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_emergency_average_delivery_ratio, 10.0 / 12.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_normal_average_delivery_delay, 12.5), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_normal_average_delivery_ratio, 6.0 / 18.0), true, "Must be equal");
+
+    // ======= Third packet =======
+
+    SetUpThirdPacketReceivers (priority_simulation_stats_file);
+
+    result = priority_simulation_stats_file.CalculateStatistics (values);
+    NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
+
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, 155.0 / 9.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, 29.0 / 63.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_total_overhead, 80000.0 / 17350.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_data_overhead, 38000 / 17350.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_control_overhead, 42000.0 / 17350.0), true, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_transmitted_bytes, 80000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_data_transmitted_bytes, 38000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_control_transmitted_bytes, 42000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 17350, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 58, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 22, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_emergency_average_delivery_delay, 235.0 / 12.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_emergency_average_delivery_ratio, 11.0 / 21.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_normal_average_delivery_delay, 12.5), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_normal_average_delivery_ratio, 6.0 / 18.0), true, "Must be equal");
+
+    // ======= Fourth packet =======
+
+    SetUpFourthPacketReceivers (priority_simulation_stats_file);
+
+    result = priority_simulation_stats_file.CalculateStatistics (values);
+    NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
+
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, 155.0 / 9.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, 29.0 / 84.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_total_overhead, 80000.0 / 17350.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_data_overhead, 38000 / 17350.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_control_overhead, 42000.0 / 17350.0), true, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_transmitted_bytes, 80000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_data_transmitted_bytes, 38000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_control_transmitted_bytes, 42000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 17350, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 66, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 22, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_emergency_average_delivery_delay, 235.0 / 12.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_emergency_average_delivery_ratio, 11.0 / 21.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_normal_average_delivery_delay, 12.5), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_normal_average_delivery_ratio, 1.0 / 6.0), true, "Must be equal");
+
+    // ======= Fifth packet =======
+
+    SetUpFifthPacketReceivers (priority_simulation_stats_file);
+
+    result = priority_simulation_stats_file.CalculateStatistics (values);
+    NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
+
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, 155.0 / 9.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, 29.0 / 84.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_total_overhead, 80000.0 / 17350.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_data_overhead, 38000 / 17350.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_control_overhead, 42000.0 / 17350.0), true, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_transmitted_bytes, 80000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_data_transmitted_bytes, 38000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_control_transmitted_bytes, 42000u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 17350, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 66, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 22, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_emergency_average_delivery_delay, 235.0 / 12.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_emergency_average_delivery_ratio, 11.0 / 21.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_normal_average_delivery_delay, 12.5), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_normal_average_delivery_ratio, 1.0 / 6.0), true, "Must be equal");
+  }
+
+  void
+  TestGetDataPacketStatistics () override
+  {
+    PrioritySimulationStatisticsFile priority_simulation_stats_file (m_gta_visitor_nodes,
+                                                                     m_node_id_to_ip);
+
+    uint32_t packet_confirmed_receivers_count, packet_expected_receivers_count;
+    double packet_delivery_ratio, packet_average_delivery_delay;
+    uint32_t packet_delivered_data_bytes;
+
+    // Set up transmitted packet counters
+    SetUpTransmittedPacketsCounters (priority_simulation_stats_file);
+
+    // ======= First packet =======
+
+    const DataIdentifier packet_1_data_id = SetUpFirstPacketReceivers (priority_simulation_stats_file);
+
+    priority_simulation_stats_file.GetDataPacketStatistics (packet_1_data_id)
+            .GetStatistics (packet_confirmed_receivers_count, packet_expected_receivers_count,
+                            packet_delivery_ratio, packet_average_delivery_delay,
+                            packet_delivered_data_bytes);
+
+    NS_TEST_EXPECT_MSG_EQ (packet_confirmed_receivers_count, 10u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (packet_expected_receivers_count, 12u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (packet_delivery_ratio, 10.0 / 12.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (packet_average_delivery_delay, 10.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (packet_delivered_data_bytes, 6490u, "Must be equal");
+
+    // ======= Second packet =======
+
+    const DataIdentifier packet_2_data_id = SetUpSecondPacketRececeivers (priority_simulation_stats_file);
+
+    priority_simulation_stats_file.GetDataPacketStatistics (packet_2_data_id)
+            .GetStatistics (packet_confirmed_receivers_count, packet_expected_receivers_count,
+                            packet_delivery_ratio, packet_average_delivery_delay,
+                            packet_delivered_data_bytes);
+
+    NS_TEST_EXPECT_MSG_EQ (packet_confirmed_receivers_count, 6u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (packet_expected_receivers_count, 18u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (packet_delivery_ratio, 6.0 / 18.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (packet_average_delivery_delay, 12.5), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (packet_delivered_data_bytes, 6966u, "Must be equal");
+
+    // ======= Third packet =======
+
+    const DataIdentifier packet_3_data_id = SetUpThirdPacketReceivers (priority_simulation_stats_file);
+
+    priority_simulation_stats_file.GetDataPacketStatistics (packet_3_data_id)
+            .GetStatistics (packet_confirmed_receivers_count, packet_expected_receivers_count,
+                            packet_delivery_ratio, packet_average_delivery_delay,
+                            packet_delivered_data_bytes);
+
+    NS_TEST_EXPECT_MSG_EQ (packet_confirmed_receivers_count, 6u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (packet_expected_receivers_count, 28u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (packet_delivery_ratio, 6.0 / 28.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (packet_average_delivery_delay, 175.0 / 6.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (packet_delivered_data_bytes, 3894u, "Must be equal");
+
+    // ======= Fourth packet =======
+
+    const DataIdentifier packet_4_data_id = SetUpFourthPacketReceivers (priority_simulation_stats_file);
+
+    priority_simulation_stats_file.GetDataPacketStatistics (packet_4_data_id)
+            .GetStatistics (packet_confirmed_receivers_count, packet_expected_receivers_count,
+                            packet_delivery_ratio, packet_average_delivery_delay,
+                            packet_delivered_data_bytes);
+
+    NS_TEST_EXPECT_MSG_EQ (packet_confirmed_receivers_count, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (packet_expected_receivers_count, 8u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (packet_delivery_ratio, 0.0 / 8.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (packet_average_delivery_delay, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (packet_delivered_data_bytes, 0u, "Must be equal");
+
+    // ======= Fifth packet =======
+
+    const DataIdentifier packet_5_data_id = SetUpFifthPacketReceivers (priority_simulation_stats_file);
+
+    priority_simulation_stats_file.GetDataPacketStatistics (packet_5_data_id)
+            .GetStatistics (packet_confirmed_receivers_count, packet_expected_receivers_count,
+                            packet_delivery_ratio, packet_average_delivery_delay,
+                            packet_delivered_data_bytes);
+
+    NS_TEST_EXPECT_MSG_EQ (packet_confirmed_receivers_count, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (packet_expected_receivers_count, 0u, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (packet_delivery_ratio, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (packet_average_delivery_delay, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (packet_delivered_data_bytes, 0u, "Must be equal");
+  }
+
+  void
+  TestCalculateAreaStatistics () override
+  {
+    PrioritySimulationStatisticsFile priority_simulation_stats_file (m_gta_visitor_nodes,
+                                                                     m_node_id_to_ip);
+
+    bool result;
+    PrioritySimulationStatisticsValues values;
+    Area destination_area;
+
+    // ======= No packets yet =======
+
+    result = priority_simulation_stats_file.CalculateAreaStatistics (destination_area, values);
+    NS_TEST_EXPECT_MSG_EQ (result, false, "Must be false");
+
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, -1.0), true, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 0, "Must be equal");
+
+    // Set up transmitted packet counters
+    SetUpTransmittedPacketsCounters (priority_simulation_stats_file);
+
+    SetUpFirstPacketReceivers (priority_simulation_stats_file);
+    SetUpSecondPacketRececeivers (priority_simulation_stats_file);
+    SetUpThirdPacketReceivers (priority_simulation_stats_file);
+    SetUpFourthPacketReceivers (priority_simulation_stats_file);
+    SetUpFifthPacketReceivers (priority_simulation_stats_file);
+
+    // ======= First area =======
+
+    destination_area = m_destination_areas.at (0);
+    result = priority_simulation_stats_file.CalculateAreaStatistics (destination_area, values);
+    NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
+
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, 10.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, 10.0 / 12.0), true, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 6490, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 12, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 10, "Must be equal");
+
+    // ======= Second area =======
+
+    destination_area = m_destination_areas.at (1);
+    result = priority_simulation_stats_file.CalculateAreaStatistics (destination_area, values);
+    NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
+
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, 12.5), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, 6.0 / 18.0), true, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 6966, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 18, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 6, "Must be equal");
+
+    // ======= Third area =======
+
+    destination_area = m_destination_areas.at (2);
+    result = priority_simulation_stats_file.CalculateAreaStatistics (destination_area, values);
+    NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
+
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, 175.0 / 6.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, 6. / 28.0), true, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 3894, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 28, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 6, "Must be equal");
+
+    // ======= Unknown area =======
+
+    result = priority_simulation_stats_file.CalculateAreaStatistics (Area (-10, -10, -20, -20), values);
+    NS_TEST_EXPECT_MSG_EQ (result, false, "Must be false");
+
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, -1.0), true, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 0, "Must be equal");
+
+    // ======= Fourth area =======
+
+    destination_area = m_destination_areas.at (3);
+    result = priority_simulation_stats_file.CalculateAreaStatistics (destination_area, values);
+    NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
+
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, 0.0 / 8.0), true, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 8, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 0, "Must be equal");
+
+    // ======= Fifth area =======
+
+    destination_area = m_destination_areas.at (4);
+    result = priority_simulation_stats_file.CalculateAreaStatistics (destination_area, values);
+    NS_TEST_EXPECT_MSG_EQ (result, true, "Must be true");
+
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_delay, -1.0), true, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (AlmostEqual (values.m_average_delivery_ratio, -1.0), true, "Must be equal");
+
+    NS_TEST_EXPECT_MSG_EQ (values.m_total_delivered_data_bytes, 0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_expected_receivers, 0, "Must be equal");
+    NS_TEST_EXPECT_MSG_EQ (values.m_confirmed_receivers, 0, "Must be equal");
+  }
+
+  void
+  TestSaveToXmlFile ()
+  {
+    PrioritySimulationStatisticsFile simulation_stats_file (m_gta_visitor_nodes,
+                                                            m_node_id_to_ip);
+
+    // ---- Empty SimulationStatisticsFile object -----
+
+    simulation_stats_file.SaveToXmlFile (m_output_filename);
+
+    std::string exported_file_content;
+    TestUtils::ReadFile (m_output_filename, exported_file_content);
+
+    std::string expected_str = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n<document>\n\n<statistics-results>\n  <result type=\"total\" average-delivery-ratio=\"-1.000000\" average-delivery-delay=\"-1.000000\" emergency-packets-average-delivery-ratio=\"-1.000000\" emergency-packets-average-delivery-delay=\"-1.000000\" normal-packets-average-delivery-ratio=\"-1.000000\" normal-packets-average-delivery-delay=\"-1.000000\" total-overhead=\"-1.000000\" data-overhead=\"-1.000000\" control-overhead=\"-1.000000\" total-transmitted-bytes=\"0\" data-transmitted-bytes=\"0\" control-transmitted-bytes=\"0\" total-delivered-data-bytes=\"0\" expected-receiver-nodes=\"0\" confirmed-receiver-nodes=\"0\" />\n</statistics-results>\n\n<nodes-transmitted-packets>\n</nodes-transmitted-packets>\n\n<data-packets>\n</data-packets>\n\n</document>\n";
+
+    NS_TEST_EXPECT_MSG_EQ (exported_file_content, expected_str, "Must be equal");
+
+    // ---- Set up transmitted packet counters -----
+
+    SetUpTransmittedPacketsCounters (simulation_stats_file);
+
+    simulation_stats_file.SaveToXmlFile (m_output_filename);
+    TestUtils::ReadFile (m_output_filename, exported_file_content);
+
+    expected_str = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n<document>\n\n<statistics-results>\n  <result type=\"total\" average-delivery-ratio=\"-1.000000\" average-delivery-delay=\"-1.000000\" emergency-packets-average-delivery-ratio=\"-1.000000\" emergency-packets-average-delivery-delay=\"-1.000000\" normal-packets-average-delivery-ratio=\"-1.000000\" normal-packets-average-delivery-delay=\"-1.000000\" total-overhead=\"-1.000000\" data-overhead=\"-1.000000\" control-overhead=\"-1.000000\" total-transmitted-bytes=\"0\" data-transmitted-bytes=\"0\" control-transmitted-bytes=\"0\" total-delivered-data-bytes=\"0\" expected-receiver-nodes=\"0\" confirmed-receiver-nodes=\"0\" />\n</statistics-results>\n\n<nodes-transmitted-packets>\n  <node-transmitted-packets node-ip=\"10.0.0.0\" node-id=\"0\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.1\" node-id=\"1\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.2\" node-id=\"2\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.3\" node-id=\"3\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.4\" node-id=\"4\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.5\" node-id=\"5\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.6\" node-id=\"6\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.7\" node-id=\"7\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.8\" node-id=\"8\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.9\" node-id=\"9\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.10\" node-id=\"10\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.11\" node-id=\"11\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.12\" node-id=\"12\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.13\" node-id=\"13\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.14\" node-id=\"14\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.15\" node-id=\"15\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.16\" node-id=\"16\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.17\" node-id=\"17\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.18\" node-id=\"18\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.19\" node-id=\"19\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.20\" node-id=\"20\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.21\" node-id=\"21\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.22\" node-id=\"22\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.23\" node-id=\"23\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.24\" node-id=\"24\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.25\" node-id=\"25\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.26\" node-id=\"26\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.27\" node-id=\"27\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.28\" node-id=\"28\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.29\" node-id=\"29\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.30\" node-id=\"30\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.31\" node-id=\"31\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.32\" node-id=\"32\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.33\" node-id=\"33\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.34\" node-id=\"34\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.35\" node-id=\"35\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.36\" node-id=\"36\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.37\" node-id=\"37\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.38\" node-id=\"38\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.39\" node-id=\"39\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n</nodes-transmitted-packets>\n\n<data-packets>\n</data-packets>\n\n</document>\n";
+
+    NS_TEST_EXPECT_MSG_EQ (exported_file_content, expected_str, "Must be equal");
+
+    // ---- Setup some packets ----
+    SetUpFirstPacketReceivers (simulation_stats_file);
+    SetUpSecondPacketRececeivers (simulation_stats_file);
+    SetUpThirdPacketReceivers (simulation_stats_file);
+
+    simulation_stats_file.SaveToXmlFile (m_output_filename);
+    TestUtils::ReadFile (m_output_filename, exported_file_content);
+
+    expected_str = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n<document>\n\n<statistics-results>\n  <result type=\"total\" average-delivery-ratio=\"0.460317\" average-delivery-delay=\"17.222222\" emergency-packets-average-delivery-ratio=\"0.523810\" emergency-packets-average-delivery-delay=\"19.583333\" normal-packets-average-delivery-ratio=\"0.333333\" normal-packets-average-delivery-delay=\"12.500000\" total-overhead=\"4.610951\" data-overhead=\"2.190202\" control-overhead=\"2.420749\" total-transmitted-bytes=\"80000\" data-transmitted-bytes=\"38000\" control-transmitted-bytes=\"42000\" total-delivered-data-bytes=\"17350\" expected-receiver-nodes=\"58\" confirmed-receiver-nodes=\"22\" />\n  <result type=\"area\" area=\"0.000000,0.000000, 10.000000,10.000000\" average-delivery-ratio=\"0.833333\" average-delivery-delay=\"10.000000\" total-delivered-data-bytes=\"6490\" expected-receiver-nodes=\"12\" confirmed-receiver-nodes=\"10\" />\n  <result type=\"area\" area=\"10.000000,10.000000, 20.000000,20.000000\" average-delivery-ratio=\"0.333333\" average-delivery-delay=\"12.500000\" total-delivered-data-bytes=\"6966\" expected-receiver-nodes=\"18\" confirmed-receiver-nodes=\"6\" />\n  <result type=\"area\" area=\"20.000000,20.000000, 30.000000,30.000000\" average-delivery-ratio=\"0.214286\" average-delivery-delay=\"29.166667\" total-delivered-data-bytes=\"3894\" expected-receiver-nodes=\"28\" confirmed-receiver-nodes=\"6\" />\n</statistics-results>\n\n<nodes-transmitted-packets>\n  <node-transmitted-packets node-ip=\"10.0.0.0\" node-id=\"0\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.1\" node-id=\"1\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.2\" node-id=\"2\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.3\" node-id=\"3\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.4\" node-id=\"4\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.5\" node-id=\"5\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.6\" node-id=\"6\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.7\" node-id=\"7\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.8\" node-id=\"8\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.9\" node-id=\"9\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.10\" node-id=\"10\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.11\" node-id=\"11\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.12\" node-id=\"12\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.13\" node-id=\"13\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.14\" node-id=\"14\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.15\" node-id=\"15\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.16\" node-id=\"16\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.17\" node-id=\"17\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.18\" node-id=\"18\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.19\" node-id=\"19\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.20\" node-id=\"20\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.21\" node-id=\"21\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.22\" node-id=\"22\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.23\" node-id=\"23\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.24\" node-id=\"24\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.25\" node-id=\"25\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.26\" node-id=\"26\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.27\" node-id=\"27\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.28\" node-id=\"28\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.29\" node-id=\"29\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.30\" node-id=\"30\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.31\" node-id=\"31\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.32\" node-id=\"32\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.33\" node-id=\"33\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.34\" node-id=\"34\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.35\" node-id=\"35\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.36\" node-id=\"36\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.37\" node-id=\"37\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.38\" node-id=\"38\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.39\" node-id=\"39\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n</nodes-transmitted-packets>\n\n<data-packets>\n  <data-packet data-id=\"10.0.0.0:1\" priority=\"Emergency\" source-node-ip=\"10.0.0.0\" source-node-id=\"0\" destination-area=\"0.000000,0.000000, 10.000000,10.000000\" temporal-scope=\"30.00,130.00\" creation-time=\"0.000000\" data-message-size=\"512\" packet-size=\"649\" confirmed-receiver-nodes=\"10\" expected-receiver-nodes=\"12\" delivery-ratio=\"0.833333\" delivery-delay=\"10.000000\" delivered-data-bytes=\"6490\">\n    <receiver-node node-ip=\"10.0.0.1\" node-id=\"1\" received-from=\"10.0.0.25\" time=\"40.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n    <receiver-node node-ip=\"10.0.0.2\" node-id=\"2\" received-from=\"10.0.0.25\" time=\"20.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n    <receiver-node node-ip=\"10.0.0.3\" node-id=\"3\" received-from=\"10.0.0.25\" time=\"20.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n    <receiver-node node-ip=\"10.0.0.4\" node-id=\"4\" received-from=\"10.0.0.25\" time=\"30.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n    <receiver-node node-ip=\"10.0.0.5\" node-id=\"5\" received-from=\"10.0.0.25\" time=\"30.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n    <receiver-node node-ip=\"10.0.0.6\" node-id=\"6\" received-from=\"10.0.0.25\" time=\"70.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n    <receiver-node node-ip=\"10.0.0.7\" node-id=\"7\" received-from=\"10.0.0.25\" time=\"90.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n    <receiver-node node-ip=\"10.0.0.8\" node-id=\"8\" received-from=\"10.0.0.25\" time=\"80.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n    <receiver-node node-ip=\"10.0.0.9\" node-id=\"9\" received-from=\"10.0.0.25\" time=\"10.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n    <receiver-node node-ip=\"10.0.0.10\" node-id=\"10\" received-from=\"10.0.0.25\" time=\"120.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n  </data-packet>\n\n  <data-packet data-id=\"10.0.0.0:2\" priority=\"Normal\" source-node-ip=\"10.0.0.0\" source-node-id=\"0\" destination-area=\"10.000000,10.000000, 20.000000,20.000000\" temporal-scope=\"120.00,220.00\" creation-time=\"70.000000\" data-message-size=\"1024\" packet-size=\"1161\" confirmed-receiver-nodes=\"6\" expected-receiver-nodes=\"18\" delivery-ratio=\"0.333333\" delivery-delay=\"12.500000\" delivered-data-bytes=\"6966\">\n    <receiver-node node-ip=\"10.0.0.1\" node-id=\"1\" received-from=\"10.0.0.25\" time=\"135.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n    <receiver-node node-ip=\"10.0.0.2\" node-id=\"2\" received-from=\"10.0.0.25\" time=\"100.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n    <receiver-node node-ip=\"10.0.0.3\" node-id=\"3\" received-from=\"10.0.0.25\" time=\"155.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n    <receiver-node node-ip=\"10.0.0.4\" node-id=\"4\" received-from=\"10.0.0.25\" time=\"175.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n    <receiver-node node-ip=\"10.0.0.5\" node-id=\"5\" received-from=\"10.0.0.25\" time=\"140.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n    <receiver-node node-ip=\"10.0.0.6\" node-id=\"6\" received-from=\"10.0.0.25\" time=\"200.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n  </data-packet>\n\n  <data-packet data-id=\"10.0.0.0:3\" priority=\"Emergency\" source-node-ip=\"10.0.0.0\" source-node-id=\"0\" destination-area=\"20.000000,20.000000, 30.000000,30.000000\" temporal-scope=\"350.00,450.00\" creation-time=\"200.000000\" data-message-size=\"512\" packet-size=\"649\" confirmed-receiver-nodes=\"6\" expected-receiver-nodes=\"28\" delivery-ratio=\"0.214286\" delivery-delay=\"29.166667\" delivered-data-bytes=\"3894\">\n    <receiver-node node-ip=\"10.0.0.1\" node-id=\"1\" received-from=\"10.0.0.25\" time=\"230.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n    <receiver-node node-ip=\"10.0.0.4\" node-id=\"4\" received-from=\"10.0.0.25\" time=\"445.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n    <receiver-node node-ip=\"10.0.0.5\" node-id=\"5\" received-from=\"10.0.0.25\" time=\"405.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n    <receiver-node node-ip=\"10.0.0.6\" node-id=\"6\" received-from=\"10.0.0.25\" time=\"420.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n    <receiver-node node-ip=\"10.0.0.7\" node-id=\"7\" received-from=\"10.0.0.25\" time=\"380.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n    <receiver-node node-ip=\"10.0.0.8\" node-id=\"8\" received-from=\"10.0.0.25\" time=\"395.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n  </data-packet>\n\n</data-packets>\n\n</document>\n";
+
+    NS_TEST_EXPECT_MSG_EQ (exported_file_content, expected_str, "Must be equal");
+
+    // ---- Setup some packets more ----
+    SetUpFourthPacketReceivers (simulation_stats_file);
+    SetUpFifthPacketReceivers (simulation_stats_file);
+
+    simulation_stats_file.SaveToXmlFile (m_output_filename);
+    TestUtils::ReadFile (m_output_filename, exported_file_content);
+
+    expected_str = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n<document>\n\n<statistics-results>\n  <result type=\"total\" average-delivery-ratio=\"0.345238\" average-delivery-delay=\"17.222222\" emergency-packets-average-delivery-ratio=\"0.523810\" emergency-packets-average-delivery-delay=\"19.583333\" normal-packets-average-delivery-ratio=\"0.166667\" normal-packets-average-delivery-delay=\"12.500000\" total-overhead=\"4.610951\" data-overhead=\"2.190202\" control-overhead=\"2.420749\" total-transmitted-bytes=\"80000\" data-transmitted-bytes=\"38000\" control-transmitted-bytes=\"42000\" total-delivered-data-bytes=\"17350\" expected-receiver-nodes=\"66\" confirmed-receiver-nodes=\"22\" />\n  <result type=\"area\" area=\"0.000000,0.000000, 10.000000,10.000000\" average-delivery-ratio=\"0.833333\" average-delivery-delay=\"10.000000\" total-delivered-data-bytes=\"6490\" expected-receiver-nodes=\"12\" confirmed-receiver-nodes=\"10\" />\n  <result type=\"area\" area=\"10.000000,10.000000, 20.000000,20.000000\" average-delivery-ratio=\"0.333333\" average-delivery-delay=\"12.500000\" total-delivered-data-bytes=\"6966\" expected-receiver-nodes=\"18\" confirmed-receiver-nodes=\"6\" />\n  <result type=\"area\" area=\"20.000000,20.000000, 30.000000,30.000000\" average-delivery-ratio=\"0.214286\" average-delivery-delay=\"29.166667\" total-delivered-data-bytes=\"3894\" expected-receiver-nodes=\"28\" confirmed-receiver-nodes=\"6\" />\n  <result type=\"area\" area=\"30.000000,30.000000, 40.000000,40.000000\" average-delivery-ratio=\"0.000000\" average-delivery-delay=\"-1.000000\" total-delivered-data-bytes=\"0\" expected-receiver-nodes=\"8\" confirmed-receiver-nodes=\"0\" />\n  <result type=\"area\" area=\"40.000000,40.000000, 50.000000,50.000000\" average-delivery-ratio=\"-1.000000\" average-delivery-delay=\"-1.000000\" total-delivered-data-bytes=\"0\" expected-receiver-nodes=\"0\" confirmed-receiver-nodes=\"0\" />\n</statistics-results>\n\n<nodes-transmitted-packets>\n  <node-transmitted-packets node-ip=\"10.0.0.0\" node-id=\"0\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.1\" node-id=\"1\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.2\" node-id=\"2\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.3\" node-id=\"3\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.4\" node-id=\"4\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.5\" node-id=\"5\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.6\" node-id=\"6\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.7\" node-id=\"7\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.8\" node-id=\"8\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.9\" node-id=\"9\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.10\" node-id=\"10\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.11\" node-id=\"11\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.12\" node-id=\"12\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.13\" node-id=\"13\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.14\" node-id=\"14\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.15\" node-id=\"15\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.16\" node-id=\"16\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.17\" node-id=\"17\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.18\" node-id=\"18\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.19\" node-id=\"19\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.20\" node-id=\"20\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.21\" node-id=\"21\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.22\" node-id=\"22\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.23\" node-id=\"23\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.24\" node-id=\"24\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.25\" node-id=\"25\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.26\" node-id=\"26\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.27\" node-id=\"27\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.28\" node-id=\"28\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.29\" node-id=\"29\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.30\" node-id=\"30\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.31\" node-id=\"31\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.32\" node-id=\"32\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.33\" node-id=\"33\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.34\" node-id=\"34\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.35\" node-id=\"35\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.36\" node-id=\"36\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.37\" node-id=\"37\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.38\" node-id=\"38\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n  <node-transmitted-packets node-ip=\"10.0.0.39\" node-id=\"39\" control-packets-count=\"1\" control-packets-size=\"1050\" data-packets-count=\"1\" data-packets-size=\"950\" />\n</nodes-transmitted-packets>\n\n<data-packets>\n  <data-packet data-id=\"10.0.0.0:1\" priority=\"Emergency\" source-node-ip=\"10.0.0.0\" source-node-id=\"0\" destination-area=\"0.000000,0.000000, 10.000000,10.000000\" temporal-scope=\"30.00,130.00\" creation-time=\"0.000000\" data-message-size=\"512\" packet-size=\"649\" confirmed-receiver-nodes=\"10\" expected-receiver-nodes=\"12\" delivery-ratio=\"0.833333\" delivery-delay=\"10.000000\" delivered-data-bytes=\"6490\">\n    <receiver-node node-ip=\"10.0.0.1\" node-id=\"1\" received-from=\"10.0.0.25\" time=\"40.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n    <receiver-node node-ip=\"10.0.0.2\" node-id=\"2\" received-from=\"10.0.0.25\" time=\"20.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n    <receiver-node node-ip=\"10.0.0.3\" node-id=\"3\" received-from=\"10.0.0.25\" time=\"20.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n    <receiver-node node-ip=\"10.0.0.4\" node-id=\"4\" received-from=\"10.0.0.25\" time=\"30.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n    <receiver-node node-ip=\"10.0.0.5\" node-id=\"5\" received-from=\"10.0.0.25\" time=\"30.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n    <receiver-node node-ip=\"10.0.0.6\" node-id=\"6\" received-from=\"10.0.0.25\" time=\"70.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n    <receiver-node node-ip=\"10.0.0.7\" node-id=\"7\" received-from=\"10.0.0.25\" time=\"90.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n    <receiver-node node-ip=\"10.0.0.8\" node-id=\"8\" received-from=\"10.0.0.25\" time=\"80.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n    <receiver-node node-ip=\"10.0.0.9\" node-id=\"9\" received-from=\"10.0.0.25\" time=\"10.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n    <receiver-node node-ip=\"10.0.0.10\" node-id=\"10\" received-from=\"10.0.0.25\" time=\"120.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n  </data-packet>\n\n  <data-packet data-id=\"10.0.0.0:2\" priority=\"Normal\" source-node-ip=\"10.0.0.0\" source-node-id=\"0\" destination-area=\"10.000000,10.000000, 20.000000,20.000000\" temporal-scope=\"120.00,220.00\" creation-time=\"70.000000\" data-message-size=\"1024\" packet-size=\"1161\" confirmed-receiver-nodes=\"6\" expected-receiver-nodes=\"18\" delivery-ratio=\"0.333333\" delivery-delay=\"12.500000\" delivered-data-bytes=\"6966\">\n    <receiver-node node-ip=\"10.0.0.1\" node-id=\"1\" received-from=\"10.0.0.25\" time=\"135.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n    <receiver-node node-ip=\"10.0.0.2\" node-id=\"2\" received-from=\"10.0.0.25\" time=\"100.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n    <receiver-node node-ip=\"10.0.0.3\" node-id=\"3\" received-from=\"10.0.0.25\" time=\"155.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n    <receiver-node node-ip=\"10.0.0.4\" node-id=\"4\" received-from=\"10.0.0.25\" time=\"175.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n    <receiver-node node-ip=\"10.0.0.5\" node-id=\"5\" received-from=\"10.0.0.25\" time=\"140.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n    <receiver-node node-ip=\"10.0.0.6\" node-id=\"6\" received-from=\"10.0.0.25\" time=\"200.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n  </data-packet>\n\n  <data-packet data-id=\"10.0.0.0:3\" priority=\"Emergency\" source-node-ip=\"10.0.0.0\" source-node-id=\"0\" destination-area=\"20.000000,20.000000, 30.000000,30.000000\" temporal-scope=\"350.00,450.00\" creation-time=\"200.000000\" data-message-size=\"512\" packet-size=\"649\" confirmed-receiver-nodes=\"6\" expected-receiver-nodes=\"28\" delivery-ratio=\"0.214286\" delivery-delay=\"29.166667\" delivered-data-bytes=\"3894\">\n    <receiver-node node-ip=\"10.0.0.1\" node-id=\"1\" received-from=\"10.0.0.25\" time=\"230.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n    <receiver-node node-ip=\"10.0.0.4\" node-id=\"4\" received-from=\"10.0.0.25\" time=\"445.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n    <receiver-node node-ip=\"10.0.0.5\" node-id=\"5\" received-from=\"10.0.0.25\" time=\"405.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n    <receiver-node node-ip=\"10.0.0.6\" node-id=\"6\" received-from=\"10.0.0.25\" time=\"420.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n    <receiver-node node-ip=\"10.0.0.7\" node-id=\"7\" received-from=\"10.0.0.25\" time=\"380.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n    <receiver-node node-ip=\"10.0.0.8\" node-id=\"8\" received-from=\"10.0.0.25\" time=\"395.000000\" intended-receiver=\"True\" unicast-transmitted-replicas=\"0\" broadcast-transmitted-replicas=\"0\" received-duplicates=\"0\" />\n  </data-packet>\n\n  <data-packet data-id=\"10.0.0.0:4\" priority=\"Normal\" source-node-ip=\"10.0.0.0\" source-node-id=\"0\" destination-area=\"30.000000,30.000000, 40.000000,40.000000\" temporal-scope=\"210.00,310.00\" creation-time=\"130.000000\" data-message-size=\"1024\" packet-size=\"1161\" confirmed-receiver-nodes=\"0\" expected-receiver-nodes=\"8\" delivery-ratio=\"0.000000\" delivery-delay=\"-1.000000\" delivered-data-bytes=\"0\" />\n\n  <data-packet data-id=\"10.0.0.0:5\" priority=\"Emergency\" source-node-ip=\"10.0.0.0\" source-node-id=\"0\" destination-area=\"40.000000,40.000000, 50.000000,50.000000\" temporal-scope=\"350.00,450.00\" creation-time=\"200.000000\" data-message-size=\"256\" packet-size=\"393\" confirmed-receiver-nodes=\"0\" expected-receiver-nodes=\"0\" delivery-ratio=\"-1.000000\" delivery-delay=\"-1.000000\" delivered-data-bytes=\"0\" />\n\n</data-packets>\n\n</document>\n";
+
+    NS_TEST_EXPECT_MSG_EQ (exported_file_content, expected_str, "Must be equal");
+
+    // Remove the generated temporal testing files.
+    TestUtils::DeleteFile (m_output_filename);
+  }
+
+  void
+  DoRun () override
+  {
+    TestCalculateStatistics ();
+    TestGetDataPacketStatistics ();
+    TestCalculateAreaStatistics ();
     TestSaveToXmlFile ();
   }
 };
@@ -3605,8 +6358,13 @@ public:
     AddTestCase (new TransmissionTypeTest, TestCase::QUICK);
     AddTestCase (new DataPacketReceptionStatsTest, TestCase::QUICK);
     AddTestCase (new DataPacketStatisticsTest, TestCase::QUICK);
+    AddTestCase (new SimulationStatisticsValuesTest, TestCase::QUICK);
     AddTestCase (new SimulationStatisticsTest, TestCase::QUICK);
     AddTestCase (new SimulationStatisticsFileTest, TestCase::QUICK);
+    AddTestCase (new PriorityDataPacketStatisticsTest, TestCase::QUICK);
+    AddTestCase (new PrioritySimulationStatisticsValuesTest, TestCase::QUICK);
+    AddTestCase (new PrioritySimulationStatisticsTest, TestCase::QUICK);
+    AddTestCase (new PrioritySimulationStatisticsFileTest, TestCase::QUICK);
   }
 };
 

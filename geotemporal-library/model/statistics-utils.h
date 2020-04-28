@@ -11,8 +11,9 @@
 #include <ns3/nstime.h>
 
 #include "geotemporal-utils.h"
-#include "packet-utils.h"
 #include "gps-system.h"
+#include "math-utils.h"
+#include "packet-utils.h"
 
 namespace GeoTemporalLibrary
 {
@@ -478,7 +479,7 @@ operator<< (std::ostream & os, const DataPacketReceptionStats & obj)
  */
 class DataPacketStatistics
 {
-private:
+protected:
 
   /** Identifier of the data packet (source node IP + packet SEQ number). */
   DataIdentifier m_data_id;
@@ -794,6 +795,73 @@ operator<< (std::ostream & os, const DataPacketStatistics & obj)
 
 
 // =============================================================================
+//                          SimulationStatisticsValues
+// =============================================================================
+
+/**
+ * Contains the statistic values computed by an SimulationStatistics object.
+ */
+class SimulationStatisticsValues
+{
+public:
+
+  double m_average_delivery_delay;
+  double m_average_delivery_ratio;
+  double m_total_overhead;
+  double m_data_overhead;
+  double m_control_overhead;
+  uint64_t m_total_transmitted_bytes;
+  uint64_t m_data_transmitted_bytes;
+  uint64_t m_control_transmitted_bytes;
+  uint64_t m_total_delivered_data_bytes;
+  uint32_t m_expected_receivers;
+  uint32_t m_confirmed_receivers;
+
+
+  SimulationStatisticsValues ();
+
+  SimulationStatisticsValues (const SimulationStatisticsValues & copy);
+
+
+  /**
+   * Initializes the values of the object to an "empty (or clean) state".
+   * 
+   * Integer values to zero.
+   * 
+   * Double values to -1.0.
+   */
+  virtual void InitializeValues ();
+
+  friend bool operator== (const SimulationStatisticsValues & lhs,
+                          const SimulationStatisticsValues & rhs);
+};
+
+// SimulationStatisticsValues relational operators
+
+inline bool
+operator== (const SimulationStatisticsValues & lhs, const SimulationStatisticsValues & rhs)
+{
+  return AlmostEqual (lhs.m_average_delivery_delay, rhs.m_average_delivery_delay)
+          && AlmostEqual (lhs.m_average_delivery_ratio, rhs.m_average_delivery_ratio)
+          && AlmostEqual (lhs.m_total_overhead, rhs.m_total_overhead)
+          && AlmostEqual (lhs.m_data_overhead, rhs.m_data_overhead)
+          && AlmostEqual (lhs.m_control_overhead, rhs.m_control_overhead)
+          && lhs.m_total_transmitted_bytes == rhs.m_total_transmitted_bytes
+          && lhs.m_data_transmitted_bytes == rhs.m_data_transmitted_bytes
+          && lhs.m_control_transmitted_bytes == rhs.m_control_transmitted_bytes
+          && lhs.m_total_delivered_data_bytes == rhs.m_total_delivered_data_bytes
+          && lhs.m_expected_receivers == rhs.m_expected_receivers
+          && lhs.m_confirmed_receivers == rhs.m_confirmed_receivers;
+}
+
+inline bool
+operator!= (const SimulationStatisticsValues & lhs, const SimulationStatisticsValues & rhs)
+{
+  return !operator== (lhs, rhs);
+}
+
+
+// =============================================================================
 //                              SimulationStatistics
 // =============================================================================
 
@@ -900,14 +968,11 @@ public:
    *
    * If there are no data packets in the object then it returns <code>false</code>,
    * because there's no statistics to calculate.
+   * 
+   * The <code>values</code> object is always initialized to its default values.
    */
   bool
-  GetStatistics (double & average_delivery_delay, double & average_delivery_ratio,
-                 double & total_overhead, double & data_overhead,
-                 double & control_overhead, uint64_t & total_transmitted_bytes,
-                 uint64_t & data_transmitted_bytes, uint64_t & control_transmitted_bytes,
-                 uint64_t & total_delivered_data_bytes, uint32_t & expected_receivers,
-                 uint32_t & confirmed_receivers) const;
+  CalculateStatistics (SimulationStatisticsValues & values) const;
 
   /**
    * Computes the final statistics using the collected reception data of the
@@ -916,12 +981,12 @@ public:
    * If there are no data packets in the object or there are none data packets
    * with the specified destination area then it returns <code>false</code>,
    * because there's no statistics to calculate.
+   * 
+   * The <code>values</code> object is always initialized to its default values.
    */
   bool
-  GetAreaStatistics (const LibraryUtils::Area & destination_area,
-                     double & average_delivery_delay, double & average_delivery_ratio,
-                     uint64_t & total_delivered_data_bytes, uint32_t & expected_receivers,
-                     uint32_t & confirmed_receivers) const;
+  CalculateAreaStatistics (const LibraryUtils::Area & destination_area,
+                           SimulationStatisticsValues & values) const;
 };
 
 
@@ -965,6 +1030,315 @@ public:
   void
   SaveToXmlFile (const std::string & output_filename) const;
 };
+
+
+// =============================================================================
+//                         PriorityDataPacketStatistics
+// =============================================================================
+
+/**
+ * This class calculates the statistics of a DATA packet with a emergency flag.
+ */
+class PriorityDataPacketStatistics : public DataPacketStatistics
+{
+private:
+
+  /**
+   * If enabled, it indicates that the packet has high priority, is an emergency
+   * packet. Otherwise, when disabled, it indicates that the packet doesn't have
+   * high priority.
+   */
+  bool m_emergency_flag;
+
+
+public:
+
+  PriorityDataPacketStatistics ();
+
+  /**
+   * Initializes the object.
+   * 
+   * @param data_id Unique identifier of the data packet.
+   * @param emergency_flag Indicates if the packet is an emergency packet.
+   * @param source_node_id Numeric identifier of the node that created the packet.
+   * @param creation_time Simulation time when the packet was created.
+   * @param message_size Size (in bytes) of the message of the packet.
+   * @param data_packet_size Size (in bytes) of the entire DATA packet.
+   * @param destination_geo_temporal_area Destination geo-temporal area of the 
+   * packet.
+   */
+  PriorityDataPacketStatistics (const DataIdentifier & data_id,
+                                const bool emergency_flag,
+                                uint32_t source_node_id,
+                                const ns3::Time & creation_time,
+                                uint32_t message_size,
+                                uint32_t data_packet_size,
+                                const LibraryUtils::GeoTemporalArea & destination_geo_temporal_area);
+
+  PriorityDataPacketStatistics (const PriorityDataPacketStatistics & copy);
+
+
+  // --------------------------
+  // Getters & Setters
+  // --------------------------
+
+  inline const bool
+  IsEmergencyPacket () const
+  {
+    return m_emergency_flag;
+  }
+
+
+  /**
+   * Returns a <code>string</code> object containing the representation of this
+   * instance as a sequence of characters.
+   */
+  std::string ToString () const override;
+
+  void Print (std::ostream & os) const override;
+
+  friend bool operator== (const PriorityDataPacketStatistics & lhs,
+                          const PriorityDataPacketStatistics & rhs);
+  friend bool operator< (const PriorityDataPacketStatistics & lhs,
+                         const PriorityDataPacketStatistics & rhs);
+};
+
+// PriorityDataPacketStatistics relational operators
+
+inline bool
+operator== (const PriorityDataPacketStatistics & lhs, const PriorityDataPacketStatistics & rhs)
+{
+  return ((DataPacketStatistics) lhs) == ((DataPacketStatistics) rhs)
+          && lhs.m_emergency_flag == rhs.m_emergency_flag;
+}
+
+inline bool
+operator!= (const PriorityDataPacketStatistics & lhs, const PriorityDataPacketStatistics & rhs)
+{
+  return !operator== (lhs, rhs);
+}
+
+inline bool
+operator< (const PriorityDataPacketStatistics & lhs, const PriorityDataPacketStatistics & rhs)
+{
+  return ((DataPacketStatistics) lhs) < ((DataPacketStatistics) rhs);
+}
+
+inline bool
+operator> (const PriorityDataPacketStatistics & lhs, const PriorityDataPacketStatistics & rhs)
+{
+  return operator< (rhs, lhs);
+}
+
+inline bool
+operator<= (const PriorityDataPacketStatistics & lhs, const PriorityDataPacketStatistics & rhs)
+{
+  return !operator> (lhs, rhs);
+}
+
+inline bool
+operator>= (const PriorityDataPacketStatistics & lhs, const PriorityDataPacketStatistics & rhs)
+{
+  return !operator< (lhs, rhs);
+}
+
+// PriorityDataPacketStatistics stream operators
+
+inline std::ostream &
+operator<< (std::ostream & os, const PriorityDataPacketStatistics & obj)
+{
+  obj.Print (os);
+  return os;
+}
+
+
+// =============================================================================
+//                      PrioritySimulationStatisticsValues
+// =============================================================================
+
+/**
+ * Contains the statistic values computed by an PrioritySimulationStatistics
+ * object.
+ */
+class PrioritySimulationStatisticsValues : public SimulationStatisticsValues
+{
+public:
+
+  double m_emergency_average_delivery_delay;
+  double m_emergency_average_delivery_ratio;
+  double m_normal_average_delivery_delay;
+  double m_normal_average_delivery_ratio;
+
+
+  PrioritySimulationStatisticsValues ();
+
+  PrioritySimulationStatisticsValues (const PrioritySimulationStatisticsValues & copy);
+
+  /**
+   * Initializes the values of the object to an "empty (or clean) state".
+   * 
+   * Integer values to zero.
+   * 
+   * Double values to -1.0.
+   */
+  void InitializeValues () override;
+
+  friend bool operator== (const PrioritySimulationStatisticsValues & lhs,
+                          const PrioritySimulationStatisticsValues & rhs);
+};
+
+// PrioritySimulationStatisticsValues relational operators
+
+inline bool
+operator== (const PrioritySimulationStatisticsValues & lhs, const PrioritySimulationStatisticsValues & rhs)
+{
+  return ((SimulationStatisticsValues) lhs) == ((SimulationStatisticsValues) rhs)
+          && AlmostEqual (lhs.m_emergency_average_delivery_delay, rhs.m_emergency_average_delivery_delay)
+          && AlmostEqual (lhs.m_emergency_average_delivery_ratio, rhs.m_emergency_average_delivery_ratio)
+          && AlmostEqual (lhs.m_normal_average_delivery_delay, rhs.m_normal_average_delivery_delay)
+          && AlmostEqual (lhs.m_normal_average_delivery_ratio, rhs.m_normal_average_delivery_ratio);
+}
+
+inline bool
+operator!= (const PrioritySimulationStatisticsValues & lhs, const PrioritySimulationStatisticsValues & rhs)
+{
+  return !operator== (lhs, rhs);
+}
+
+
+// =============================================================================
+//                         PrioritySimulationStatistics
+// =============================================================================
+
+/**
+ * Computes the statistics of the current simulation with priority packets.
+ */
+class PrioritySimulationStatistics : public SimulationStatistics
+{
+protected:
+
+  std::map<DataIdentifier, PriorityDataPacketStatistics> m_priority_data_packet_statistics;
+
+
+public:
+
+  PrioritySimulationStatistics ();
+
+  PrioritySimulationStatistics (const NavigationSystem::GeoTemporalAreasVisitorNodes & gta_visitor_nodes,
+                                const std::map<uint32_t, ns3::Ipv4Address> & nodes_id_to_ip);
+
+  PrioritySimulationStatistics (const std::string & gta_visitor_nodes_input_filename,
+                                const std::map<uint32_t, ns3::Ipv4Address> & nodes_id_to_ip);
+
+  PrioritySimulationStatistics (const PrioritySimulationStatistics & copy);
+
+
+
+  /**
+   * Returns a constant reference to the desired DATA packet.
+   *
+   * If a packet with the given DATA ID doesn't exist it throws an <code>std::out_of_range</code>
+   * exception.
+   *
+   * @param packet_data_id ID of the packet to retrieve.
+   */
+  const PriorityDataPacketStatistics &
+  GetDataPacketStatistics (const DataIdentifier & packet_data_id) const;
+
+
+
+  /** Adds a priority data packet. */
+  virtual void
+  AddDataPacket (const PriorityDataPacketStatistics & priority_packet_statistics);
+
+  /**
+   * Counts the information about the DATA packet reception.
+   *
+   * Returns <code>true</code> if the processed packet reception is from an 
+   * expected receiver node, and therefore it counts. If the packet reception is
+   * not from an expected receiver node then it returns <code>false</code> and 
+   * it is not counted.
+   *
+   * @param receiver_node_ip IP address of the node that received the DATA packet.
+   * @param reception_stats Object that contains information about the packet 
+   * reception (reception time, transmitter node, etc).
+   *
+   * @return <code>true</code> if packet reception from a expected receiver node, 
+   * otherwise <code>false</code>.
+   */
+  virtual bool
+  CountDataPacketReceiverNode (const ns3::Ipv4Address & receiver_node_ip,
+                               const DataPacketReceptionStats & reception_stats);
+
+  /**
+   * Computes the final statistics using the collected reception data of all
+   * entered DATA packets.
+   *
+   * If there are no data packets in the object then it returns <code>false</code>,
+   * because there's no statistics to calculate.
+   * 
+   * The <code>values</code> object is always initialized to its default values.
+   */
+  bool
+  CalculateStatistics (PrioritySimulationStatisticsValues & values) const;
+
+  /**
+   * Computes the final statistics using the collected reception data of the
+   * DATA packets that have the specified area as destination area.
+   *
+   * If there are no data packets in the object or there are none data packets
+   * with the specified destination area then it returns <code>false</code>,
+   * because there's no statistics to calculate.
+   * 
+   * The <code>values</code> object is always initialized to its default values.
+   */
+  bool
+  CalculateAreaStatistics (const LibraryUtils::Area & destination_area,
+                           PrioritySimulationStatisticsValues & values) const;
+};
+
+
+// =============================================================================
+//                       PrioritySimulationStatisticsFile
+// =============================================================================
+
+/**
+ * Computes the statistics of the current simulation and saves the data and
+ * results to a text file.
+ */
+class PrioritySimulationStatisticsFile : public PrioritySimulationStatistics
+{
+private:
+
+  /** Used to store the XML string of confirmed receivers of each data packet. */
+  std::map<DataIdentifier, std::string> m_data_packets_str_section;
+
+
+public:
+
+  PrioritySimulationStatisticsFile ();
+
+  PrioritySimulationStatisticsFile (const NavigationSystem::GeoTemporalAreasVisitorNodes & gta_visitor_nodes,
+                                    const std::map<uint32_t, ns3::Ipv4Address> & nodes_id_to_ip);
+
+  PrioritySimulationStatisticsFile (const std::string & gta_visitor_nodes_input_filename,
+                                    const std::map<uint32_t, ns3::Ipv4Address> & nodes_id_to_ip);
+
+  PrioritySimulationStatisticsFile (const PrioritySimulationStatisticsFile & copy);
+
+
+  void
+  AddDataPacket (const PriorityDataPacketStatistics & priority_packet_statistics) override;
+
+  bool
+  CountDataPacketReceiverNode (const ns3::Ipv4Address & receiver_node_ip,
+                               const DataPacketReceptionStats & reception_stats) override;
+
+  /** Stores in the given file the resulting statistics in XML format. */
+  void
+  SaveToXmlFile (const std::string & output_filename) const;
+};
+
 
 }
 }

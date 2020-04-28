@@ -149,7 +149,7 @@ DataPacketReceptionStats::Print (std::ostream & os) const
 }
 
 // =============================================================================
-//                                   DataPacketStatistics
+//                           DataPacketStatistics
 // =============================================================================
 
 DataPacketStatistics::DataPacketStatistics ()
@@ -165,7 +165,8 @@ m_processed_receiver_nodes_ips (),
 m_confirmed_receiver_nodes_ips (),
 m_processed_delivery_delay_list () { }
 
-DataPacketStatistics::DataPacketStatistics (const DataIdentifier & data_id, uint32_t source_node_id,
+DataPacketStatistics::DataPacketStatistics (const DataIdentifier & data_id,
+                                            uint32_t source_node_id,
                                             const ns3::Time & creation_time,
                                             uint32_t message_size,
                                             uint32_t data_packet_size,
@@ -298,8 +299,10 @@ DataPacketStatistics::CountReception (const ns3::Ipv4Address & receiver_node_ip,
 }
 
 void
-DataPacketStatistics::GetStatistics (uint32_t & confirmed_packet_receivers_count, uint32_t & expected_packet_receivers_count,
-                                     double & packet_delivery_ratio, double & packet_average_delivery_delay,
+DataPacketStatistics::GetStatistics (uint32_t & confirmed_packet_receivers_count,
+                                     uint32_t & expected_packet_receivers_count,
+                                     double & packet_delivery_ratio,
+                                     double & packet_average_delivery_delay,
                                      uint32_t & delivered_data_bytes) const
 {
   if (m_confirmed_receiver_nodes_ips.size () != m_processed_delivery_delay_list.size ())
@@ -400,6 +403,59 @@ void
 DataPacketStatistics::Print (std::ostream & os) const
 {
   os << ToString ();
+}
+
+
+// =============================================================================
+//                          SimulationStatisticsValues
+// =============================================================================
+
+SimulationStatisticsValues::SimulationStatisticsValues ()
+: m_average_delivery_delay (),
+m_average_delivery_ratio (),
+m_total_overhead (),
+m_data_overhead (),
+m_control_overhead (),
+m_total_transmitted_bytes (),
+m_data_transmitted_bytes (),
+m_control_transmitted_bytes (),
+m_total_delivered_data_bytes (),
+m_expected_receivers (),
+m_confirmed_receivers ()
+{
+  InitializeValues ();
+}
+
+SimulationStatisticsValues::SimulationStatisticsValues (const SimulationStatisticsValues& copy)
+: m_average_delivery_delay (copy.m_average_delivery_delay),
+m_average_delivery_ratio (copy.m_average_delivery_ratio),
+m_total_overhead (copy.m_total_overhead),
+m_data_overhead (copy.m_data_overhead),
+m_control_overhead (copy.m_control_overhead),
+m_total_transmitted_bytes (copy.m_total_transmitted_bytes),
+m_data_transmitted_bytes (copy.m_data_transmitted_bytes),
+m_control_transmitted_bytes (copy.m_control_transmitted_bytes),
+m_total_delivered_data_bytes (copy.m_total_delivered_data_bytes),
+m_expected_receivers (copy.m_expected_receivers),
+m_confirmed_receivers (copy.m_confirmed_receivers) { }
+
+void
+SimulationStatisticsValues::InitializeValues ()
+{
+  // Double values are initialized to -1.0
+  m_average_delivery_delay = -1.0;
+  m_average_delivery_ratio = -1.0;
+  m_total_overhead = -1.0;
+  m_data_overhead = -1.0;
+  m_control_overhead = -1.0;
+
+  // Integer values are initialized to zero
+  m_total_transmitted_bytes = 0u;
+  m_data_transmitted_bytes = 0u;
+  m_control_transmitted_bytes = 0u;
+  m_total_delivered_data_bytes = 0u;
+  m_expected_receivers = 0u;
+  m_confirmed_receivers = 0u;
 }
 
 
@@ -550,38 +606,19 @@ SimulationStatistics::SetNodeTransmittedPacketsCounter (const ns3::Ipv4Address &
 }
 
 bool
-SimulationStatistics::GetStatistics (double & average_delivery_delay, double & average_delivery_ratio,
-                                     double & total_overhead, double & data_overhead,
-                                     double & control_overhead, uint64_t & total_transmitted_bytes,
-                                     uint64_t & data_transmitted_bytes, uint64_t & control_transmitted_bytes,
-                                     uint64_t & total_delivered_data_bytes, uint32_t & expected_receivers,
-                                     uint32_t & confirmed_receivers) const
+SimulationStatistics::CalculateStatistics (SimulationStatisticsValues& values) const
 {
+  // Initialize values (integers to zero and doubles to -1.0)
+  values.InitializeValues ();
+
+  // If there are no packets, then there are no statistics to calculate
   if (m_data_packets_statistics.empty ())
-    {
-      average_delivery_delay = -1.0;
-      average_delivery_ratio = -1.0;
-      total_overhead = -1.0;
-      data_overhead = -1.0;
-      control_overhead = -1.0;
-      total_transmitted_bytes = 0u;
-      data_transmitted_bytes = 0u;
-      control_transmitted_bytes = 0u;
-      total_delivered_data_bytes = 0u;
-      expected_receivers = 0u;
-      confirmed_receivers = 0u;
-      return false;
-    }
+    return false;
 
   // Current packet output statistics
   uint32_t current_packet_confirmed_packet_receivers_count, current_packet_expected_packet_receivers_count,
           current_packet_delivered_data_bytes;
   double current_packet_packet_delivery_ratio, current_packet_packet_average_delivery_delay;
-
-  // Initialize counters
-  total_delivered_data_bytes = 0u;
-  expected_receivers = 0u;
-  confirmed_receivers = 0u;
 
   std::vector<double> average_delivery_delay_list;
   std::vector<double> delivery_ratio_list;
@@ -596,9 +633,9 @@ SimulationStatistics::GetStatistics (double & average_delivery_delay, double & a
                                                   current_packet_packet_average_delivery_delay,
                                                   current_packet_delivered_data_bytes);
 
-      total_delivered_data_bytes += current_packet_delivered_data_bytes;
-      expected_receivers += current_packet_expected_packet_receivers_count;
-      confirmed_receivers += current_packet_confirmed_packet_receivers_count;
+      values.m_total_delivered_data_bytes += current_packet_delivered_data_bytes;
+      values.m_expected_receivers += current_packet_expected_packet_receivers_count;
+      values.m_confirmed_receivers += current_packet_confirmed_packet_receivers_count;
 
       if (current_packet_packet_average_delivery_delay >= 0.0)
         average_delivery_delay_list.push_back (current_packet_packet_average_delivery_delay);
@@ -608,33 +645,25 @@ SimulationStatistics::GetStatistics (double & average_delivery_delay, double & a
     }
 
   // Compute transmitted bytes
-  total_transmitted_bytes = 0u;
-  data_transmitted_bytes = 0u;
-  control_transmitted_bytes = 0u;
-
   for (std::map<ns3::Ipv4Address, PacketsCounter>::const_iterator node_transmitted_packets_it =
           m_nodes_transmitted_packets_counters.begin ();
           node_transmitted_packets_it != m_nodes_transmitted_packets_counters.end ();
           ++node_transmitted_packets_it)
     {
-      total_transmitted_bytes += node_transmitted_packets_it->second.GetCombinedPacketsSize ();
-      data_transmitted_bytes += node_transmitted_packets_it->second.GetDataPacketsSize ();
-      control_transmitted_bytes += node_transmitted_packets_it->second.GetControlPacketsSize ();
+      values.m_total_transmitted_bytes += node_transmitted_packets_it->second.GetCombinedPacketsSize ();
+      values.m_data_transmitted_bytes += node_transmitted_packets_it->second.GetDataPacketsSize ();
+      values.m_control_transmitted_bytes += node_transmitted_packets_it->second.GetControlPacketsSize ();
     }
 
   // Compute overheads
-  total_overhead = (double) total_transmitted_bytes / (double) total_delivered_data_bytes;
-  data_overhead = (double) data_transmitted_bytes / (double) total_delivered_data_bytes;
-  control_overhead = (double) control_transmitted_bytes / (double) total_delivered_data_bytes;
+  values.m_total_overhead = (double) values.m_total_transmitted_bytes / (double) values.m_total_delivered_data_bytes;
+  values.m_data_overhead = (double) values.m_data_transmitted_bytes / (double) values.m_total_delivered_data_bytes;
+  values.m_control_overhead = (double) values.m_control_transmitted_bytes / (double) values.m_total_delivered_data_bytes;
 
   // Compute average delivery delay
   double sum = 0.0;
 
-  if (average_delivery_delay_list.empty ())
-    {
-      average_delivery_delay = -1.0;
-    }
-  else
+  if (!average_delivery_delay_list.empty ())
     {
       for (std::vector<double>::const_iterator delivery_delay_it = average_delivery_delay_list.begin ();
               delivery_delay_it != average_delivery_delay_list.end (); ++delivery_delay_it)
@@ -642,17 +671,13 @@ SimulationStatistics::GetStatistics (double & average_delivery_delay, double & a
           sum += *delivery_delay_it;
         }
 
-      average_delivery_delay = sum / (double) average_delivery_delay_list.size ();
+      values.m_average_delivery_delay = sum / (double) average_delivery_delay_list.size ();
     }
 
   // Compute average delivery ratio
   sum = 0.0;
 
-  if (delivery_ratio_list.empty ())
-    {
-      average_delivery_ratio = -1.0;
-    }
-  else
+  if (!delivery_ratio_list.empty ())
     {
       for (std::vector<double>::const_iterator delivery_ratio_it = delivery_ratio_list.begin ();
               delivery_ratio_it != delivery_ratio_list.end (); ++delivery_ratio_it)
@@ -660,37 +685,26 @@ SimulationStatistics::GetStatistics (double & average_delivery_delay, double & a
           sum += *delivery_ratio_it;
         }
 
-      average_delivery_ratio = sum / (double) delivery_ratio_list.size ();
+      values.m_average_delivery_ratio = sum / (double) delivery_ratio_list.size ();
     }
 
   return true;
 }
 
 bool
-SimulationStatistics::GetAreaStatistics (const LibraryUtils::Area & destination_area,
-                                         double & average_delivery_delay, double & average_delivery_ratio,
-                                         uint64_t & total_delivered_data_bytes, uint32_t & expected_receivers,
-                                         uint32_t & confirmed_receivers) const
+SimulationStatistics::CalculateAreaStatistics (const LibraryUtils::Area & destination_area,
+                                               SimulationStatisticsValues& values) const
 {
+  // Initialize values (integers to zero and doubles to -1.0)
+  values.InitializeValues ();
+
   if (m_data_packets_statistics.empty () || m_known_destination_areas.count (destination_area) == 0u)
-    {
-      average_delivery_delay = -1.0;
-      average_delivery_ratio = -1.0;
-      total_delivered_data_bytes = 0u;
-      expected_receivers = 0u;
-      confirmed_receivers = 0u;
-      return false;
-    }
+    return false;
 
   // Current packet output statistics
   uint32_t current_packet_confirmed_packet_receivers_count, current_packet_expected_packet_receivers_count,
           current_packet_delivered_data_bytes;
   double current_packet_packet_delivery_ratio, current_packet_packet_average_delivery_delay;
-
-  // Initialize counters
-  total_delivered_data_bytes = 0u;
-  expected_receivers = 0u;
-  confirmed_receivers = 0u;
 
   std::vector<double> average_delivery_delay_list;
   std::vector<double> delivery_ratio_list;
@@ -708,9 +722,9 @@ SimulationStatistics::GetAreaStatistics (const LibraryUtils::Area & destination_
                                                   current_packet_packet_average_delivery_delay,
                                                   current_packet_delivered_data_bytes);
 
-      total_delivered_data_bytes += current_packet_delivered_data_bytes;
-      expected_receivers += current_packet_expected_packet_receivers_count;
-      confirmed_receivers += current_packet_confirmed_packet_receivers_count;
+      values.m_total_delivered_data_bytes += current_packet_delivered_data_bytes;
+      values.m_expected_receivers += current_packet_expected_packet_receivers_count;
+      values.m_confirmed_receivers += current_packet_confirmed_packet_receivers_count;
 
       if (current_packet_packet_average_delivery_delay >= 0.0)
         average_delivery_delay_list.push_back (current_packet_packet_average_delivery_delay);
@@ -722,11 +736,7 @@ SimulationStatistics::GetAreaStatistics (const LibraryUtils::Area & destination_
   // Compute average delivery delay
   double sum = 0.0;
 
-  if (average_delivery_delay_list.empty ())
-    {
-      average_delivery_delay = -1.0;
-    }
-  else
+  if (!average_delivery_delay_list.empty ())
     {
       for (std::vector<double>::const_iterator delivery_delay_it = average_delivery_delay_list.begin ();
               delivery_delay_it != average_delivery_delay_list.end (); ++delivery_delay_it)
@@ -734,17 +744,13 @@ SimulationStatistics::GetAreaStatistics (const LibraryUtils::Area & destination_
           sum += *delivery_delay_it;
         }
 
-      average_delivery_delay = sum / (double) average_delivery_delay_list.size ();
+      values.m_average_delivery_delay = sum / (double) average_delivery_delay_list.size ();
     }
 
   // Compute average delivery ratio
   sum = 0.0;
 
-  if (delivery_ratio_list.empty ())
-    {
-      average_delivery_ratio = -1.0;
-    }
-  else
+  if (!delivery_ratio_list.empty ())
     {
       for (std::vector<double>::const_iterator delivery_ratio_it = delivery_ratio_list.begin ();
               delivery_ratio_it != delivery_ratio_list.end (); ++delivery_ratio_it)
@@ -752,7 +758,7 @@ SimulationStatistics::GetAreaStatistics (const LibraryUtils::Area & destination_
           sum += *delivery_ratio_it;
         }
 
-      average_delivery_ratio = sum / (double) delivery_ratio_list.size ();
+      values.m_average_delivery_ratio = sum / (double) delivery_ratio_list.size ();
     }
 
   return true;
@@ -859,49 +865,42 @@ SimulationStatisticsFile::SaveToXmlFile (const std::string & output_filename) co
   output_file << "<statistics-results>" << end_line;
 
   // Print general statistics
-  double average_delivery_delay, average_delivery_ratio, total_overhead, data_overhead,
-          control_overhead;
-  uint64_t total_transmitted_bytes, data_transmitted_bytes, control_transmitted_bytes,
-          total_delivered_data_bytes;
-  uint32_t expected_receivers, confirmed_receivers;
+  SimulationStatisticsValues values;
 
-  GetStatistics (average_delivery_delay, average_delivery_ratio, total_overhead, data_overhead,
-                 control_overhead, total_transmitted_bytes, data_transmitted_bytes,
-                 control_transmitted_bytes, total_delivered_data_bytes, expected_receivers,
-                 confirmed_receivers);
+  CalculateStatistics (values);
 
-  std::sprintf (buffer, "%f", average_delivery_ratio);
+  std::sprintf (buffer, "%f", values.m_average_delivery_ratio);
   output_file << indentation << "<result type=\"total\" "
           << "average-delivery-ratio=\"" << buffer << "\" ";
 
-  std::sprintf (buffer, "%f", average_delivery_delay);
+  std::sprintf (buffer, "%f", values.m_average_delivery_delay);
   output_file << "average-delivery-delay=\"" << buffer << "\" ";
 
-  std::sprintf (buffer, "%f", total_overhead);
+  std::sprintf (buffer, "%f", values.m_total_overhead);
   output_file << "total-overhead=\"" << buffer << "\" ";
 
-  std::sprintf (buffer, "%f", data_overhead);
+  std::sprintf (buffer, "%f", values.m_data_overhead);
   output_file << "data-overhead=\"" << buffer << "\" ";
 
-  std::sprintf (buffer, "%f", control_overhead);
+  std::sprintf (buffer, "%f", values.m_control_overhead);
   output_file << "control-overhead=\"" << buffer << "\" ";
 
-  std::sprintf (buffer, "%lu", total_transmitted_bytes);
+  std::sprintf (buffer, "%lu", values.m_total_transmitted_bytes);
   output_file << "total-transmitted-bytes=\"" << buffer << "\" ";
 
-  std::sprintf (buffer, "%lu", data_transmitted_bytes);
+  std::sprintf (buffer, "%lu", values.m_data_transmitted_bytes);
   output_file << "data-transmitted-bytes=\"" << buffer << "\" ";
 
-  std::sprintf (buffer, "%lu", control_transmitted_bytes);
+  std::sprintf (buffer, "%lu", values.m_control_transmitted_bytes);
   output_file << "control-transmitted-bytes=\"" << buffer << "\" ";
 
-  std::sprintf (buffer, "%lu", total_delivered_data_bytes);
+  std::sprintf (buffer, "%lu", values.m_total_delivered_data_bytes);
   output_file << "total-delivered-data-bytes=\"" << buffer << "\" ";
 
-  std::sprintf (buffer, "%u", expected_receivers);
+  std::sprintf (buffer, "%u", values.m_expected_receivers);
   output_file << "expected-receiver-nodes=\"" << buffer << "\" ";
 
-  std::sprintf (buffer, "%u", confirmed_receivers);
+  std::sprintf (buffer, "%u", values.m_confirmed_receivers);
   output_file << "confirmed-receiver-nodes=\"" << buffer << "\" ";
   output_file << "/>" << end_line;
 
@@ -909,8 +908,7 @@ SimulationStatisticsFile::SaveToXmlFile (const std::string & output_filename) co
   for (std::set<LibraryUtils::Area>::const_iterator area_it = m_known_destination_areas.begin ();
           area_it != m_known_destination_areas.end (); ++area_it)
     {
-      GetAreaStatistics (*area_it, average_delivery_delay, average_delivery_ratio,
-                         total_delivered_data_bytes, expected_receivers, confirmed_receivers);
+      CalculateAreaStatistics (*area_it, values);
 
       std::sprintf (buffer, "%f", area_it->GetX1 ());
       output_file << indentation << "<result type=\"area\" "
@@ -925,19 +923,19 @@ SimulationStatisticsFile::SaveToXmlFile (const std::string & output_filename) co
       std::sprintf (buffer, "%f", area_it->GetY2 ());
       output_file << buffer << "\" ";
 
-      std::sprintf (buffer, "%f", average_delivery_ratio);
+      std::sprintf (buffer, "%f", values.m_average_delivery_ratio);
       output_file << "average-delivery-ratio=\"" << buffer << "\" ";
 
-      std::sprintf (buffer, "%f", average_delivery_delay);
+      std::sprintf (buffer, "%f", values.m_average_delivery_delay);
       output_file << "average-delivery-delay=\"" << buffer << "\" ";
 
-      std::sprintf (buffer, "%lu", total_delivered_data_bytes);
+      std::sprintf (buffer, "%lu", values.m_total_delivered_data_bytes);
       output_file << "total-delivered-data-bytes=\"" << buffer << "\" ";
 
-      std::sprintf (buffer, "%u", expected_receivers);
+      std::sprintf (buffer, "%u", values.m_expected_receivers);
       output_file << "expected-receiver-nodes=\"" << buffer << "\" ";
 
-      std::sprintf (buffer, "%u", confirmed_receivers);
+      std::sprintf (buffer, "%u", values.m_confirmed_receivers);
       output_file << "confirmed-receiver-nodes=\"" << buffer << "\" ";
       output_file << "/>" << end_line;
     }
@@ -988,6 +986,763 @@ SimulationStatisticsFile::SaveToXmlFile (const std::string & output_filename) co
     {
       output_file << indentation << "<data-packet data-id=\""
               << data_packet_stats_it->first.ToString () << "\" ";
+
+      output_file << "source-node-ip=\""
+              + LibraryUtils::ToString (data_packet_stats_it->second.GetSourceNodeIp ()) + "\" ";
+
+      std::sprintf (buffer, "%u", data_packet_stats_it->second.GetSourceNodeId ());
+      output_file << "source-node-id=\"" << buffer << "\" ";
+
+      const LibraryUtils::GeoTemporalArea & geo_temporal_area = data_packet_stats_it->second
+              .GetPacketDestinationGeoTemporalArea ();
+
+      std::sprintf (buffer, "%f", geo_temporal_area.GetArea ().GetX1 ());
+      output_file << "destination-area=\"" << buffer << ",";
+
+      std::sprintf (buffer, "%f", geo_temporal_area.GetArea ().GetY1 ());
+      output_file << buffer << ", ";
+
+      std::sprintf (buffer, "%f", geo_temporal_area.GetArea ().GetX2 ());
+      output_file << buffer << ",";
+
+      std::sprintf (buffer, "%f", geo_temporal_area.GetArea ().GetY2 ());
+      output_file << buffer << "\" ";
+
+      std::sprintf (buffer, "%04.2f", geo_temporal_area.GetTimePeriod ().GetStartTime ().GetSeconds ());
+      output_file << "temporal-scope=\"" << buffer << ",";
+
+      std::sprintf (buffer, "%04.2f", geo_temporal_area.GetTimePeriod ().GetEndTime ().GetSeconds ());
+      output_file << buffer << "\" ";
+
+      std::sprintf (buffer, "%f", data_packet_stats_it->second.GetPacketCreationTime ().GetSeconds ());
+      output_file << "creation-time=\"" << buffer << "\" ";
+
+      std::sprintf (buffer, "%u", data_packet_stats_it->second.GetPacketMessageSize ());
+      output_file << "data-message-size=\"" << buffer << "\" ";
+
+      std::sprintf (buffer, "%u", data_packet_stats_it->second.GetPacketSize ());
+      output_file << "packet-size=\"" << buffer << "\" ";
+
+      data_packet_stats_it->second.GetStatistics (confirmed_packet_receivers_count,
+                                                  expected_packet_receivers_count,
+                                                  packet_delivery_ratio,
+                                                  packet_average_delivery_delay,
+                                                  delivered_data_bytes);
+
+      std::sprintf (buffer, "%u", confirmed_packet_receivers_count);
+      output_file << "confirmed-receiver-nodes=\"" << buffer << "\" ";
+
+      std::sprintf (buffer, "%u", expected_packet_receivers_count);
+      output_file << "expected-receiver-nodes=\"" << buffer << "\" ";
+
+      std::sprintf (buffer, "%f", packet_delivery_ratio);
+      output_file << "delivery-ratio=\"" << buffer << "\" ";
+
+      std::sprintf (buffer, "%f", packet_average_delivery_delay);
+      output_file << "delivery-delay=\"" << buffer << "\" ";
+
+      std::sprintf (buffer, "%u", delivered_data_bytes);
+      output_file << "delivered-data-bytes=\"" << buffer << "\"";
+
+      if (confirmed_packet_receivers_count == 0u)
+        {
+          output_file << " />" << end_line << end_line;
+        }
+      else
+        {
+          output_file << ">" << end_line;
+
+          // Print confirmed receivers.
+          output_file << m_data_packets_str_section.at (data_packet_stats_it->first);
+
+          output_file << indentation << "</data-packet>" << end_line << end_line;
+        }
+    }
+
+  output_file << "</data-packets>" << end_line << end_line;
+
+  output_file << "</document>" << end_line;
+
+  output_file.close ();
+}
+
+
+// =============================================================================
+//                         PriorityDataPacketStatistics
+// =============================================================================
+
+PriorityDataPacketStatistics::PriorityDataPacketStatistics ()
+: DataPacketStatistics (), m_emergency_flag (false) { }
+
+PriorityDataPacketStatistics::PriorityDataPacketStatistics (const DataIdentifier& data_id,
+                                                            const bool emergency_flag,
+                                                            uint32_t source_node_id,
+                                                            const ns3::Time& creation_time,
+                                                            uint32_t message_size,
+                                                            uint32_t data_packet_size,
+                                                            const LibraryUtils::GeoTemporalArea& destination_geo_temporal_area)
+: DataPacketStatistics (data_id, source_node_id, creation_time, message_size,
+                        data_packet_size, destination_geo_temporal_area),
+m_emergency_flag (emergency_flag) { }
+
+PriorityDataPacketStatistics::PriorityDataPacketStatistics (const PriorityDataPacketStatistics& copy)
+: DataPacketStatistics (copy), m_emergency_flag (copy.m_emergency_flag) { }
+
+std::string
+PriorityDataPacketStatistics::ToString () const
+{
+  char buffer[30];
+
+  std::string str = "<data-packet data-id=\"" + m_data_id.ToString () + "\" ";
+
+  if (m_emergency_flag)
+    str += "priority=\"Emergency\" ";
+  else
+    str += "priority=\"Normal\" ";
+
+  str += "source-node-ip=\"" + LibraryUtils::ToString (m_data_id.GetSourceIp ()) + "\" ";
+
+  std::sprintf (buffer, "%u", m_source_node_id);
+  str += "source-node-id=\"" + std::string (buffer) + "\" ";
+
+  std::sprintf (buffer, "%f", m_packet_creation_time.GetSeconds ());
+  str += "creation-time=\"" + std::string (buffer) + "\" ";
+
+  std::sprintf (buffer, "%f", m_destination_geo_temporal_area.GetArea ().GetX1 ());
+  str += "destination-area=\"" + std::string (buffer) + ",";
+
+  std::sprintf (buffer, "%f", m_destination_geo_temporal_area.GetArea ().GetY1 ());
+  str += std::string (buffer) + ", ";
+
+  std::sprintf (buffer, "%f", m_destination_geo_temporal_area.GetArea ().GetX2 ());
+  str += std::string (buffer) + ",";
+
+  std::sprintf (buffer, "%f", m_destination_geo_temporal_area.GetArea ().GetY2 ());
+  str += std::string (buffer) + "\" ";
+
+  std::sprintf (buffer, "%04.2f", m_destination_geo_temporal_area.GetTimePeriod ().GetStartTime ().GetSeconds ());
+  str += "initial-time=\"" + std::string (buffer) + "\" ";
+
+  std::sprintf (buffer, "%04.2f", m_destination_geo_temporal_area.GetTimePeriod ().GetDuration ().GetSeconds ());
+  str += "duration=\"" + std::string (buffer) + "\" ";
+
+  std::sprintf (buffer, "%u", m_packet_message_size);
+  str += "data-message-size=\"" + std::string (buffer) + "\" ";
+
+  std::sprintf (buffer, "%u", m_packet_size);
+  str += "packet-size=\"" + std::string (buffer) + "\" ";
+
+  str += "/>";
+  return str;
+}
+
+void
+PriorityDataPacketStatistics::Print (std::ostream & os) const
+{
+  os << ToString ();
+}
+
+
+// =============================================================================
+//                      PrioritySimulationStatisticsValues
+// =============================================================================
+
+PrioritySimulationStatisticsValues::PrioritySimulationStatisticsValues ()
+: SimulationStatisticsValues (),
+m_emergency_average_delivery_delay (),
+m_emergency_average_delivery_ratio (),
+m_normal_average_delivery_delay (),
+m_normal_average_delivery_ratio ()
+{
+  InitializeValues ();
+}
+
+PrioritySimulationStatisticsValues::PrioritySimulationStatisticsValues (const PrioritySimulationStatisticsValues& copy)
+: SimulationStatisticsValues (copy),
+m_emergency_average_delivery_delay (copy.m_emergency_average_delivery_delay),
+m_emergency_average_delivery_ratio (copy.m_emergency_average_delivery_ratio),
+m_normal_average_delivery_delay (copy.m_normal_average_delivery_delay),
+m_normal_average_delivery_ratio (copy.m_normal_average_delivery_ratio) { }
+
+void
+PrioritySimulationStatisticsValues::InitializeValues ()
+{
+  // Integer values are initialized to zero
+  SimulationStatisticsValues::InitializeValues ();
+
+  // Double values are initialized to -1.0
+  m_emergency_average_delivery_delay = -1.0;
+  m_emergency_average_delivery_ratio = -1.0;
+  m_normal_average_delivery_delay = -1.0;
+  m_normal_average_delivery_ratio = -1.0;
+}
+
+
+// =============================================================================
+//                         PrioritySimulationStatistics
+// =============================================================================
+
+PrioritySimulationStatistics::PrioritySimulationStatistics ()
+: SimulationStatistics (), m_priority_data_packet_statistics () { }
+
+PrioritySimulationStatistics::PrioritySimulationStatistics (const NavigationSystem::GeoTemporalAreasVisitorNodes& gta_visitor_nodes,
+                                                            const std::map<uint32_t, ns3::Ipv4Address>& nodes_id_to_ip)
+: SimulationStatistics (gta_visitor_nodes, nodes_id_to_ip),
+m_priority_data_packet_statistics () { }
+
+PrioritySimulationStatistics::PrioritySimulationStatistics (const std::string& gta_visitor_nodes_input_filename,
+                                                            const std::map<uint32_t, ns3::Ipv4Address>& nodes_id_to_ip)
+: SimulationStatistics (gta_visitor_nodes_input_filename, nodes_id_to_ip),
+m_priority_data_packet_statistics () { }
+
+PrioritySimulationStatistics::PrioritySimulationStatistics (const PrioritySimulationStatistics& copy)
+: SimulationStatistics (copy),
+m_priority_data_packet_statistics (copy.m_priority_data_packet_statistics) { }
+
+const PriorityDataPacketStatistics&
+PrioritySimulationStatistics::GetDataPacketStatistics (const DataIdentifier& packet_data_id) const
+{
+  std::map<DataIdentifier, PriorityDataPacketStatistics>::const_iterator packet_stats_it
+          = m_priority_data_packet_statistics.find (packet_data_id);
+
+  if (packet_stats_it == m_priority_data_packet_statistics.end ())
+    throw std::out_of_range ("Error: the packet with ID '" + packet_data_id.ToString ()
+                             + "' is unknown.");
+
+  return packet_stats_it->second;
+}
+
+void
+PrioritySimulationStatistics::AddDataPacket (const PriorityDataPacketStatistics& priority_packet_statistics)
+{
+  const LibraryUtils::GeoTemporalArea & destination_geo_temporal_area
+          = priority_packet_statistics.GetPacketDestinationGeoTemporalArea ();
+
+  if (!m_gta_visitor_nodes.ContainsGeoTemporalArea (destination_geo_temporal_area))
+    throw std::runtime_error ("The given data packet has a destination geo-temporal area that "
+                              "is unknown to the GeoTemporalAreasVisitorNodes object.");
+
+  if (m_priority_data_packet_statistics.count (priority_packet_statistics.GetDataIdentifier ()) > 0u)
+    throw std::runtime_error ("The given PriorityDataPacketStatistics already exists.");
+
+  // Update set of used areas
+  m_known_destination_areas.insert (priority_packet_statistics.GetPacketDestinationGeoTemporalArea ().GetArea ());
+
+  // Insert packet statistics object
+  std::pair < std::map<DataIdentifier, PriorityDataPacketStatistics>::iterator, bool> insertion_result;
+  insertion_result = m_priority_data_packet_statistics.insert (std::make_pair (priority_packet_statistics.GetDataIdentifier (),
+                                                                               priority_packet_statistics));
+
+  // Construct the set of expected receiver nodes
+  const std::set<NavigationSystem::VisitorNode> & gta_visitor_nodes_set
+          = m_gta_visitor_nodes.GetGeoTemporalAreaVisitorNodes (destination_geo_temporal_area);
+
+  std::map<ns3::Ipv4Address, ns3::Time> expected_receiver_nodes_map;
+
+  for (std::set<NavigationSystem::VisitorNode>::const_iterator visitor_node_it = gta_visitor_nodes_set.begin ();
+          visitor_node_it != gta_visitor_nodes_set.end (); ++visitor_node_it)
+    {
+      expected_receiver_nodes_map.insert (std::make_pair (GetNodeIpAddressFromId (visitor_node_it->GetNodeId ()),
+                                                          ns3::Seconds (visitor_node_it->GetArrivalTime ())));
+    }
+
+  insertion_result.first->second.SetExpectedReceiverNodes (expected_receiver_nodes_map);
+}
+
+bool
+PrioritySimulationStatistics::CountDataPacketReceiverNode (const ns3::Ipv4Address& receiver_node_ip,
+                                                           const DataPacketReceptionStats& reception_stats)
+{
+  std::map<DataIdentifier, PriorityDataPacketStatistics>::iterator packet_statistics_it
+          = m_priority_data_packet_statistics.find (reception_stats.GetPacketDataIdentifier ());
+
+  if (packet_statistics_it == m_priority_data_packet_statistics.end ())
+    throw std::runtime_error ("The specified packet doesn't exist. Add it using "
+                              "SimulationStatistics::AddPriorityDataPacket "
+                              "(const PriorityDataPacketStatistics &) function.");
+
+  return packet_statistics_it->second.CountReception (receiver_node_ip,
+                                                      reception_stats);
+}
+
+bool
+PrioritySimulationStatistics::CalculateStatistics (PrioritySimulationStatisticsValues& values) const
+{
+  // Initialize values (integers to zero and doubles to -1.0)
+  values.InitializeValues ();
+
+  if (m_priority_data_packet_statistics.empty ())
+    return false;
+
+  // Current packet output statistics
+  uint32_t current_packet_confirmed_packet_receivers_count, current_packet_expected_packet_receivers_count,
+          current_packet_delivered_data_bytes;
+  double current_packet_packet_delivery_ratio, current_packet_packet_average_delivery_delay;
+
+  // Total count for delivery delay and delivery ratio
+  std::vector<double> total_average_delivery_delay_list;
+  std::vector<double> total_delivery_ratio_list;
+
+  // Emergency packets count for delivery delay and delivery ratio
+  std::vector<double> emergency_packet_average_delivery_delay_list;
+  std::vector<double> emergency_packet_delivery_ratio_list;
+
+  // Normal packets count for delivery delay and delivery ratio
+  std::vector<double> normal_packet_average_delivery_delay_list;
+  std::vector<double> normal_packet_delivery_ratio_list;
+
+  for (std::map<DataIdentifier, PriorityDataPacketStatistics>::const_iterator packet_statistics_it =
+          m_priority_data_packet_statistics.begin ();
+          packet_statistics_it != m_priority_data_packet_statistics.end (); ++packet_statistics_it)
+    {
+      packet_statistics_it->second.GetStatistics (current_packet_confirmed_packet_receivers_count,
+                                                  current_packet_expected_packet_receivers_count,
+                                                  current_packet_packet_delivery_ratio,
+                                                  current_packet_packet_average_delivery_delay,
+                                                  current_packet_delivered_data_bytes);
+
+      values.m_total_delivered_data_bytes += current_packet_delivered_data_bytes;
+      values.m_expected_receivers += current_packet_expected_packet_receivers_count;
+      values.m_confirmed_receivers += current_packet_confirmed_packet_receivers_count;
+
+      if (current_packet_packet_average_delivery_delay >= 0.0)
+        {
+          total_average_delivery_delay_list.push_back (current_packet_packet_average_delivery_delay);
+
+          if (packet_statistics_it->second.IsEmergencyPacket ())
+            emergency_packet_average_delivery_delay_list.push_back (current_packet_packet_average_delivery_delay);
+          else
+            normal_packet_average_delivery_delay_list.push_back (current_packet_packet_average_delivery_delay);
+        }
+
+      if (current_packet_packet_delivery_ratio >= 0.0)
+        {
+          total_delivery_ratio_list.push_back (current_packet_packet_delivery_ratio);
+
+          if (packet_statistics_it->second.IsEmergencyPacket ())
+            emergency_packet_delivery_ratio_list.push_back (current_packet_packet_delivery_ratio);
+          else
+            normal_packet_delivery_ratio_list.push_back (current_packet_packet_delivery_ratio);
+        }
+    }
+
+  // Compute transmitted bytes
+  for (std::map<ns3::Ipv4Address, PacketsCounter>::const_iterator node_transmitted_packets_it =
+          m_nodes_transmitted_packets_counters.begin ();
+          node_transmitted_packets_it != m_nodes_transmitted_packets_counters.end ();
+          ++node_transmitted_packets_it)
+    {
+      values.m_total_transmitted_bytes += node_transmitted_packets_it->second.GetCombinedPacketsSize ();
+      values.m_data_transmitted_bytes += node_transmitted_packets_it->second.GetDataPacketsSize ();
+      values.m_control_transmitted_bytes += node_transmitted_packets_it->second.GetControlPacketsSize ();
+    }
+
+  // Compute overheads
+  values.m_total_overhead = (double) values.m_total_transmitted_bytes / (double) values.m_total_delivered_data_bytes;
+  values.m_data_overhead = (double) values.m_data_transmitted_bytes / (double) values.m_total_delivered_data_bytes;
+  values.m_control_overhead = (double) values.m_control_transmitted_bytes / (double) values.m_total_delivered_data_bytes;
+
+  // Compute DELIVERY DELAYS
+  // - Compute total average delivery delay
+  double sum = 0.0;
+
+  if (!total_average_delivery_delay_list.empty ())
+    {
+      for (std::vector<double>::const_iterator delivery_delay_it = total_average_delivery_delay_list.begin ();
+              delivery_delay_it != total_average_delivery_delay_list.end (); ++delivery_delay_it)
+        {
+          sum += *delivery_delay_it;
+        }
+
+      values.m_average_delivery_delay = sum / (double) total_average_delivery_delay_list.size ();
+    }
+
+  // - Compute emergency packets average delivery delay
+  sum = 0.0;
+
+  if (!emergency_packet_average_delivery_delay_list.empty ())
+    {
+      for (std::vector<double>::const_iterator delivery_delay_it = emergency_packet_average_delivery_delay_list.begin ();
+              delivery_delay_it != emergency_packet_average_delivery_delay_list.end (); ++delivery_delay_it)
+        {
+          sum += *delivery_delay_it;
+        }
+
+      values.m_emergency_average_delivery_delay = sum / (double) emergency_packet_average_delivery_delay_list.size ();
+    }
+
+  // - Compute normal packets average delivery delay
+  sum = 0.0;
+
+  if (!normal_packet_average_delivery_delay_list.empty ())
+    {
+      for (std::vector<double>::const_iterator delivery_delay_it = normal_packet_average_delivery_delay_list.begin ();
+              delivery_delay_it != normal_packet_average_delivery_delay_list.end (); ++delivery_delay_it)
+        {
+          sum += *delivery_delay_it;
+        }
+
+      values.m_normal_average_delivery_delay = sum / (double) normal_packet_average_delivery_delay_list.size ();
+    }
+
+  // Compute DELIVERY RATIOS
+  // - Compute total average delivery ratio
+  sum = 0.0;
+
+  if (!total_delivery_ratio_list.empty ())
+    {
+      for (std::vector<double>::const_iterator delivery_ratio_it = total_delivery_ratio_list.begin ();
+              delivery_ratio_it != total_delivery_ratio_list.end (); ++delivery_ratio_it)
+        {
+          sum += *delivery_ratio_it;
+        }
+
+      values.m_average_delivery_ratio = sum / (double) total_delivery_ratio_list.size ();
+    }
+
+  // - Compute emergency packets average delivery ratio
+  sum = 0.0;
+
+  if (!emergency_packet_delivery_ratio_list.empty ())
+    {
+      for (std::vector<double>::const_iterator delivery_ratio_it = emergency_packet_delivery_ratio_list.begin ();
+              delivery_ratio_it != emergency_packet_delivery_ratio_list.end (); ++delivery_ratio_it)
+        {
+          sum += *delivery_ratio_it;
+        }
+
+      values.m_emergency_average_delivery_ratio = sum / (double) emergency_packet_delivery_ratio_list.size ();
+    }
+
+  // - Compute normal packets average delivery ratio
+  sum = 0.0;
+
+  if (!normal_packet_delivery_ratio_list.empty ())
+    {
+      for (std::vector<double>::const_iterator delivery_ratio_it = normal_packet_delivery_ratio_list.begin ();
+              delivery_ratio_it != normal_packet_delivery_ratio_list.end (); ++delivery_ratio_it)
+        {
+          sum += *delivery_ratio_it;
+        }
+
+      values.m_normal_average_delivery_ratio = sum / (double) normal_packet_delivery_ratio_list.size ();
+    }
+
+  return true;
+}
+
+bool
+PrioritySimulationStatistics::CalculateAreaStatistics (const LibraryUtils::Area& destination_area,
+                                                       PrioritySimulationStatisticsValues& values) const
+{
+  // Initialize values (integers to zero and doubles to -1.0)
+  values.InitializeValues ();
+
+  if (m_priority_data_packet_statistics.empty () || m_known_destination_areas.count (destination_area) == 0u)
+    return false;
+
+  // Current packet output statistics
+  uint32_t current_packet_confirmed_packet_receivers_count, current_packet_expected_packet_receivers_count,
+          current_packet_delivered_data_bytes;
+  double current_packet_packet_delivery_ratio, current_packet_packet_average_delivery_delay;
+
+  std::vector<double> average_delivery_delay_list;
+  std::vector<double> delivery_ratio_list;
+
+  for (std::map<DataIdentifier, PriorityDataPacketStatistics>::const_iterator packet_statistics_it =
+          m_priority_data_packet_statistics.begin ();
+          packet_statistics_it != m_priority_data_packet_statistics.end (); ++packet_statistics_it)
+    {
+      if (destination_area != packet_statistics_it->second.GetPacketDestinationGeoTemporalArea ().GetArea ())
+        continue;
+
+      packet_statistics_it->second.GetStatistics (current_packet_confirmed_packet_receivers_count,
+                                                  current_packet_expected_packet_receivers_count,
+                                                  current_packet_packet_delivery_ratio,
+                                                  current_packet_packet_average_delivery_delay,
+                                                  current_packet_delivered_data_bytes);
+
+      values.m_total_delivered_data_bytes += current_packet_delivered_data_bytes;
+      values.m_expected_receivers += current_packet_expected_packet_receivers_count;
+      values.m_confirmed_receivers += current_packet_confirmed_packet_receivers_count;
+
+      if (current_packet_packet_average_delivery_delay >= 0.0)
+        average_delivery_delay_list.push_back (current_packet_packet_average_delivery_delay);
+
+      if (current_packet_packet_delivery_ratio >= 0.0)
+        delivery_ratio_list.push_back (current_packet_packet_delivery_ratio);
+    }
+
+  // Compute average delivery delay
+  double sum = 0.0;
+
+  if (!average_delivery_delay_list.empty ())
+    {
+      for (std::vector<double>::const_iterator delivery_delay_it = average_delivery_delay_list.begin ();
+              delivery_delay_it != average_delivery_delay_list.end (); ++delivery_delay_it)
+        {
+          sum += *delivery_delay_it;
+        }
+
+      values.m_average_delivery_delay = sum / (double) average_delivery_delay_list.size ();
+    }
+
+  // Compute average delivery ratio
+  sum = 0.0;
+
+  if (!delivery_ratio_list.empty ())
+    {
+      for (std::vector<double>::const_iterator delivery_ratio_it = delivery_ratio_list.begin ();
+              delivery_ratio_it != delivery_ratio_list.end (); ++delivery_ratio_it)
+        {
+          sum += *delivery_ratio_it;
+        }
+
+      values.m_average_delivery_ratio = sum / (double) delivery_ratio_list.size ();
+    }
+
+  return true;
+}
+
+
+// =============================================================================
+//                       PrioritySimulationStatisticsFile
+// =============================================================================
+
+PrioritySimulationStatisticsFile::PrioritySimulationStatisticsFile ()
+: PrioritySimulationStatistics (), m_data_packets_str_section () { }
+
+PrioritySimulationStatisticsFile::PrioritySimulationStatisticsFile (const NavigationSystem::GeoTemporalAreasVisitorNodes & gta_visitor_nodes,
+                                                                    const std::map<uint32_t, ns3::Ipv4Address>& nodes_id_to_ip)
+: PrioritySimulationStatistics (gta_visitor_nodes, nodes_id_to_ip),
+m_data_packets_str_section () { }
+
+PrioritySimulationStatisticsFile::PrioritySimulationStatisticsFile (const std::string& gta_visitor_nodes_input_filename,
+                                                                    const std::map<uint32_t, ns3::Ipv4Address>& nodes_id_to_ip)
+: PrioritySimulationStatistics (gta_visitor_nodes_input_filename, nodes_id_to_ip),
+m_data_packets_str_section () { }
+
+PrioritySimulationStatisticsFile::PrioritySimulationStatisticsFile (const PrioritySimulationStatisticsFile & copy)
+: PrioritySimulationStatistics (copy),
+m_data_packets_str_section (copy.m_data_packets_str_section) { }
+
+void
+PrioritySimulationStatisticsFile::AddDataPacket (const PriorityDataPacketStatistics & priority_packet_statistics)
+{
+  PrioritySimulationStatistics::AddDataPacket (priority_packet_statistics);
+
+  m_data_packets_str_section.insert (std::make_pair (priority_packet_statistics.GetDataIdentifier (),
+                                                     std::string ()));
+}
+
+bool
+PrioritySimulationStatisticsFile::CountDataPacketReceiverNode (const ns3::Ipv4Address & receiver_node_ip,
+                                                               const DataPacketReceptionStats & reception_stats)
+{
+  const bool expected_receiver
+          = PrioritySimulationStatistics::CountDataPacketReceiverNode (receiver_node_ip,
+                                                                       reception_stats);
+
+  if (expected_receiver == false)
+    return false;
+
+  char buffer[30];
+  const std::string indentation = "  ";
+  const std::string end_line = "\n"; // LibraryUtils::SYSTEM_NEW_LINE_STRING ();
+
+  std::sprintf (buffer, "%u", GetNodeIdFromIpAddress (receiver_node_ip));
+  std::string reception_str = indentation + indentation
+          + "<receiver-node "
+          + "node-ip=\"" + LibraryUtils::ToString (receiver_node_ip) + "\" "
+          + "node-id=\"" + std::string (buffer) + "\" ";
+
+  reception_str += "received-from=\""
+          + LibraryUtils::ToString (reception_stats.GetTransmitterIpAddress ()) + "\" ";
+
+  std::sprintf (buffer, "%f", reception_stats.GetReceptionTime ().ToDouble (ns3::Time::S));
+  reception_str += "time=\"" + std::string (buffer) + "\" ";
+
+  if (reception_stats.GetPacketDestinedToReceiverNode ())
+    reception_str += "intended-receiver=\"True\" ";
+  else
+    reception_str += "intended-receiver=\"False\" ";
+
+  std::sprintf (buffer, "%u", reception_stats.GetUnicastTransmittedReplicasCount ());
+  reception_str += "unicast-transmitted-replicas=\"" + std::string (buffer) + "\" ";
+
+  std::sprintf (buffer, "%u", reception_stats.GetBroadcastTransmittedReplicasCount ());
+  reception_str += "broadcast-transmitted-replicas=\"" + std::string (buffer) + "\" ";
+
+  std::sprintf (buffer, "%u", reception_stats.GetReceivedDuplicatesCount ());
+  reception_str += "received-duplicates=\"" + std::string (buffer) + "\" />" + end_line;
+
+  m_data_packets_str_section.at (reception_stats.GetPacketDataIdentifier ()) += reception_str;
+
+  return true;
+}
+
+void
+PrioritySimulationStatisticsFile::SaveToXmlFile (const std::string & output_filename) const
+{
+  const std::string output_filename_trimmed = LibraryUtils::Trim_Copy (output_filename);
+  const std::string end_line = "\n"; // LibraryUtils::SYSTEM_NEW_LINE_STRING ();
+  const std::string indentation = "  ";
+  char buffer[40];
+
+  if (output_filename_trimmed.empty ())
+    throw std::runtime_error ("Invalid filename: the filename cannot be empty.");
+
+  std::ofstream output_file (output_filename_trimmed, std::ios::out);
+
+  if (!output_file.is_open ())
+    throw std::runtime_error ("Unable to open file \"" + output_filename_trimmed + "\".");
+
+  // Print XML prolog
+  output_file << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << end_line << end_line;
+
+  output_file << "<document>" << end_line << end_line;
+
+  output_file << "<statistics-results>" << end_line;
+
+  // Print general statistics
+  PrioritySimulationStatisticsValues values;
+
+  CalculateStatistics (values);
+
+  std::sprintf (buffer, "%f", values.m_average_delivery_ratio);
+  output_file << indentation << "<result type=\"total\" "
+          << "average-delivery-ratio=\"" << buffer << "\" ";
+
+  std::sprintf (buffer, "%f", values.m_average_delivery_delay);
+  output_file << "average-delivery-delay=\"" << buffer << "\" ";
+
+  std::sprintf (buffer, "%f", values.m_emergency_average_delivery_ratio);
+  output_file << "emergency-packets-average-delivery-ratio=\"" << buffer << "\" ";
+
+  std::sprintf (buffer, "%f", values.m_emergency_average_delivery_delay);
+  output_file << "emergency-packets-average-delivery-delay=\"" << buffer << "\" ";
+
+  std::sprintf (buffer, "%f", values.m_normal_average_delivery_ratio);
+  output_file << "normal-packets-average-delivery-ratio=\"" << buffer << "\" ";
+
+  std::sprintf (buffer, "%f", values.m_normal_average_delivery_delay);
+  output_file << "normal-packets-average-delivery-delay=\"" << buffer << "\" ";
+
+  std::sprintf (buffer, "%f", values.m_total_overhead);
+  output_file << "total-overhead=\"" << buffer << "\" ";
+
+  std::sprintf (buffer, "%f", values.m_data_overhead);
+  output_file << "data-overhead=\"" << buffer << "\" ";
+
+  std::sprintf (buffer, "%f", values.m_control_overhead);
+  output_file << "control-overhead=\"" << buffer << "\" ";
+
+  std::sprintf (buffer, "%lu", values.m_total_transmitted_bytes);
+  output_file << "total-transmitted-bytes=\"" << buffer << "\" ";
+
+  std::sprintf (buffer, "%lu", values.m_data_transmitted_bytes);
+  output_file << "data-transmitted-bytes=\"" << buffer << "\" ";
+
+  std::sprintf (buffer, "%lu", values.m_control_transmitted_bytes);
+  output_file << "control-transmitted-bytes=\"" << buffer << "\" ";
+
+  std::sprintf (buffer, "%lu", values.m_total_delivered_data_bytes);
+  output_file << "total-delivered-data-bytes=\"" << buffer << "\" ";
+
+  std::sprintf (buffer, "%u", values.m_expected_receivers);
+  output_file << "expected-receiver-nodes=\"" << buffer << "\" ";
+
+  std::sprintf (buffer, "%u", values.m_confirmed_receivers);
+  output_file << "confirmed-receiver-nodes=\"" << buffer << "\" ";
+  output_file << "/>" << end_line;
+
+  // Print area statistics
+  for (std::set<LibraryUtils::Area>::const_iterator area_it = m_known_destination_areas.begin ();
+          area_it != m_known_destination_areas.end (); ++area_it)
+    {
+      CalculateAreaStatistics (*area_it, values);
+
+      std::sprintf (buffer, "%f", area_it->GetX1 ());
+      output_file << indentation << "<result type=\"area\" "
+              << "area=\"" << buffer << ",";
+
+      std::sprintf (buffer, "%f", area_it->GetY1 ());
+      output_file << buffer << ", ";
+
+      std::sprintf (buffer, "%f", area_it->GetX2 ());
+      output_file << buffer << ",";
+
+      std::sprintf (buffer, "%f", area_it->GetY2 ());
+      output_file << buffer << "\" ";
+
+      std::sprintf (buffer, "%f", values.m_average_delivery_ratio);
+      output_file << "average-delivery-ratio=\"" << buffer << "\" ";
+
+      std::sprintf (buffer, "%f", values.m_average_delivery_delay);
+      output_file << "average-delivery-delay=\"" << buffer << "\" ";
+
+      std::sprintf (buffer, "%lu", values.m_total_delivered_data_bytes);
+      output_file << "total-delivered-data-bytes=\"" << buffer << "\" ";
+
+      std::sprintf (buffer, "%u", values.m_expected_receivers);
+      output_file << "expected-receiver-nodes=\"" << buffer << "\" ";
+
+      std::sprintf (buffer, "%u", values.m_confirmed_receivers);
+      output_file << "confirmed-receiver-nodes=\"" << buffer << "\" ";
+      output_file << "/>" << end_line;
+    }
+
+  output_file << "</statistics-results>" << end_line << end_line;
+
+  // Print transmission counters
+  output_file << "<nodes-transmitted-packets>" << end_line;
+
+  for (std::map<ns3::Ipv4Address, PacketsCounter>::const_iterator node_packets_counter_it
+          = m_nodes_transmitted_packets_counters.begin ();
+          node_packets_counter_it != m_nodes_transmitted_packets_counters.end ();
+          ++node_packets_counter_it)
+    {
+      output_file << indentation << "<node-transmitted-packets ";
+
+      output_file << "node-ip=\"" << LibraryUtils::ToString (node_packets_counter_it->first) << "\" ";
+
+      std::sprintf (buffer, "%u", GetNodeIdFromIpAddress (node_packets_counter_it->first));
+      output_file << "node-id=\"" << buffer << "\" ";
+
+      std::sprintf (buffer, "%u", node_packets_counter_it->second.GetControlPacketsCount ());
+      output_file << "control-packets-count=\"" << buffer << "\" ";
+
+      std::sprintf (buffer, "%u", node_packets_counter_it->second.GetControlPacketsSize ());
+      output_file << "control-packets-size=\"" << buffer << "\" ";
+
+      std::sprintf (buffer, "%u", node_packets_counter_it->second.GetDataPacketsCount ());
+      output_file << "data-packets-count=\"" << buffer << "\" ";
+
+      std::sprintf (buffer, "%u", node_packets_counter_it->second.GetDataPacketsSize ());
+      output_file << "data-packets-size=\"" << buffer << "\" ";
+      output_file << "/>" << end_line;
+    }
+
+  output_file << "</nodes-transmitted-packets>" << end_line << end_line;
+
+  // Print data packets receiver nodes
+  output_file << "<data-packets>" << end_line;
+
+  uint32_t confirmed_packet_receivers_count, expected_packet_receivers_count;
+  double packet_delivery_ratio, packet_average_delivery_delay;
+  uint32_t delivered_data_bytes;
+
+  for (std::map<DataIdentifier, PriorityDataPacketStatistics>::const_iterator data_packet_stats_it
+          = m_priority_data_packet_statistics.begin ();
+          data_packet_stats_it != m_priority_data_packet_statistics.end (); ++data_packet_stats_it)
+    {
+      output_file << indentation << "<data-packet data-id=\""
+              << data_packet_stats_it->first.ToString () << "\" ";
+
+      if (data_packet_stats_it->second.IsEmergencyPacket ())
+        output_file << "priority=\"Emergency\" ";
+      else
+        output_file << "priority=\"Normal\" ";
 
       output_file << "source-node-ip=\""
               + LibraryUtils::ToString (data_packet_stats_it->second.GetSourceNodeIp ()) + "\" ";
